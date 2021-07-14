@@ -11,6 +11,11 @@
     "android/build.gradle",
     "dist/",
     "ios/Plugin/",
+    "src/",
+    "package.json",
+    "README.md",
+    "tsconfig.json",
+    "rollup.config.js",
     "AppsflyerCapacitorPlugin.podspec"
   ],
   "author": "Paz Lavi",
