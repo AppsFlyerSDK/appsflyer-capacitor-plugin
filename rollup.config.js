@@ -4,7 +4,7 @@ export default {
     {
       file: 'dist/plugin.js',
       format: 'iife',
-      name: 'capacitorAppsFlyerPlugin',
+      name: 'AppsFlyerCapacitorPlugin',
       globals: {
         '@capacitor/core': 'capacitorExports',
       },

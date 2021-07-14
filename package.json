@@ -1,6 +1,6 @@
 {
-  "name": "capacitor-appsflyer-plugin",
-  "version": "0.0.1",
+  "name": "appsflyer-capacitor-plugin",
+  "version": "6.3.2",
   "description": "AppsFlyer SDK plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -11,16 +11,16 @@
     "android/build.gradle",
     "dist/",
     "ios/Plugin/",
-    "CapacitorAppsflyerPlugin.podspec"
+    "AppsflyerCapacitorPlugin.podspec"
   ],
   "author": "Paz Lavi",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pazlavi/capacitor-appsflyer-plugin.git.git"
+    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin.git"
   },
   "bugs": {
-    "url": "https://github.com/pazlavi/capacitor-appsflyer-plugin.git/issues"
+    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin.git/issues"
   },
   "keywords": [
     "capacitor",
@@ -37,13 +37,15 @@
     "eslint": "eslint . --ext ts",
     "prettier": "prettier \"**/*.{css,html,ts,js,java}\"",
     "swiftlint": "node-swiftlint",
-    "docgen": "docgen --api AppsFlyerPluginPlugin --output-readme README.md --output-json dist/docs.json",
+    "docgen": "docgen --api AppsFlyerPlugin --output-readme README.md --output-json dist/docs.json",
     "build": "npm run clean && npm run docgen && tsc && rollup -c rollup.config.js",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "rimraf": "./node_modules/rimraf/bin.js"
   },
   "devDependencies": {
+    "@angular/cli": "^12.1.1",
     "@capacitor/android": "^3.0.0",
     "@capacitor/core": "^3.0.0",
     "@capacitor/docgen": "^0.0.10",

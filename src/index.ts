@@ -1,10 +1,10 @@
 import { registerPlugin } from '@capacitor/core';
 
-import type { AppsFlyerPluginPlugin } from './definitions';
+import type { AppsFlyerPlugin } from './definitions';
 
-const AppsFlyerPlugin = registerPlugin<AppsFlyerPluginPlugin>('AppsFlyerPlugin', {
-  web: () => import('./web').then(m => new m.AppsFlyerPluginWeb()),
+const AppsFlyer = registerPlugin<AppsFlyerPlugin>('AppsFlyerPlugin', {
+
 });
 
 export * from './definitions';
-export { AppsFlyerPlugin };
+export { AppsFlyer };

@@ -5,10 +5,13 @@ def capacitor_pods
   use_frameworks!
   pod 'Capacitor', :path => '../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../node_modules/@capacitor/ios'
+
 end
 
 target 'Plugin' do
   capacitor_pods
+   #pod 'AppsFlyerFramework', ' 6.3.2'
+
 end
 
 target 'PluginTests' do
