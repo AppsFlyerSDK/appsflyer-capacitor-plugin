@@ -7,4 +7,6 @@ const AppsFlyer = registerPlugin<AppsFlyerPlugin>('AppsFlyerPlugin', {
 });
 
 export * from './definitions';
+export * from './Appsflyer_constants';
+export * from './Appsflyer_constants';
 export { AppsFlyer };

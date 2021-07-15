@@ -35,8 +35,7 @@ public class AppsFlyerPlugin: CAPPlugin {
         conversion = call.getBool(AppsFlyerConstants.AF_CONVERSION_LISTENER, true)
         oaoa = call.getBool(AppsFlyerConstants.AF_OAOA, true)
         udl = call.getBool(AppsFlyerConstants.AF_UDL, false)
-        
-        
+
         appsflyer.isDebug = debug
         appsflyer.appsFlyerDevKey = devKey
         appsflyer.appleAppID = appID
@@ -336,17 +335,17 @@ public class AppsFlyerPlugin: CAPPlugin {
                 currency: currency,
                 transactionId: transactionId,
                 additionalParameters: additionalParameters,
-                success: {_ in
-                    call.resolve(["res":"ok"])
+                success: {result in
+                    call.resolve(["res":result])
                 },
                 failure: { error, result in
-                    guard let emptyInApp = result as? [String:Any],
-                          let status = emptyInApp["status"] as? String else
+                    guard let emptyInApp = result as? [String:Any]
+                          else
                     {
                         call.reject((error)?.localizedDescription ?? "error" )
                         return
                     }
-                    call.reject((error)?.localizedDescription ?? "error" , status)
+                    call.reject((error)?.localizedDescription ?? "error" , emptyInApp.jsonStringRepresentaiton)
                     
                 })
         }else{

@@ -1,31 +1,35 @@
 import type {PluginListenerHandle} from "@capacitor/core";
 
-import type  {AFConstants} from "./Appsflyer_constants";
+import type {AFConstants} from "./Appsflyer_constants";
 import type {
-    AFInit,
-    AFEvent,
-    OnAppOpenAttribution,
-    OnConversionDataResult,
-    OnDeepLink,
-    AFUninstall,
-    AFCurrency,
-    AFCuid,
-    AFOnelinkID,
-    AFOnelinkDomain,
-    AFUrls,
-    AFUid,
+    AFAndroidInAppPurchase,
     AFAnonymizeUser,
-    AFStop,
-    AFIsStopped,
-    AFPath,
-    AFFilters,
+    AFAppendToDeepLink,
+    AFCuid,
+    AFCurrency,
     AFData,
     AFDisable,
+    AFEvent,
+    AFFbDAL,
+    AFFilters,
     AFHost,
-    AFLinkGenerator,
-    AFRes,
+    AFInit,
+    AFIosInAppPurchase,
+    AFIsStopped,
     AFLink,
-    AFAndroidInAppPurchase, AFIosInAppPurchase, AFFbDAL, AFPushPayload, AFAppendToDeepLink
+    AFLinkGenerator,
+    AFOnelinkDomain,
+    AFOnelinkID,
+    AFPath,
+    AFPushPayload,
+    AFRes,
+    AFStop,
+    AFUid,
+    AFUninstall,
+    AFUrls,
+    OnAppOpenAttribution,
+    OnConversionDataResult,
+    OnDeepLink
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -47,57 +51,142 @@ export interface AppsFlyerPlugin {
         listenerFunc: (event: OnDeepLink) => void,
     ): PluginListenerHandle;
 
+    /**
+     * Use this method to initialize and start AppsFlyer SDK. This API should be called as soon as the app launched.
+     */
     initSDK(options: AFInit): Promise<AFRes>;
 
-    logEvent(date: AFEvent): Promise<AFRes>
+    /**
+     * Log an in-app event.
+     *
+     * */
+    logEvent(data: AFEvent): Promise<AFRes>
 
+    /**
+     * Setting your own customer ID enables you to cross-reference your own unique ID with AppsFlyer’s unique ID and other devices’ IDs.
+     * This ID is available in raw-data reports and in the Postback APIs for cross-referencing with your internal IDs.
+     */
     setCustomerUserId(cuid: AFCuid): Promise<void>
 
+    /**
+     * Sets the currency for in-app purchases. The currency code should be a 3 character ISO 4217 code
+     * */
     setCurrencyCode(currencyCode: AFCurrency): Promise<void>
 
+    /**
+     * (Android) Allows to pass GCM/FCM Tokens that where collected by third party plugins to the AppsFlyer server. Can be used for Uninstall log.
+     * (iOS) Allows to pass APN Tokens that where collected by third party plugins to the AppsFlyer server. Can be used for log Uninstall.
+     */
     updateServerUninstallToken(token: AFUninstall): Promise<void>
 
+    /**
+     * Set the OneLink ID that should be used for attributing user-Invite. The link that is generated for the user invite will use this OneLink as the base link.
+     */
     setAppInviteOneLink(id: AFOnelinkID): Promise<void>
 
+    /**
+     * In order for AppsFlyer SDK to successfully resolve hidden (decoded in shortlink ID) attribution parameters, any domain that is configured as a branded domain in the AppsFlyer Dashboard should be provided to this method.
+     */
     setOneLinkCustomDomain(domains: AFOnelinkDomain): Promise<void>
 
+    /**
+     * Enables app owners using App Links for deep linking (without OneLink) to attribute sessions initiated via a domain associated with their app. Call this method before calling start.
+     * You must provide the following parameters in the parameters Map:
+     * pid
+     * is_retargeting must be set to true
+     * */
     appendParametersToDeepLinkingURL(data: AFAppendToDeepLink): Promise<void>
 
+    /**
+     *Advertisers can wrap an AppsFlyer OneLink within another Universal Link. This Universal Link will invoke the app but any deep linking data will not propagate to AppsFlyer.
+     * setResolveDeepLinkURLs enables you to configure the SDK to resolve the wrapped OneLink URLs, so that deep linking can occur correctly.
+     */
     setResolveDeepLinkURLs(urls: AFUrls): Promise<void>
 
+    /**
+     * Configures how the SDK extracts deep link values from push notification payloads.
+     */
     addPushNotificationDeepLinkPath(path: AFPath): Promise<void>
 
+    /**
+     * Stops events from propagating to the specified AppsFlyer partners.
+     */
     setSharingFilter(filters: AFFilters): Promise<void>
 
+    /**
+     * Stops events from propagating to all AppsFlyer partners. Overwrites setSharingFilter.
+     */
     setSharingFilterForAllPartners(): Promise<void>
 
-    setAdditionalData(additionalData : AFData): Promise<void>
+    /**
+     * Set additional data to be sent to AppsFlyer. See
+     */
+    setAdditionalData(additionalData: AFData): Promise<void>
 
+    /**
+     * Get AppsFlyer's unique device ID (created for every new install of an app).
+     */
     getAppsFlyerUID(): Promise<AFUid>
 
-    anonymizeUser(anonymize:AFAnonymizeUser): Promise<void>
+    /**
+     * End User Opt-Out from AppsFlyer analytics (Anonymize user data).
+     */
+    anonymizeUser(anonymize: AFAnonymizeUser): Promise<void>
 
-    stop(stop?:AFStop): Promise<AFIsStopped>
+    /**
+     * Once this API is invoked, our SDK no longer communicates with our servers and stops functioning.
+     * Useful when implementing user opt-in/opt-out.
+     */
+    stop(stop?: AFStop): Promise<AFIsStopped>
 
-    disableSKAdNetwork(stop:AFDisable): Promise<void>
+    /**
+     * Opt-out of SKAdNetwork
+     *
+     */
+    disableSKAdNetwork(stop: AFDisable): Promise<void>
 
-    disableAdvertisingIdentifier(stop:AFDisable): Promise<void>
+    /**
+     * Disables collection of various Advertising IDs by the SDK. This includes Apple Identity for Advertisers (IDFA), Google Advertising ID (GAID), OAID and Amazon Advertising ID (AAID).
+     */
+    disableAdvertisingIdentifier(stop: AFDisable): Promise<void>
 
-    disableCollectASA(stop:AFDisable): Promise<void>
+    /**
+     * Opt-out of Apple Search Ads attributions.
+     */
+    disableCollectASA(stop: AFDisable): Promise<void>
 
-    setHost(hostName:AFHost): Promise<void>
+    /**
+     * Set a custom host.
+     */
+    setHost(hostName: AFHost): Promise<void>
 
-    generateInviteLink(params : AFLinkGenerator): Promise<AFLink>;
+    /**
+     *  Allowing your existing users to invite their friends and contacts as new users to your app
+     */
+    generateInviteLink(params: AFLinkGenerator): Promise<AFLink>;
 
-    validateAndLogInAppPurchaseAndroid(purchaseData:AFAndroidInAppPurchase): Promise<AFRes>;
+    /**
+     * API for server verification of in-app purchases. An af_purchase event with the relevant values will be automatically logged if the validation is successful.
+     */
+    validateAndLogInAppPurchaseAndroid(purchaseData: AFAndroidInAppPurchase): Promise<AFRes>;
 
-    validateAndLogInAppPurchaseIos(purchaseData:AFIosInAppPurchase): Promise<AFRes>;
+    validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase): Promise<AFRes>;
 
+    /**
+     * Get the AppsFlyer SDK version used in app.
+     */
     getSdkVersion(): Promise<AFRes>;
 
-    enableFacebookDeferredApplinks(enable:AFFbDAL): Promise<AFRes>;
+    /**
+     * Enable the collection of Facebook Deferred AppLinks. Requires Facebook SDK and Facebook app on target/client device.
+     * This API must be invoked before initializing the AppsFlyer SDK in order to function properly.
+     */
+    enableFacebookDeferredApplinks(enable: AFFbDAL): Promise<AFRes>;
 
-    sendPushNotificationData(payload:AFPushPayload): Promise<void>;
+    /**
+     * Measure and get data from push-notification campaigns.
+     */
+    sendPushNotificationData(payload: AFPushPayload): Promise<void>;
 
 }
 
