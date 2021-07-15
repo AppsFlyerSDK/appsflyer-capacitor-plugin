@@ -1,733 +1,121 @@
-# appsflyer-capacitor-plugin
+<img src="https://www.appsflyer.com/wp-content/uploads/2016/11/logo-1.svg"  width="600">
 
-AppsFlyer SDK plugin for Capacitor
+# Capacitor AppsFlyer plugin for Android and iOS.
 
-## Install
+🛠 In order for us to provide optimal support, we would kindly ask you to submit any issues to support@appsflyer.com
+*When submitting an issue please specify your AppsFlyer sign-up (account) email , your app ID , reproduction steps, code snippets, logs, and any additional relevant information.*
 
-```bash
-npm install appsflyer-capacitor-plugin
-npx cap sync
+[![npm version](https://badge.fury.io/js/appsflyer-capacitor-plugin.svg)](https://badge.fury.io/js/cordova-plugin-appsflyer-sdk)
+[![Build Status](https://travis-ci.org/AppsFlyerSDK/appsflyer-capacitor-plugin.svg?branch=master)](https://travis-ci.org/AppsFlyerSDK/appsflyer-cordova-plugin)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) 
+[![Downloads](https://img.shields.io/npm/dm/appsflyer-capacitor-plugin.svg)](https://www.npmjs.com/package/cordova-plugin-appsflyer-sdk)
+
+----------
+
+## Table of content
+
+- [SDK versions](#plugin-build-for)
+- [Installation](#installation)
+- [Add or Remove Strict mode for App-kids](#appKids)
+- [Guides](#guides)
+- [Setup](#setup)
+- [API](#api) 
+
+## <a id="plugin-build-for"> This plugin is built for
+- iOS AppsFlyerSDK **v6.3.2**
+- Android AppsFlyerSDK **v6.3.2**
+
+## <a id="installation">📲Installation
+```bash  
+npm install appsflyer-capacitor-plugin  
+npx cap sync  
 ```
 
-## API
+## <a id="appKids">👨‍👩‍👧‍👦 Add or Remove Strict mode for App-kids
+The iOS SDK comes in two variants: **Strict** mode and **Regular** mode. Please read more [here](https://support.appsflyer.com/hc/en-us/articles/207032066-iOS-SDK-V6-X-integration-guide-for-developers#additional-apis-strict-mode-sdk) <br>
+***Change to Strict mode***<br>
+After you [installed](#installation) the AppsFlyer plugin, add `$AppsFlyerStrictMode` in the project's Podfile:
+```
+//App/ios/Podfile
+...
+use_frameworks!
+  $AppsFlyerStrictMode
 
-<docgen-index>
+  # Pods for App
+...
 
-* [`addListener(...)`](#addlistener)
-* [`addListener(...)`](#addlistener)
-* [`addListener(...)`](#addlistener)
-* [`initSDK(...)`](#initsdk)
-* [`logEvent(...)`](#logevent)
-* [`setCustomerUserId(...)`](#setcustomeruserid)
-* [`setCurrencyCode(...)`](#setcurrencycode)
-* [`updateServerUninstallToken(...)`](#updateserveruninstalltoken)
-* [`setAppInviteOneLink(...)`](#setappinviteonelink)
-* [`setOneLinkCustomDomain(...)`](#setonelinkcustomdomain)
-* [`appendParametersToDeepLinkingURL(...)`](#appendparameterstodeeplinkingurl)
-* [`setResolveDeepLinkURLs(...)`](#setresolvedeeplinkurls)
-* [`addPushNotificationDeepLinkPath(...)`](#addpushnotificationdeeplinkpath)
-* [`setSharingFilter(...)`](#setsharingfilter)
-* [`setSharingFilterForAllPartners()`](#setsharingfilterforallpartners)
-* [`setAdditionalData(...)`](#setadditionaldata)
-* [`getAppsFlyerUID()`](#getappsflyeruid)
-* [`anonymizeUser(...)`](#anonymizeuser)
-* [`stop(...)`](#stop)
-* [`disableSKAdNetwork(...)`](#disableskadnetwork)
-* [`disableAdvertisingIdentifier(...)`](#disableadvertisingidentifier)
-* [`disableCollectASA(...)`](#disablecollectasa)
-* [`setHost(...)`](#sethost)
-* [`generateInviteLink(...)`](#generateinvitelink)
-* [`validateAndLogInAppPurchaseAndroid(...)`](#validateandloginapppurchaseandroid)
-* [`validateAndLogInAppPurchaseIos(...)`](#validateandloginapppurchaseios)
-* [`getSdkVersion()`](#getsdkversion)
-* [`enableFacebookDeferredApplinks(...)`](#enablefacebookdeferredapplinks)
-* [`sendPushNotificationData(...)`](#sendpushnotificationdata)
-* [Interfaces](#interfaces)
-* [Enums](#enums)
+```
+In the  `root` folder of your project Run `npx cap sync ios`
 
-</docgen-index>
+***Change to Regular mode***<br>
+Remove `$AppsFlyerStrictMode` from the project's Podfile:
+```
+//App/ios/Podfile
+...
+use_frameworks!
+ ## $AppsFlyerStrictMode // remove this line!
 
-<docgen-api>
-<!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
+  # Pods for App
+...
+```
+In the  `root` folder of your project Run `npx cap sync ios`
 
-### addListener(...)
+ ## <a id="guides"> 📖 Guides
+
+Great installation and setup guides can be viewed [here](/docs/Guides.md).
+- [init SDK Guide](/docs/Guides.md#init-sdk)
+- [Deeplinking Guide](/docs/Guides.md#deeplinking)
+- [Uninstall Guide](/docs/Guides.md#uninstall)
+- [Set plugin for IOS 14](/docs/Guides.md#ios14)
+## <a id="setup"> 🚀 Setup
+
+####  Set your App_ID (iOS only), Dev_Key and enable AppsFlyer to detect installations, sessions (app opens) and updates.  
+> This is the minimum requirement to start tracking your app installs and is already implemented in this plugin. You **MUST** modify this call and provide:  
+ **devKey** - Your application devKey provided by AppsFlyer.<br>
+**appID**  - ***For iOS only.*** Your AppStore Application ID.<br>
+**[waitForATTUserAuthorization](https://support.appsflyer.com/hc/en-us/articles/207032066-iOS-SDK-integration-guide-for-marketers#integration-31-configuring-app-tracking-transparency-att-support)**  - ***For iOS14 only.*** Time for the sdk to wait before launch.
+
+
+Add the following lines to your code to be able to initialize tracking with your own AppsFlyer dev key:
+
 
 ```typescript
-addListener(eventName: AFConstants.CONVERSION_CALLBACK, listenerFunc: (event: OnConversionDataResult) => void) => PluginListenerHandle
+export class HomePage {
+  constructor(public platform: Platform) {
+
+    this.platform.ready().then(() => {
+      const afConfig: AFInit = {
+        appID: '1234567890', // replace with your app ID. 
+        devKey: 'your_dev_key', // replace with your dev key. 
+        isDebug: true,
+        waitForATTUserAuthorization: 10, // for iOS 14 and higher
+        minTimeBetweenSessions: 6, // default 5 sec
+        registerOnDeepLink: true,
+        registerConversionListener: true,
+        registerOnAppOpenAttribution: false,
+        useReceiptValidationSandbox: true, // iOS only
+        useUninstallSandbox: true // iOS only
+      };
+     
+      AppsFlyer.initSDK(afConfig).then(res => alert(JSON.stringify(res)));
+    });
+  }
+}
 ```
-
-| Param              | Type                                                                                          |
-| ------------------ | --------------------------------------------------------------------------------------------- |
-| **`eventName`**    | <code><a href="#afconstants">AFConstants.CONVERSION_CALLBACK</a></code>                       |
-| **`listenerFunc`** | <code>(event: <a href="#onconversiondataresult">OnConversionDataResult</a>) =&gt; void</code> |
-
-**Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>
-
---------------------
-
-
-### addListener(...)
-
-```typescript
-addListener(eventName: AFConstants.OAOA_CALLBACK, listenerFunc: (event: OnAppOpenAttribution) => void) => PluginListenerHandle
-```
-
-| Param              | Type                                                                                      |
-| ------------------ | ----------------------------------------------------------------------------------------- |
-| **`eventName`**    | <code><a href="#afconstants">AFConstants.OAOA_CALLBACK</a></code>                         |
-| **`listenerFunc`** | <code>(event: <a href="#onappopenattribution">OnAppOpenAttribution</a>) =&gt; void</code> |
-
-**Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>
-
---------------------
-
-
-### addListener(...)
-
-```typescript
-addListener(eventName: AFConstants.UDL_CALLBACK, listenerFunc: (event: OnDeepLink) => void) => PluginListenerHandle
-```
-
-| Param              | Type                                                                  |
-| ------------------ | --------------------------------------------------------------------- |
-| **`eventName`**    | <code><a href="#afconstants">AFConstants.UDL_CALLBACK</a></code>      |
-| **`listenerFunc`** | <code>(event: <a href="#ondeeplink">OnDeepLink</a>) =&gt; void</code> |
-
-**Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>
-
---------------------
-
-
-### initSDK(...)
-
-```typescript
-initSDK(options: AFInit) => any
-```
-
-| Param         | Type                                      |
-| ------------- | ----------------------------------------- |
-| **`options`** | <code><a href="#afinit">AFInit</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### logEvent(...)
-
-```typescript
-logEvent(date: AFEvent) => any
-```
-
-| Param      | Type                                        |
-| ---------- | ------------------------------------------- |
-| **`date`** | <code><a href="#afevent">AFEvent</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setCustomerUserId(...)
-
-```typescript
-setCustomerUserId(cuid: AFCuid) => any
-```
-
-| Param      | Type                                      |
-| ---------- | ----------------------------------------- |
-| **`cuid`** | <code><a href="#afcuid">AFCuid</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setCurrencyCode(...)
-
-```typescript
-setCurrencyCode(currencyCode: AFCurrency) => any
-```
-
-| Param              | Type                                              |
-| ------------------ | ------------------------------------------------- |
-| **`currencyCode`** | <code><a href="#afcurrency">AFCurrency</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### updateServerUninstallToken(...)
-
-```typescript
-updateServerUninstallToken(token: AFUninstall) => any
-```
-
-| Param       | Type                                                |
-| ----------- | --------------------------------------------------- |
-| **`token`** | <code><a href="#afuninstall">AFUninstall</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setAppInviteOneLink(...)
-
-```typescript
-setAppInviteOneLink(id: AFOnelinkID) => any
-```
-
-| Param    | Type                                                |
-| -------- | --------------------------------------------------- |
-| **`id`** | <code><a href="#afonelinkid">AFOnelinkID</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setOneLinkCustomDomain(...)
-
-```typescript
-setOneLinkCustomDomain(domains: AFOnelinkDomain) => any
-```
-
-| Param         | Type                                                        |
-| ------------- | ----------------------------------------------------------- |
-| **`domains`** | <code><a href="#afonelinkdomain">AFOnelinkDomain</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### appendParametersToDeepLinkingURL(...)
-
-```typescript
-appendParametersToDeepLinkingURL(data: AFAppendToDeepLink) => any
-```
-
-| Param      | Type                                                              |
-| ---------- | ----------------------------------------------------------------- |
-| **`data`** | <code><a href="#afappendtodeeplink">AFAppendToDeepLink</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setResolveDeepLinkURLs(...)
-
-```typescript
-setResolveDeepLinkURLs(urls: AFUrls) => any
-```
-
-| Param      | Type                                      |
-| ---------- | ----------------------------------------- |
-| **`urls`** | <code><a href="#afurls">AFUrls</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### addPushNotificationDeepLinkPath(...)
-
-```typescript
-addPushNotificationDeepLinkPath(path: AFPath) => any
-```
-
-| Param      | Type                                      |
-| ---------- | ----------------------------------------- |
-| **`path`** | <code><a href="#afpath">AFPath</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setSharingFilter(...)
-
-```typescript
-setSharingFilter(filters: AFFilters) => any
-```
-
-| Param         | Type                                            |
-| ------------- | ----------------------------------------------- |
-| **`filters`** | <code><a href="#affilters">AFFilters</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setSharingFilterForAllPartners()
-
-```typescript
-setSharingFilterForAllPartners() => any
-```
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setAdditionalData(...)
-
-```typescript
-setAdditionalData(additionalData: AFData) => any
-```
-
-| Param                | Type                                      |
-| -------------------- | ----------------------------------------- |
-| **`additionalData`** | <code><a href="#afdata">AFData</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### getAppsFlyerUID()
-
-```typescript
-getAppsFlyerUID() => any
-```
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### anonymizeUser(...)
-
-```typescript
-anonymizeUser(anonymize: AFAnonymizeUser) => any
-```
-
-| Param           | Type                                                        |
-| --------------- | ----------------------------------------------------------- |
-| **`anonymize`** | <code><a href="#afanonymizeuser">AFAnonymizeUser</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### stop(...)
-
-```typescript
-stop(stop?: AFStop | undefined) => any
-```
-
-| Param      | Type                                      |
-| ---------- | ----------------------------------------- |
-| **`stop`** | <code><a href="#afstop">AFStop</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### disableSKAdNetwork(...)
-
-```typescript
-disableSKAdNetwork(stop: AFDisable) => any
-```
-
-| Param      | Type                                            |
-| ---------- | ----------------------------------------------- |
-| **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### disableAdvertisingIdentifier(...)
-
-```typescript
-disableAdvertisingIdentifier(stop: AFDisable) => any
-```
-
-| Param      | Type                                            |
-| ---------- | ----------------------------------------------- |
-| **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### disableCollectASA(...)
-
-```typescript
-disableCollectASA(stop: AFDisable) => any
-```
-
-| Param      | Type                                            |
-| ---------- | ----------------------------------------------- |
-| **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### setHost(...)
-
-```typescript
-setHost(hostName: AFHost) => any
-```
-
-| Param          | Type                                      |
-| -------------- | ----------------------------------------- |
-| **`hostName`** | <code><a href="#afhost">AFHost</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### generateInviteLink(...)
-
-```typescript
-generateInviteLink(params: AFLinkGenerator) => any
-```
-
-| Param        | Type                                                        |
-| ------------ | ----------------------------------------------------------- |
-| **`params`** | <code><a href="#aflinkgenerator">AFLinkGenerator</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### validateAndLogInAppPurchaseAndroid(...)
-
-```typescript
-validateAndLogInAppPurchaseAndroid(purchaseData: AFAndroidInAppPurchase) => any
-```
-
-| Param              | Type                                                                      |
-| ------------------ | ------------------------------------------------------------------------- |
-| **`purchaseData`** | <code><a href="#afandroidinapppurchase">AFAndroidInAppPurchase</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### validateAndLogInAppPurchaseIos(...)
-
-```typescript
-validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => any
-```
-
-| Param              | Type                                                              |
-| ------------------ | ----------------------------------------------------------------- |
-| **`purchaseData`** | <code><a href="#afiosinapppurchase">AFIosInAppPurchase</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### getSdkVersion()
-
-```typescript
-getSdkVersion() => any
-```
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### enableFacebookDeferredApplinks(...)
-
-```typescript
-enableFacebookDeferredApplinks(enable: AFFbDAL) => any
-```
-
-| Param        | Type                                        |
-| ------------ | ------------------------------------------- |
-| **`enable`** | <code><a href="#affbdal">AFFbDAL</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### sendPushNotificationData(...)
-
-```typescript
-sendPushNotificationData(payload: AFPushPayload) => any
-```
-
-| Param         | Type                                                    |
-| ------------- | ------------------------------------------------------- |
-| **`payload`** | <code><a href="#afpushpayload">AFPushPayload</a></code> |
-
-**Returns:** <code>any</code>
-
---------------------
-
-
-### Interfaces
-
-
-#### PluginListenerHandle
-
-| Prop         | Type                      |
-| ------------ | ------------------------- |
-| **`remove`** | <code>() =&gt; any</code> |
-
-
-#### OnConversionDataResult
-
-| Prop               | Type                |
-| ------------------ | ------------------- |
-| **`callbackName`** | <code>string</code> |
-| **`errorMessage`** | <code>string</code> |
-| **`data`**         | <code>any</code>    |
-
-
-#### OnAppOpenAttribution
-
-| Prop               | Type                |
-| ------------------ | ------------------- |
-| **`callbackName`** | <code>string</code> |
-| **`errorMessage`** | <code>string</code> |
-| **`data`**         | <code>any</code>    |
-
-
-#### OnDeepLink
-
-| Prop           | Type                |
-| -------------- | ------------------- |
-| **`status`**   | <code>string</code> |
-| **`error`**    | <code>string</code> |
-| **`deepLink`** | <code>any</code>    |
-
-
-#### AFInit
-
-| Prop                               | Type                 |
-| ---------------------------------- | -------------------- |
-| **`devKey`**                       | <code>string</code>  |
-| **`appID`**                        | <code>string</code>  |
-| **`isDebug`**                      | <code>boolean</code> |
-| **`waitForATTUserAuthorization`**  | <code>number</code>  |
-| **`registerConversionListener`**   | <code>boolean</code> |
-| **`registerOnAppOpenAttribution`** | <code>boolean</code> |
-| **`registerOnDeepLink`**           | <code>boolean</code> |
-| **`useUninstallSandbox`**          | <code>boolean</code> |
-| **`useReceiptValidationSandbox`**  | <code>boolean</code> |
-| **`minTimeBetweenSessions`**       | <code>number</code>  |
-
-
-#### AFRes
-
-| Prop      | Type                |
-| --------- | ------------------- |
-| **`res`** | <code>string</code> |
-
-
-#### AFEvent
-
-| Prop             | Type                |
-| ---------------- | ------------------- |
-| **`eventName`**  | <code>string</code> |
-| **`eventValue`** | <code>any</code>    |
-
-
-#### AFCuid
-
-| Prop       | Type                |
-| ---------- | ------------------- |
-| **`cuid`** | <code>string</code> |
-
-
-#### AFCurrency
-
-| Prop               | Type                |
-| ------------------ | ------------------- |
-| **`currencyCode`** | <code>string</code> |
-
-
-#### AFUninstall
-
-| Prop        | Type                |
-| ----------- | ------------------- |
-| **`token`** | <code>string</code> |
-
-
-#### AFOnelinkID
-
-| Prop            | Type                |
-| --------------- | ------------------- |
-| **`onelinkID`** | <code>string</code> |
-
-
-#### AFOnelinkDomain
-
-| Prop          | Type            |
-| ------------- | --------------- |
-| **`domains`** | <code>{}</code> |
-
-
-#### AFAppendToDeepLink
-
-| Prop             | Type                                            |
-| ---------------- | ----------------------------------------------- |
-| **`contains`**   | <code>string</code>                             |
-| **`parameters`** | <code><a href="#stringmap">StringMap</a></code> |
-
-
-#### StringMap
-
-
-#### AFUrls
-
-| Prop       | Type            |
-| ---------- | --------------- |
-| **`urls`** | <code>{}</code> |
-
-
-#### AFPath
-
-| Prop       | Type            |
-| ---------- | --------------- |
-| **`path`** | <code>{}</code> |
-
-
-#### AFFilters
-
-| Prop          | Type            |
-| ------------- | --------------- |
-| **`filters`** | <code>{}</code> |
-
-
-#### AFData
-
-| Prop                 | Type             |
-| -------------------- | ---------------- |
-| **`additionalData`** | <code>any</code> |
-
-
-#### AFUid
-
-| Prop      | Type                |
-| --------- | ------------------- |
-| **`uid`** | <code>string</code> |
-
-
-#### AFAnonymizeUser
-
-| Prop                | Type                 |
-| ------------------- | -------------------- |
-| **`anonymizeUser`** | <code>boolean</code> |
-
-
-#### AFStop
-
-| Prop       | Type                 |
-| ---------- | -------------------- |
-| **`stop`** | <code>boolean</code> |
-
-
-#### AFIsStopped
-
-| Prop            | Type                 |
-| --------------- | -------------------- |
-| **`isStopped`** | <code>boolean</code> |
-
-
-#### AFDisable
-
-| Prop                | Type                 |
-| ------------------- | -------------------- |
-| **`shouldDisable`** | <code>boolean</code> |
-
-
-#### AFHost
-
-| Prop                 | Type                |
-| -------------------- | ------------------- |
-| **`hostPrefixName`** | <code>string</code> |
-| **`hostName`**       | <code>string</code> |
-
-
-#### AFLinkGenerator
-
-| Prop                     | Type                                            |
-| ------------------------ | ----------------------------------------------- |
-| **`brandDomain`**        | <code>string</code>                             |
-| **`campaign`**           | <code>string</code>                             |
-| **`channel`**            | <code>string</code>                             |
-| **`referrerName`**       | <code>string</code>                             |
-| **`referrerImageURL`**   | <code>string</code>                             |
-| **`referrerCustomerId`** | <code>string</code>                             |
-| **`baseDeeplink`**       | <code>string</code>                             |
-| **`addParameters`**      | <code><a href="#stringmap">StringMap</a></code> |
-
-
-#### AFLink
-
-| Prop       | Type                |
-| ---------- | ------------------- |
-| **`link`** | <code>string</code> |
-
-
-#### AFAndroidInAppPurchase
-
-| Prop               | Type                |
-| ------------------ | ------------------- |
-| **`publicKey`**    | <code>string</code> |
-| **`signature`**    | <code>string</code> |
-| **`purchaseData`** | <code>string</code> |
-| **`price`**        | <code>string</code> |
-
-
-#### AFIosInAppPurchase
-
-| Prop                | Type                |
-| ------------------- | ------------------- |
-| **`inAppPurchase`** | <code>string</code> |
-| **`price`**         | <code>string</code> |
-| **`transactionId`** | <code>string</code> |
-
-
-#### AFFbDAL
-
-| Prop                    | Type                 |
-| ----------------------- | -------------------- |
-| **`enableFacebookDAL`** | <code>boolean</code> |
-
-
-#### AFPushPayload
-
-| Prop              | Type                                            |
-| ----------------- | ----------------------------------------------- |
-| **`pushPayload`** | <code><a href="#stringmap">StringMap</a></code> |
-
-
-### Enums
-
-
-#### AFConstants
-
-| Members                       | Value                                  |
-| ----------------------------- | -------------------------------------- |
-| **`onConversionDataSuccess`** | <code>'onConversionDataSuccess'</code> |
-| **`onConversionDataFail`**    | <code>'onConversionDataFail'</code>    |
-| **`onAppOpenAttribution`**    | <code>'onAppOpenAttribution'</code>    |
-| **`onAttributionFailure`**    | <code>'onAttributionFailure'</code>    |
-| **`CONVERSION_CALLBACK`**     | <code>'conversion_callback'</code>     |
-| **`OAOA_CALLBACK`**           | <code>'oaoa_callback'</code>           |
-| **`UDL_CALLBACK`**            | <code>'udl_callback'</code>            |
-
-</docgen-api>
+| Setting  | Description   |
+| -------- | ------------- |
+| devKey   | Your application [devKey](https://support.appsflyer.com/hc/en-us/articles/207032126#integration-2-integrating-the-sdk) provided by AppsFlyer (required)  |
+| appID      | Your App Store application ID  (iOS only)  |
+| isDebug    | Debug mode - set to `true` for testing only  |
+|registerConversionListener| Set listener for SDK init response (Optional. default=true) |
+|registerOnAppOpenAttribution| Set listener for OnAppOpenAttribution response (Optional. default=true)|
+|registerOnDeepLink| Set listener for UDL response (Optional. default=false) |
+|waitForATTUserAuthorization| Time for the sdk to wait before launch. please read more [Here](https://support.appsflyer.com/hc/en-us/articles/207032066-iOS-SDK-V6-X-integration-guide-for-developers#integration-31-configuring-app-tracking-transparency-att-support) (iOS only) |
+|useReceiptValidationSandbox| To test purchase validation using a sandboxed environment, set to `true` (Optional. default=false) |
+|useUninstallSandbox| Set this flag to test uninstall on Apple environment(production or sandbox). (Optional. default=false) |
+|minTimeBetweenSessions| Set a custom value for the minimum required time between sessions. (Optional. default=5 sec) |
+
+---
+## <a id="api"> 📑 API
+  
+See the full [API](/docs/API.md) available for this plugin.
