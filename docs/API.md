@@ -1,0 +1,795 @@
+# API  
+  
+  
+<img  src="https://massets.appsflyer.com/wp-content/uploads/2018/06/20092440/static-ziv_1TP.png"  width="400"  >  
+  
+The list of available methods for this plugin is described below.  
+  
+## Table of content  
+  
+- [API](#api)  
+- [Interfaces](#interfaces)  
+- [Enums](#enums)  
+
+    
+  
+
+## API  
+  
+<docgen-index>  
+  
+* [`addListener(...) - Conversion Data`](#gcd)  
+* [`addListener(...) - onAppOpenAttribution`](#oaoa)  
+* [`addListener(...) - onDeepLinking`](#udl)  
+* [`initSDK(...)`](#initsdk)  
+* [`logEvent(...)`](#logevent)  
+* [`setCustomerUserId(...)`](#setcustomeruserid)  
+* [`setCurrencyCode(...)`](#setcurrencycode)  
+* [`updateServerUninstallToken(...)`](#updateserveruninstalltoken)  
+* [`setAppInviteOneLink(...)`](#setappinviteonelink)  
+* [`setOneLinkCustomDomain(...)`](#setonelinkcustomdomain)  
+* [`appendParametersToDeepLinkingURL(...)`](#appendparameterstodeeplinkingurl)  
+* [`setResolveDeepLinkURLs(...)`](#setresolvedeeplinkurls)  
+* [`addPushNotificationDeepLinkPath(...)`](#addpushnotificationdeeplinkpath)  
+* [`setSharingFilter(...)`](#setsharingfilter)  
+* [`setSharingFilterForAllPartners()`](#setsharingfilterforallpartners)  
+* [`setAdditionalData(...)`](#setadditionaldata)  
+* [`getAppsFlyerUID()`](#getappsflyeruid)  
+* [`anonymizeUser(...)`](#anonymizeuser)  
+* [`stop(...)`](#stop)  
+* [`disableSKAdNetwork(...)`](#disableskadnetwork)  
+* [`disableAdvertisingIdentifier(...)`](#disableadvertisingidentifier)  
+* [`disableCollectASA(...)`](#disablecollectasa)  
+* [`setHost(...)`](#sethost)  
+* [`generateInviteLink(...)`](#generateinvitelink)  
+* [`validateAndLogInAppPurchaseAndroid(...)`](#validateandloginapppurchaseandroid)  
+* [`validateAndLogInAppPurchaseIos(...)`](#validateandloginapppurchaseios)  
+* [`getSdkVersion()`](#getsdkversion)  
+* [`enableFacebookDeferredApplinks(...)`](#enablefacebookdeferredapplinks)  
+* [`sendPushNotificationData(...)`](#sendpushnotificationdata)  
+ 
+  
+</docgen-index>  
+  
+<docgen-api>  
+<!--Update the source file JSDoc comments and rerun docgen to update the docs below-->  
+  
+### <a id="gcd"> addListener(...)  - Conversion Data
+  
+```typescript  
+addListener(eventName: AFConstants.CONVERSION_CALLBACK, listenerFunc: (event: OnConversionDataResult) => void) => PluginListenerHandle  
+```  
+  
+| Param              | Type                                                                                          |  
+| ------------------ | --------------------------------------------------------------------------------------------- |  
+| **`eventName`** | <code><a href="#afconstants">AFConstants.CONVERSION_CALLBACK</a></code>                       |  
+| **`listenerFunc`** | <code>(event: <a href="#onconversiondataresult">OnConversionDataResult</a>) =&gt; void</code> |  
+  
+**Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>  
+  
+--------------------  
+  
+  
+### <a id="oaoa"> addListener(...)  - onAppOpenAttribution
+  
+```typescript  
+addListener(eventName: AFConstants.OAOA_CALLBACK, listenerFunc: (event: OnAppOpenAttribution) => void) => PluginListenerHandle  
+```  
+  
+| Param              | Type                                                                                      |  
+| ------------------ | ----------------------------------------------------------------------------------------- |  
+| **`eventName`** | <code><a href="#afconstants">AFConstants.OAOA_CALLBACK</a></code>                         |  
+| **`listenerFunc`** | <code>(event: <a href="#onappopenattribution">OnAppOpenAttribution</a>) =&gt; void</code> |  
+  
+**Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>  
+  
+--------------------  
+  
+  
+### <a id="udl"> addListener(...)  - onDeepLinking
+  
+```typescript  
+addListener(eventName: AFConstants.UDL_CALLBACK, listenerFunc: (event: OnDeepLink) => void) => PluginListenerHandle  
+```  
+  
+| Param              | Type                                                                  |  
+| ------------------ | --------------------------------------------------------------------- |  
+| **`eventName`** | <code><a href="#afconstants">AFConstants.UDL_CALLBACK</a></code>      |  
+| **`listenerFunc`** | <code>(event: <a href="#ondeeplink">OnDeepLink</a>) =&gt; void</code> |  
+  
+**Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>  
+  
+--------------------  
+  
+  
+### initSDK(...)  
+  
+```typescript  
+initSDK(options: AFInit) => Promise<AFRes>  
+```  
+  
+Use this method to initialize and start AppsFlyer SDK. This API should be called as soon as the app launched.  
+  
+| Param         | Type                                      |  
+| ------------- | ----------------------------------------- |  
+| **`options`** | <code><a href="#afinit">AFInit</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+  
+--------------------  
+  
+  
+### logEvent(...)  
+  
+```typescript  
+logEvent(data: AFEvent) => Promise<AFRes>  
+```  
+  
+Log an in-app event.  
+  
+| Param      | Type                                        |  
+| ---------- | ------------------------------------------- |  
+| **`data`** | <code><a href="#afevent">AFEvent</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
+  
+--------------------  
+  
+  
+### setCustomerUserId(...)  
+  
+```typescript  
+setCustomerUserId(cuid: AFCuid) => Promise<void>  
+```  
+  
+Setting your own customer ID enables you to cross-reference your own unique ID with AppsFlyer’s unique ID and other devices’ IDs.  
+This ID is available in raw-data reports and in the Postback APIs for cross-referencing with your internal IDs.  
+  
+| Param      | Type                                      |  
+| ---------- | ----------------------------------------- |  
+| **`cuid`** | <code><a href="#afcuid">AFCuid</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### setCurrencyCode(...)  
+  
+```typescript  
+setCurrencyCode(currencyCode: AFCurrency) => Promise<void>  
+```  
+  
+Sets the currency for in-app purchases. The currency code should be a 3 character ISO 4217 code  
+  
+| Param              | Type                                              |  
+| ------------------ | ------------------------------------------------- |  
+| **`currencyCode`** | <code><a href="#afcurrency">AFCurrency</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### updateServerUninstallToken(...)  
+
+```typescript  
+updateServerUninstallToken(token: AFUninstall) => Promise<void>  
+```  
+  
+(Android) Allows to pass GCM/FCM Tokens that where collected by third party plugins to the AppsFlyer server. Can be used for Uninstall log.  
+(iOS) Allows to pass APN Tokens that where collected by third party plugins to the AppsFlyer server. Can be used for log Uninstall.  
+  
+| Param       | Type                                                |  
+| ----------- | --------------------------------------------------- |  
+| **`token`** | <code><a href="#afuninstall">AFUninstall</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### setAppInviteOneLink(...)  
+  
+```typescript  
+setAppInviteOneLink(id: AFOnelinkID) => Promise<void>  
+```  
+  
+Set the OneLink ID that should be used for attributing user-Invite. The link that is generated for the user invite will use this OneLink as the base link.  
+  
+| Param    | Type                                                |  
+| -------- | --------------------------------------------------- |  
+| **`id`** | <code><a href="#afonelinkid">AFOnelinkID</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### setOneLinkCustomDomain(...)  
+  
+```typescript  
+setOneLinkCustomDomain(domains: AFOnelinkDomain) => Promise<void>  
+```  
+  
+In order for AppsFlyer SDK to successfully resolve hidden (decoded in shortlink ID) attribution parameters, any domain that is configured as a branded domain in the AppsFlyer Dashboard should be provided to this method.  
+  
+| Param         | Type                                                        |  
+| ------------- | ----------------------------------------------------------- |  
+| **`domains`** | <code><a href="#afonelinkdomain">AFOnelinkDomain</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### appendParametersToDeepLinkingURL(...)  
+  
+```typescript  
+appendParametersToDeepLinkingURL(data: AFAppendToDeepLink) => Promise<void>  
+```  
+  
+Enables app owners using App Links for deep linking (without OneLink) to attribute sessions initiated via a domain associated with their app. Call this method before calling start.  
+You must provide the following parameters in the parameters Map:  
+pid  
+is_retargeting must be set to true  
+  
+| Param      | Type                                                              |  
+| ---------- | ----------------------------------------------------------------- |  
+| **`data`** | <code><a href="#afappendtodeeplink">AFAppendToDeepLink</a></code> |  
+  
+**Returns:** <code>Promise<void></code>   
+  
+--------------------  
+  
+  
+### setResolveDeepLinkURLs(...)  
+  
+```typescript  
+setResolveDeepLinkURLs(urls: AFUrls) => Promise<void>  
+```  
+  
+Advertisers can wrap an AppsFlyer OneLink within another Universal Link. This Universal Link will invoke the app but any deep linking data will not propagate to AppsFlyer.  
+ setResolveDeepLinkURLs enables you to configure the SDK to resolve the wrapped OneLink URLs, so that deep linking can occur correctly.  
+  
+| Param      | Type                                      |  
+| ---------- | ----------------------------------------- |  
+| **`urls`** | <code><a href="#afurls">AFUrls</a></code> |  
+  
+**Returns:** <code>Promise<void></code>   
+  
+--------------------  
+  
+  
+### addPushNotificationDeepLinkPath(...)  
+  
+```typescript  
+addPushNotificationDeepLinkPath(path: AFPath) => Promise<void>  
+```  
+  
+Configures how the SDK extracts deep link values from push notification payloads.  
+  
+| Param      | Type                                      |  
+| ---------- | ----------------------------------------- |  
+| **`path`** | <code><a href="#afpath">AFPath</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### setSharingFilter(...)  
+  
+```typescript  
+setSharingFilter(filters: AFFilters) => Promise<void>  
+```  
+  
+Stops events from propagating to the specified AppsFlyer partners.  
+  
+| Param         | Type                                            |  
+| ------------- | ----------------------------------------------- |  
+| **`filters`** | <code><a href="#affilters">AFFilters</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### setSharingFilterForAllPartners()  
+  
+```typescript  
+setSharingFilterForAllPartners() => Promise<void>  
+```  
+  
+Stops events from propagating to all AppsFlyer partners. Overwrites setSharingFilter.  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### setAdditionalData(...)  
+  
+```typescript  
+setAdditionalData(additionalData: AFData) => Promise<void>  
+```  
+  
+Set additional data to be sent to AppsFlyer. See  
+  
+| Param                | Type                                      |  
+| -------------------- | ----------------------------------------- |  
+| **`additionalData`** | <code><a href="#afdata">AFData</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### getAppsFlyerUID()  
+  
+```typescript  
+getAppsFlyerUID() => Promise<void>  
+```  
+  
+Get AppsFlyer's unique device ID (created for every new install of an app).  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### anonymizeUser(...)  
+  
+```typescript  
+anonymizeUser(anonymize: AFAnonymizeUser) => Promise<void>  
+```  
+  
+End User Opt-Out from AppsFlyer analytics (Anonymize user data).  
+  
+| Param           | Type                                                        |  
+| --------------- | ----------------------------------------------------------- |  
+| **`anonymize`** | <code><a href="#afanonymizeuser">AFAnonymizeUser</a></code> |  
+  
+**Returns:** <code>Promise<void></code>   
+  
+--------------------  
+  
+  
+### stop(...)  
+  
+```typescript  
+stop(stop?: AFStop | undefined) => Promise<void>  
+```  
+  
+Once this API is invoked, our SDK no longer communicates with our servers and stops functioning.  
+Useful when implementing user opt-in/opt-out.  
+  
+| Param      | Type                                      |  
+| ---------- | ----------------------------------------- |  
+| **`stop`** | <code><a href="#afstop">AFStop</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### disableSKAdNetwork(...)  
+ * iOS only 
+```typescript  
+disableSKAdNetwork(stop: AFDisable) => Promise<void>  
+```  
+  
+Opt-out of SKAdNetwork  
+  
+| Param      | Type                                            |  
+| ---------- | ----------------------------------------------- |  
+| **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### disableAdvertisingIdentifier(...)  
+  
+```typescript  
+disableAdvertisingIdentifier(stop: AFDisable) => Promise<void>  
+```  
+  
+Disables collection of various Advertising IDs by the SDK. This includes Apple Identity for Advertisers (IDFA), Google Advertising ID (GAID), OAID and Amazon Advertising ID (AAID).  
+  
+| Param      | Type                                            |  
+| ---------- | ----------------------------------------------- |  
+| **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### disableCollectASA(...)  
+   * iOS only 
+```typescript  
+disableCollectASA(stop: AFDisable) => Promise<void>  
+```  
+  
+Opt-out of Apple Search Ads attributions.  
+  
+| Param      | Type                                            |  
+| ---------- | ----------------------------------------------- |  
+| **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### setHost(...)  
+  
+```typescript  
+setHost(hostName: AFHost) => Promise<void>  
+```  
+  
+Set a custom host.  
+  
+| Param          | Type                                      |  
+| -------------- | ----------------------------------------- |  
+| **`hostName`** | <code><a href="#afhost">AFHost</a></code> |  
+  
+**Returns:** <code>Promise<void></code>   
+  
+--------------------  
+  
+  
+### generateInviteLink(...)  
+  
+```typescript  
+generateInviteLink(params: AFLinkGenerator) => Promise<void>  
+```  
+  
+Allowing your existing users to invite their friends and contacts as new users to your app  
+  
+| Param        | Type                                                        |  
+| ------------ | ----------------------------------------------------------- |  
+| **`params`** | <code><a href="#aflinkgenerator">AFLinkGenerator</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  
+--------------------  
+  
+  
+### validateAndLogInAppPurchaseAndroid(...)  
+   * Android only 
+```typescript  
+validateAndLogInAppPurchaseAndroid(purchaseData: AFAndroidInAppPurchase) => Promise<void>  
+```  
+  
+API for server verification of in-app purchases. An af_purchase event with the relevant values will be automatically logged if the validation is successful.  
+  
+| Param              | Type                                                                      |  
+| ------------------ | ------------------------------------------------------------------------- |  
+| **`purchaseData`** | <code><a href="#afandroidinapppurchase">AFAndroidInAppPurchase</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
+  
+--------------------  
+  
+  
+### validateAndLogInAppPurchaseIos(...)  
+   * iOS only 
+```typescript  
+validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void>  
+```  
+  
+| Param              | Type                                                              |  
+| ------------------ | ----------------------------------------------------------------- |  
+| **`purchaseData`** | <code><a href="#afiosinapppurchase">AFIosInAppPurchase</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
+  
+--------------------  
+  
+  
+### getSdkVersion()  
+  
+```typescript  
+getSdkVersion() => Promise<void>  
+```  
+  
+Get the AppsFlyer SDK version used in app.  
+  
+**Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
+  
+--------------------  
+  
+  
+### enableFacebookDeferredApplinks(...)  
+  
+```typescript  
+enableFacebookDeferredApplinks(enable: AFFbDAL) => Promise<void>  
+```  
+  
+Enable the collection of Facebook Deferred AppLinks. Requires Facebook SDK and Facebook app on target/client device.  
+This API must be invoked before initializing the AppsFlyer SDK in order to function properly.  
+  
+| Param        | Type                                        |  
+| ------------ | ------------------------------------------- |  
+| **`enable`** | <code><a href="#affbdal">AFFbDAL</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
+  
+--------------------  
+  
+  
+### sendPushNotificationData(...)  
+  
+```typescript  
+sendPushNotificationData(payload: AFPushPayload) => Promise<void>  
+```  
+  
+Measure and get data from push-notification campaigns.  
+  
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`payload`** | <code><a href="#afpushpayload">AFPushPayload</a></code> |  
+  
+**Returns:** <code>Promise<void></code>   
+  
+--------------------  
+  
+  
+## Interfaces  
+  
+  
+#### PluginListenerHandle  
+  
+| Prop         | Type                      |  
+| ------------ | ------------------------- |  
+| **`remove`** | <code>() =&gt; any</code> |  
+  
+  
+#### OnConversionDataResult  
+  
+| Prop               | Type                |  
+| ------------------ | ------------------- |  
+| **`callbackName`** | <code>string</code> |  
+| **`errorMessage`** | <code>string</code> |  
+| **`data`** | <code>any</code>    |  
+  
+  
+#### OnAppOpenAttribution  
+  
+| Prop               | Type                |  
+| ------------------ | ------------------- |  
+| **`callbackName`** | <code>string</code> |  
+| **`errorMessage`** | <code>string</code> |  
+| **`data`** | <code>any</code>    |  
+  
+  
+#### OnDeepLink  
+  
+| Prop           | Type                |  
+| -------------- | ------------------- |  
+| **`status`** | <code>string</code> |  
+| **`error`** | <code>string</code> |  
+| **`deepLink`** | <code>any</code>    |  
+  
+  
+#### AFInit  
+  
+| Prop                               | Type                 |  
+| ---------------------------------- | -------------------- |  
+| **`devKey`** | <code>string</code>  |  
+| **`appID`** | <code>string</code>  |  
+| **`isDebug`** | <code>boolean</code> |  
+| **`waitForATTUserAuthorization`** | <code>number</code>  |  
+| **`registerConversionListener`** | <code>boolean</code> |  
+| **`registerOnAppOpenAttribution`** | <code>boolean</code> |  
+| **`registerOnDeepLink`** | <code>boolean</code> |  
+| **`useUninstallSandbox`** | <code>boolean</code> |  
+| **`useReceiptValidationSandbox`** | <code>boolean</code> |  
+| **`minTimeBetweenSessions`** | <code>number</code>  |  
+  
+  
+#### AFRes  
+  
+| Prop      | Type                |  
+| --------- | ------------------- |  
+| **`res`** | <code>string</code> |  
+  
+  
+#### AFEvent  
+  
+| Prop             | Type                |  
+| ---------------- | ------------------- |  
+| **`eventName`** | <code>string</code> |  
+| **`eventValue`** | <code>any</code>    |  
+  
+  
+#### AFCuid  
+  
+| Prop       | Type                |  
+| ---------- | ------------------- |  
+| **`cuid`** | <code>string</code> |  
+  
+  
+#### AFCurrency  
+  
+| Prop               | Type                |  
+| ------------------ | ------------------- |  
+| **`currencyCode`** | <code>string</code> |  
+  
+  
+#### AFUninstall  
+  
+| Prop        | Type                |  
+| ----------- | ------------------- |  
+| **`token`** | <code>string</code> |  
+  
+  
+#### AFOnelinkID  
+  
+| Prop            | Type                |  
+| --------------- | ------------------- |  
+| **`onelinkID`** | <code>string</code> |  
+  
+  
+#### AFOnelinkDomain  
+  
+| Prop          | Type            |  
+| ------------- | --------------- |  
+| **`domains`** | <code>{}</code> |  
+  
+  
+#### AFAppendToDeepLink  
+  
+| Prop             | Type                                            |  
+| ---------------- | ----------------------------------------------- |  
+| **`contains`** | <code>string</code>                             |  
+| **`parameters`** | <code><a href="#stringmap">StringMap</a></code> |  
+  
+  
+#### StringMap  
+  
+  
+#### AFUrls  
+  
+| Prop       | Type            |  
+| ---------- | --------------- |  
+| **`urls`** | <code>string[]</code> |  
+  
+  
+#### AFPath  
+  
+| Prop       | Type            |  
+| ---------- | --------------- |  
+| **`path`** | <code>string[]</code> |  
+  
+  
+#### AFFilters  
+  
+| Prop          | Type            |  
+| ------------- | --------------- |  
+| **`filters`** | <code>string[]</code> |  
+  
+  
+#### AFData  
+  
+| Prop                 | Type             |  
+| -------------------- | ---------------- |  
+| **`additionalData`** | <code>any</code> |  
+  
+  
+#### AFUid  
+  
+| Prop      | Type                |  
+| --------- | ------------------- |  
+| **`uid`** | <code>string</code> |  
+  
+  
+#### AFAnonymizeUser  
+  
+| Prop                | Type                 |  
+| ------------------- | -------------------- |  
+| **`anonymizeUser`** | <code>boolean</code> |  
+  
+  
+#### AFStop  
+  
+| Prop       | Type                 |  
+| ---------- | -------------------- |  
+| **`stop`** | <code>boolean</code> |  
+  
+  
+#### AFIsStopped  
+  
+| Prop            | Type                 |  
+| --------------- | -------------------- |  
+| **`isStopped`** | <code>boolean</code> |  
+  
+  
+#### AFDisable  
+  
+| Prop                | Type                 |  
+| ------------------- | -------------------- |  
+| **`shouldDisable`** | <code>boolean</code> |  
+  
+  
+#### AFHost  
+  
+| Prop                 | Type                |  
+| -------------------- | ------------------- |  
+| **`hostPrefixName`** | <code>string</code> |  
+| **`hostName`** | <code>string</code> |  
+  
+  
+#### AFLinkGenerator  
+  
+| Prop                     | Type                                            |  
+| ------------------------ | ----------------------------------------------- |  
+| **`brandDomain`** | <code>string</code>                             |  
+| **`campaign`** | <code>string</code>                             |  
+| **`channel`** | <code>string</code>                             |  
+| **`referrerName`** | <code>string</code>                             |  
+| **`referrerImageURL`** | <code>string</code>                             |  
+| **`referrerCustomerId`** | <code>string</code>                             |  
+| **`baseDeeplink`** | <code>string</code>                             |  
+| **`addParameters`** | <code><a href="#stringmap">StringMap</a></code> |  
+  
+  
+#### AFLink  
+  
+| Prop       | Type                |  
+| ---------- | ------------------- |  
+| **`link`** | <code>string</code> |  
+  
+  
+#### AFAndroidInAppPurchase  
+  
+| Prop               | Type                |  
+| ------------------ | ------------------- |  
+| **`publicKey`** | <code>string</code> |  
+| **`signature`** | <code>string</code> |  
+| **`purchaseData`** | <code>string</code> |  
+| **`price`** | <code>string</code> |  
+  
+  
+#### AFIosInAppPurchase  
+  
+| Prop                | Type                |  
+| ------------------- | ------------------- |  
+| **`inAppPurchase`** | <code>string</code> |  
+| **`price`** | <code>string</code> |  
+| **`transactionId`** | <code>string</code> |  
+  
+  
+#### AFFbDAL  
+  
+| Prop                    | Type                 |  
+| ----------------------- | -------------------- |  
+| **`enableFacebookDAL`** | <code>boolean</code> |  
+  
+  
+#### AFPushPayload  
+  
+| Prop              | Type                                            |  
+| ----------------- | ----------------------------------------------- |  
+| **`pushPayload`** | <code><a href="#stringmap">StringMap</a></code> |  
+  
+  
+## Enums  
+  
+  
+#### AFConstants  
+  
+| Members                       | Value                                  |  
+| ----------------------------- | -------------------------------------- |  
+| **`onConversionDataSuccess`** | <code>'onConversionDataSuccess'</code> |  
+| **`onConversionDataFail`** | <code>'onConversionDataFail'</code>    |  
+| **`onAppOpenAttribution`** | <code>'onAppOpenAttribution'</code>    |  
+| **`onAttributionFailure`** | <code>'onAttributionFailure'</code>    |  
+| **`CONVERSION_CALLBACK`** | <code>'conversion_callback'</code>     |  
+| **`OAOA_CALLBACK`** | <code>'oaoa_callback'</code>           |  
+| **`UDL_CALLBACK`** | <code>'udl_callback'</code>            |  
+  
+</docgen-api>
