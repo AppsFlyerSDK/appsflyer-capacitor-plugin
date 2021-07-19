@@ -66,7 +66,19 @@ addListener(eventName: AFConstants.CONVERSION_CALLBACK, listenerFunc: (event: On
 | **`listenerFunc`** | <code>(event: <a href="#onconversiondataresult">OnConversionDataResult</a>) =&gt; void</code> |  
   
 **Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>  
-  
+**Example:**
+```typescript
+  AppsFlyer.addListener(AFConstants.CONVERSION_CALLBACK, event => {
+      alert('CONVERSION_CALLBACK ~~>' + JSON.stringify(event));
+      if (event.callbackName === AFConstants.onConversionDataSuccess) {
+        console.log(AFConstants.onConversionDataSuccess);
+      } else {
+        console.log(AFConstants.onConversionDataFail);
+      }
+    });
+```
+See also Deferred Deep Linking guide [here](/Guides.md#handle-deeplinking).
+
 --------------------  
   
   
@@ -82,7 +94,20 @@ addListener(eventName: AFConstants.OAOA_CALLBACK, listenerFunc: (event: OnAppOpe
 | **`listenerFunc`** | <code>(event: <a href="#onappopenattribution">OnAppOpenAttribution</a>) =&gt; void</code> |  
   
 **Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>  
-  
+  ```typescript
+ AppsFlyer.addListener(AFConstants.OAOA_CALLBACK, res => {
+      alert('OAOA_CALLBACK ~~>' + JSON.stringify(res));
+      if (res.callbackName === AFConstants.onAppOpenAttribution) {
+        console.log(AFConstants.onAppOpenAttribution);
+      } else {
+        console.log(AFConstants.onAttributionFailure);
+      }
+    });
+```
+    
+See also Direct Deep Linking guide [here](/Guides.md#deferred-deep-linking).
+
+
 --------------------  
   
   
@@ -98,7 +123,21 @@ addListener(eventName: AFConstants.UDL_CALLBACK, listenerFunc: (event: OnDeepLin
 | **`listenerFunc`** | <code>(event: <a href="#ondeeplink">OnDeepLink</a>) =&gt; void</code> |  
   
 **Returns:** <code><a href="#pluginlistenerhandle">PluginListenerHandle</a></code>  
-  
+  ```typescript
+   AppsFlyer.addListener(AFConstants.UDL_CALLBACK, res => {
+      alert('UDL_CALLBACK ~~>' + JSON.stringify(res));
+      if (res.status === 'FOUND') {
+        console.log('deep link found');
+      } else if (res.status === 'ERROR') {
+        console.log('deep link error');
+      }else{
+        console.log('deep link not found');
+      }
+    });
+```
+See also Unified Deeplinking guide [here](/Guides.md#unified-deep-linking).
+
+
 --------------------  
   
   
@@ -115,7 +154,22 @@ Use this method to initialize and start AppsFlyer SDK. This API should be called
 | **`options`** | <code><a href="#afinit">AFInit</a></code> |  
   
 **Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
-  
+  ```typescript
+      const options: AFInit = {
+        appID: '1234567890',  // replace with your app ID.
+        devKey: 'your_dev_key',   // replace with your dev key.
+        isDebug: true,
+        waitForATTUserAuthorization: 10, // for iOS 14 and higher
+        registerOnDeepLink: true,
+        registerConversionListener: true,
+      };
+    AppsFlyer.initSDK(options)
+	    .then(res => alert(JSON.stringify(res)))
+	    .catch(e =>alert(e));  
+```
+See also Init SDK guide [here](/Guides.md#init-sdk).
+
+
 --------------------  
   
   
@@ -132,7 +186,22 @@ Log an in-app event.
 | **`data`** | <code><a href="#afevent">AFEvent</a></code> |  
   
 **Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
-  
+  ```typescript
+      const data: AFEvent = {
+      eventName: 'test',
+      eventValue: {
+        af_revenue: 956,
+        af_receipt_id: 'id536',
+        af_currency: 'USD'
+      }
+    };
+    AppsFlyer.logEvent(data)
+      .then(r => alert('logEvent ~~>' + r.res))
+      .catch(err => alert('logEvent err ~~>' + err));
+```
+See also Log Event guide [here](/Guides.md#logevent).
+
+
 --------------------  
   
   
@@ -150,7 +219,9 @@ This ID is available in raw-data reports and in the Postback APIs for cross-refe
 | **`cuid`** | <code><a href="#afcuid">AFCuid</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+      AppsFlyer.setCustomerUserId({cuid: 'your_cuid_here'});
+```
 --------------------  
   
   
@@ -167,7 +238,9 @@ Sets the currency for in-app purchases. The currency code should be a 3 characte
 | **`currencyCode`** | <code><a href="#afcurrency">AFCurrency</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.setCurrencyCode({currencyCode: 'ILS'});
+```
 --------------------  
   
   
@@ -185,7 +258,12 @@ updateServerUninstallToken(token: AFUninstall) => Promise<void>
 | **`token`** | <code><a href="#afuninstall">AFUninstall</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+  AppsFlyer.updateServerUninstallToken({token: 'replace_with_token'});
+```
+See also Uninstall guide [here](/Guides.md#uninstall).
+
+
 --------------------  
   
   
@@ -202,7 +280,9 @@ Set the OneLink ID that should be used for attributing user-Invite. The link tha
 | **`id`** | <code><a href="#afonelinkid">AFOnelinkID</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.setAppInviteOneLink({onelinkID: 'ymod'});
+```
 --------------------  
   
   
@@ -219,7 +299,10 @@ In order for AppsFlyer SDK to successfully resolve hidden (decoded in shortlink 
 | **`domains`** | <code><a href="#afonelinkdomain">AFOnelinkDomain</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.setOneLinkCustomDomain({domains:
+ ['promotion.greatapp.com', 'click.greatapp.com', 'deals.greatapp.com']});
+```
 --------------------  
   
   
@@ -239,7 +322,16 @@ is_retargeting must be set to true
 | **`data`** | <code><a href="#afappendtodeeplink">AFAppendToDeepLink</a></code> |  
   
 **Returns:** <code>Promise<void></code>   
-  
+  ```typescript
+ AppsFlyer.appendParametersToDeepLinkingURL({
+      contains: 'appsflyer',
+      parameters: {
+        is_retargeting: 'true', //Required
+        pid: 'af_plugin', //Required
+        my_param: 'xyz'
+      }
+    });
+```
 --------------------  
   
   
@@ -257,7 +349,9 @@ Advertisers can wrap an AppsFlyer OneLink within another Universal Link. This Un
 | **`urls`** | <code><a href="#afurls">AFUrls</a></code> |  
   
 **Returns:** <code>Promise<void></code>   
-  
+  ```typescript
+    AppsFlyer.setResolveDeepLinkURLs({urls: ['af', 'appsflyer']});
+```
 --------------------  
   
   
@@ -274,7 +368,13 @@ Configures how the SDK extracts deep link values from push notification payloads
 | **`path`** | <code><a href="#afpath">AFPath</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+    AppsFlyer.addPushNotificationDeepLinkPath({path: ['appsflyer', 'capacitor', 'plugin']});
+```
+More info can be found [here](https://support.appsflyer.com/hc/en-us/articles/207364076-Measuring-push-notification-re-engagement-campaigns#configure-push-notification-deep-link-resolution).
+
+
+
 --------------------  
   
   
@@ -291,7 +391,9 @@ Stops events from propagating to the specified AppsFlyer partners.
 | **`filters`** | <code><a href="#affilters">AFFilters</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.setSharingFilter({filters: ['google_int']});
+```
 --------------------  
   
   
@@ -304,7 +406,9 @@ setSharingFilterForAllPartners() => Promise<void>
 Stops events from propagating to all AppsFlyer partners. Overwrites setSharingFilter.  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+    AppsFlyer.setSharingFilterForAllPartners();
+```
 --------------------  
   
   
@@ -321,7 +425,14 @@ Set additional data to be sent to AppsFlyer. See
 | **`additionalData`** | <code><a href="#afdata">AFData</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.setAdditionalData({
+      additionalData: {
+        capacitor: 'plugin',
+        apps: 'Flyer'
+      }
+    });
+```
 --------------------  
   
   
@@ -334,7 +445,10 @@ getAppsFlyerUID() => Promise<void>
 Get AppsFlyer's unique device ID (created for every new install of an app).  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.getAppsFlyerUID()
+      .then(res => alert('AppsFlyer ID:' + res.uid));
+```
 --------------------  
   
   
@@ -351,7 +465,9 @@ End User Opt-Out from AppsFlyer analytics (Anonymize user data).
 | **`anonymize`** | <code><a href="#afanonymizeuser">AFAnonymizeUser</a></code> |  
   
 **Returns:** <code>Promise<void></code>   
-  
+  ```typescript
+AppsFlyer.anonymizeUser({anonymizeUser: true});
+```
 --------------------  
   
   
@@ -369,7 +485,10 @@ Useful when implementing user opt-in/opt-out.
 | **`stop`** | <code><a href="#afstop">AFStop</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.stop({stop: true}) //change state
+          .then(r => alert('isStopped: ' + r.isStopped)); //show state after change
+```
 --------------------  
   
   
@@ -386,7 +505,9 @@ Opt-out of SKAdNetwork
 | **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.disableSKAdNetwork({shouldDisable:true});
+```
 --------------------  
   
   
@@ -403,7 +524,9 @@ Disables collection of various Advertising IDs by the SDK. This includes Apple I
 | **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.disableAdvertisingIdentifier({shouldDisable:true});
+```
 --------------------  
   
   
@@ -420,7 +543,9 @@ Opt-out of Apple Search Ads attributions.
 | **`stop`** | <code><a href="#afdisable">AFDisable</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+AppsFlyer.disableCollectASA({shouldDisable:true});
+```
 --------------------  
   
   
@@ -437,7 +562,9 @@ Set a custom host.
 | **`hostName`** | <code><a href="#afhost">AFHost</a></code> |  
   
 **Returns:** <code>Promise<void></code>   
-  
+  ```typescript
+AppsFlyer.setHost({hostName:'ce',hostPrefixName:'af'});
+```
 --------------------  
   
   
@@ -454,7 +581,15 @@ Allowing your existing users to invite their friends and contacts as new users t
 | **`params`** | <code><a href="#aflinkgenerator">AFLinkGenerator</a></code> |  
   
 **Returns:** <code>Promise<void></code>  
-  
+  ```typescript
+  AppsFlyer.generateInviteLink({
+      addParameters: {code: '1256abc', page: '152'},
+      campaign: 'appsflyer_plugin',
+      channel: 'sms'
+    })
+      .then(r => alert('user invite link: ' + r.link))
+      .catch(e => alert('user invite error: ' + e));
+```
 --------------------  
   
   
@@ -471,7 +606,18 @@ API for server verification of in-app purchases. An af_purchase event with the r
 | **`purchaseData`** | <code><a href="#afandroidinapppurchase">AFAndroidInAppPurchase</a></code> |  
   
 **Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
-  
+  ```typescript
+	AppsFlyer.validateAndLogInAppPurchaseAndroid({
+        additionalParameters: {aa: 'cc'},
+        currency: 'usd',
+        price: '20',
+        signature: 'the_signature',
+        publicKey: 'your_public_key',
+        purchaseData: 'the_purchase_data'
+      })
+        .then(r => alert('validateAndLogInAppPurchase success: ' + r.res))
+        .catch(e => alert('validateAndLogInAppPurchase error: ' + e));
+```
 --------------------  
   
   
@@ -486,7 +632,17 @@ validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void
 | **`purchaseData`** | <code><a href="#afiosinapppurchase">AFIosInAppPurchase</a></code> |  
   
 **Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
-  
+  ```typescript
+     AppsFlyer.validateAndLogInAppPurchaseIos({
+        additionalParameters: {aa: 'cc'},
+        currency: 'usd',
+        price: '20',
+        inAppPurchase: 'productIdentifier',
+        transactionId: 'transactionId'
+      })
+        .then(r => alert('validateAndLogInAppPurchase success: ' + r.res))
+        .catch(e => alert('validateAndLogInAppPurchase error: ' + JSON.stringify(e)));
+```
 --------------------  
   
   
@@ -499,7 +655,10 @@ getSdkVersion() => Promise<void>
 Get the AppsFlyer SDK version used in app.  
   
 **Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
-  
+  ```typescript
+AppsFlyer.getSdkVersion()
+      .then(v => alert('SDK Version: ' + v.res));
+```
 --------------------  
   
   
@@ -517,7 +676,11 @@ This API must be invoked before initializing the AppsFlyer SDK in order to funct
 | **`enable`** | <code><a href="#affbdal">AFFbDAL</a></code> |  
   
 **Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
-  
+  ```typescript
+AppsFlyer.enableFacebookDeferredApplinks({enableFacebookDAL: true})
+      .then(res => alert(res.res))
+      .catch(e => alert(e));
+```
 --------------------  
   
   
@@ -534,7 +697,11 @@ Measure and get data from push-notification campaigns.
 | **`payload`** | <code><a href="#afpushpayload">AFPushPayload</a></code> |  
   
 **Returns:** <code>Promise<void></code>   
-  
+  ```typescript
+ AppsFlyer.sendPushNotificationData({
+      pushPayload: {af: '{"pid":"media_int","is_retargeting":"true", "c":"test_campaign"}'} //replace with push payload
+    });
+```
 --------------------  
   
   
