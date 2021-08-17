@@ -82,7 +82,6 @@ export interface AFData{additionalData: any}
 export interface AFDisable{shouldDisable: boolean}
 export interface AFFbDAL{enableFacebookDAL: boolean}
 export interface AFPushPayload{pushPayload: StringMap}
-export interface AFLanguage{language: string}
 export interface AFHost{hostPrefixName: string;
     hostName: string;
 }

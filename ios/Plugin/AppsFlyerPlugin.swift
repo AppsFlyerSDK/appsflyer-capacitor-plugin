@@ -387,24 +387,13 @@ public class AppsFlyerPlugin: CAPPlugin {
     }
     
     
-    @objc func setCurrentDeviceLanguage(_ call: CAPPluginCall){
-        guard let language = call.getString(AppsFlyerConstants.AF_LANGUAGE) else {
-            call.reject("cannot extract the language value")
-            return
-        }
-        AppsFlyerLib.shared().currentDeviceLanguage = language
-        call.resolve(["res": "ok"])
-        
-    }
-    
-    
     
 }
 
 extension AppsFlyerPlugin{
     private func reportBridgeReady(){
         AppsFlyerAttribution.shared.bridgReady = true
-        NotificationCenter.default.post(name: Notification.Name.appsflyerBridge, object: nil)
+        NotificationCenter.default.post(name: Notification.Name(AppsFlyerConstants.AF_BRIDGE_SET), object: nil)
     }
     
     @objc  private func sendLaunch(){
