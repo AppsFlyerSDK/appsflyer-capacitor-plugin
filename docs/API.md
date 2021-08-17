@@ -18,35 +18,36 @@ The list of available methods for this plugin is described below.
   
 <docgen-index>  
   
-* [`addListener(...) - Conversion Data`](#gcd)  
-* [`addListener(...) - onAppOpenAttribution`](#oaoa)  
-* [`addListener(...) - onDeepLinking`](#udl)  
-* [`initSDK(...)`](#initsdk)  
-* [`logEvent(...)`](#logevent)  
-* [`setCustomerUserId(...)`](#setcustomeruserid)  
-* [`setCurrencyCode(...)`](#setcurrencycode)  
-* [`updateServerUninstallToken(...)`](#updateserveruninstalltoken)  
-* [`setAppInviteOneLink(...)`](#setappinviteonelink)  
-* [`setOneLinkCustomDomain(...)`](#setonelinkcustomdomain)  
-* [`appendParametersToDeepLinkingURL(...)`](#appendparameterstodeeplinkingurl)  
-* [`setResolveDeepLinkURLs(...)`](#setresolvedeeplinkurls)  
-* [`addPushNotificationDeepLinkPath(...)`](#addpushnotificationdeeplinkpath)  
-* [`setSharingFilter(...)`](#setsharingfilter)  
-* [`setSharingFilterForAllPartners()`](#setsharingfilterforallpartners)  
-* [`setAdditionalData(...)`](#setadditionaldata)  
-* [`getAppsFlyerUID()`](#getappsflyeruid)  
-* [`anonymizeUser(...)`](#anonymizeuser)  
-* [`stop(...)`](#stop)  
-* [`disableSKAdNetwork(...)`](#disableskadnetwork)  
-* [`disableAdvertisingIdentifier(...)`](#disableadvertisingidentifier)  
-* [`disableCollectASA(...)`](#disablecollectasa)  
-* [`setHost(...)`](#sethost)  
-* [`generateInviteLink(...)`](#generateinvitelink)  
-* [`validateAndLogInAppPurchaseAndroid(...)`](#validateandloginapppurchaseandroid)  
-* [`validateAndLogInAppPurchaseIos(...)`](#validateandloginapppurchaseios)  
-* [`getSdkVersion()`](#getsdkversion)  
-* [`enableFacebookDeferredApplinks(...)`](#enablefacebookdeferredapplinks)  
-* [`sendPushNotificationData(...)`](#sendpushnotificationdata)  
+* [`addListener - Conversion Data`](#gcd)  
+* [`addListener - onAppOpenAttribution`](#oaoa)  
+* [`addListener - onDeepLinking`](#udl)  
+* [`initSDK`](#initsdk)  
+* [`logEvent`](#logevent)  
+* [`setCustomerUserId`](#setcustomeruserid)  
+* [`setCurrencyCode`](#setcurrencycode)  
+* [`updateServerUninstallToken`](#updateserveruninstalltoken)  
+* [`setAppInviteOneLink`](#setappinviteonelink)  
+* [`setOneLinkCustomDomain`](#setonelinkcustomdomain)  
+* [`appendParametersToDeepLinkingURL`](#appendparameterstodeeplinkingurl)  
+* [`setResolveDeepLinkURLs`](#setresolvedeeplinkurls)  
+* [`addPushNotificationDeepLinkPath`](#addpushnotificationdeeplinkpath)  
+* [`setSharingFilter`](#setsharingfilter)  
+* [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  
+* [`setAdditionalData`](#setadditionaldata)  
+* [`getAppsFlyerUID`](#getappsflyeruid)  
+* [`anonymizeUser`](#anonymizeuser)  
+* [`stop`](#stop)  
+* [`disableSKAdNetwork`](#disableskadnetwork)  
+* [`disableAdvertisingIdentifier`](#disableadvertisingidentifier)  
+* [`disableCollectASA`](#disablecollectasa)  
+* [`setHost`](#sethost)  
+* [`generateInviteLink`](#generateinvitelink)  
+* [`validateAndLogInAppPurchaseAndroid`](#validateandloginapppurchaseandroid)  
+* [`validateAndLogInAppPurchaseIos`](#validateandloginapppurchaseios)  
+* [`getSdkVersion`](#getsdkversion)  
+* [`enableFacebookDeferredApplinks`](#enablefacebookdeferredapplinks)  
+* [`sendPushNotificationData`](#sendpushnotificationdata)  
+* [`setCurrentDeviceLanguage`](#setcurrentdevicelanguage)  
  
   
 </docgen-index>  
@@ -54,7 +55,7 @@ The list of available methods for this plugin is described below.
 <docgen-api>  
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->  
   
-### <a id="gcd"> addListener(...)  - Conversion Data
+### <a id="gcd"> addListener  - Conversion Data
   
 ```typescript  
 addListener(eventName: AFConstants.CONVERSION_CALLBACK, listenerFunc: (event: OnConversionDataResult) => void) => PluginListenerHandle  
@@ -82,7 +83,7 @@ See also Deferred Deep Linking guide [here](/Guides.md#handle-deeplinking).
 --------------------  
   
   
-### <a id="oaoa"> addListener(...)  - onAppOpenAttribution
+### <a id="oaoa"> addListener  - onAppOpenAttribution
   
 ```typescript  
 addListener(eventName: AFConstants.OAOA_CALLBACK, listenerFunc: (event: OnAppOpenAttribution) => void) => PluginListenerHandle  
@@ -111,7 +112,7 @@ See also Direct Deep Linking guide [here](/Guides.md#deferred-deep-linking).
 --------------------  
   
   
-### <a id="udl"> addListener(...)  - onDeepLinking
+### <a id="udl"> addListener  - onDeepLinking
   
 ```typescript  
 addListener(eventName: AFConstants.UDL_CALLBACK, listenerFunc: (event: OnDeepLink) => void) => PluginListenerHandle  
@@ -141,7 +142,7 @@ See also Unified Deeplinking guide [here](/Guides.md#unified-deep-linking).
 --------------------  
   
   
-### initSDK(...)  
+### initSDK  
   
 ```typescript  
 initSDK(options: AFInit) => Promise<AFRes>  
@@ -173,7 +174,7 @@ See also Init SDK guide [here](/Guides.md#init-sdk).
 --------------------  
   
   
-### logEvent(...)  
+### logEvent  
   
 ```typescript  
 logEvent(data: AFEvent) => Promise<AFRes>  
@@ -205,7 +206,7 @@ See also Log Event guide [here](/Guides.md#logevent).
 --------------------  
   
   
-### setCustomerUserId(...)  
+### setCustomerUserId  
   
 ```typescript  
 setCustomerUserId(cuid: AFCuid) => Promise<void>  
@@ -225,7 +226,7 @@ This ID is available in raw-data reports and in the Postback APIs for cross-refe
 --------------------  
   
   
-### setCurrencyCode(...)  
+### setCurrencyCode  
   
 ```typescript  
 setCurrencyCode(currencyCode: AFCurrency) => Promise<void>  
@@ -244,7 +245,7 @@ AppsFlyer.setCurrencyCode({currencyCode: 'ILS'});
 --------------------  
   
   
-### updateServerUninstallToken(...)  
+### updateServerUninstallToken  
 
 ```typescript  
 updateServerUninstallToken(token: AFUninstall) => Promise<void>  
@@ -267,7 +268,7 @@ See also Uninstall guide [here](/Guides.md#uninstall).
 --------------------  
   
   
-### setAppInviteOneLink(...)  
+### setAppInviteOneLink  
   
 ```typescript  
 setAppInviteOneLink(id: AFOnelinkID) => Promise<void>  
@@ -286,7 +287,7 @@ AppsFlyer.setAppInviteOneLink({onelinkID: 'ymod'});
 --------------------  
   
   
-### setOneLinkCustomDomain(...)  
+### setOneLinkCustomDomain  
   
 ```typescript  
 setOneLinkCustomDomain(domains: AFOnelinkDomain) => Promise<void>  
@@ -306,7 +307,7 @@ AppsFlyer.setOneLinkCustomDomain({domains:
 --------------------  
   
   
-### appendParametersToDeepLinkingURL(...)  
+### appendParametersToDeepLinkingURL  
   
 ```typescript  
 appendParametersToDeepLinkingURL(data: AFAppendToDeepLink) => Promise<void>  
@@ -335,7 +336,7 @@ is_retargeting must be set to true
 --------------------  
   
   
-### setResolveDeepLinkURLs(...)  
+### setResolveDeepLinkURLs  
   
 ```typescript  
 setResolveDeepLinkURLs(urls: AFUrls) => Promise<void>  
@@ -355,7 +356,7 @@ Advertisers can wrap an AppsFlyer OneLink within another Universal Link. This Un
 --------------------  
   
   
-### addPushNotificationDeepLinkPath(...)  
+### addPushNotificationDeepLinkPath  
   
 ```typescript  
 addPushNotificationDeepLinkPath(path: AFPath) => Promise<void>  
@@ -378,7 +379,7 @@ More info can be found [here](https://support.appsflyer.com/hc/en-us/articles/20
 --------------------  
   
   
-### setSharingFilter(...)  
+### setSharingFilter  
   
 ```typescript  
 setSharingFilter(filters: AFFilters) => Promise<void>  
@@ -397,7 +398,7 @@ AppsFlyer.setSharingFilter({filters: ['google_int']});
 --------------------  
   
   
-### setSharingFilterForAllPartners()  
+### setSharingFilterForAllPartners
   
 ```typescript  
 setSharingFilterForAllPartners() => Promise<void>  
@@ -412,7 +413,7 @@ Stops events from propagating to all AppsFlyer partners. Overwrites setSharingFi
 --------------------  
   
   
-### setAdditionalData(...)  
+### setAdditionalData  
   
 ```typescript  
 setAdditionalData(additionalData: AFData) => Promise<void>  
@@ -436,7 +437,7 @@ AppsFlyer.setAdditionalData({
 --------------------  
   
   
-### getAppsFlyerUID()  
+### getAppsFlyerUID
   
 ```typescript  
 getAppsFlyerUID() => Promise<void>  
@@ -452,7 +453,7 @@ AppsFlyer.getAppsFlyerUID()
 --------------------  
   
   
-### anonymizeUser(...)  
+### anonymizeUser  
   
 ```typescript  
 anonymizeUser(anonymize: AFAnonymizeUser) => Promise<void>  
@@ -471,7 +472,7 @@ AppsFlyer.anonymizeUser({anonymizeUser: true});
 --------------------  
   
   
-### stop(...)  
+### stop  
   
 ```typescript  
 stop(stop?: AFStop | undefined) => Promise<void>  
@@ -492,7 +493,7 @@ AppsFlyer.stop({stop: true}) //change state
 --------------------  
   
   
-### disableSKAdNetwork(...)  
+### disableSKAdNetwork  
  * iOS only 
 ```typescript  
 disableSKAdNetwork(stop: AFDisable) => Promise<void>  
@@ -511,7 +512,7 @@ AppsFlyer.disableSKAdNetwork({shouldDisable:true});
 --------------------  
   
   
-### disableAdvertisingIdentifier(...)  
+### disableAdvertisingIdentifier  
   
 ```typescript  
 disableAdvertisingIdentifier(stop: AFDisable) => Promise<void>  
@@ -530,7 +531,7 @@ AppsFlyer.disableAdvertisingIdentifier({shouldDisable:true});
 --------------------  
   
   
-### disableCollectASA(...)  
+### disableCollectASA  
    * iOS only 
 ```typescript  
 disableCollectASA(stop: AFDisable) => Promise<void>  
@@ -549,7 +550,7 @@ AppsFlyer.disableCollectASA({shouldDisable:true});
 --------------------  
   
   
-### setHost(...)  
+### setHost  
   
 ```typescript  
 setHost(hostName: AFHost) => Promise<void>  
@@ -568,7 +569,7 @@ AppsFlyer.setHost({hostName:'ce',hostPrefixName:'af'});
 --------------------  
   
   
-### generateInviteLink(...)  
+### generateInviteLink  
   
 ```typescript  
 generateInviteLink(params: AFLinkGenerator) => Promise<void>  
@@ -593,7 +594,7 @@ Allowing your existing users to invite their friends and contacts as new users t
 --------------------  
   
   
-### validateAndLogInAppPurchaseAndroid(...)  
+### validateAndLogInAppPurchaseAndroid  
    * Android only 
 ```typescript  
 validateAndLogInAppPurchaseAndroid(purchaseData: AFAndroidInAppPurchase) => Promise<void>  
@@ -621,7 +622,7 @@ API for server verification of in-app purchases. An af_purchase event with the r
 --------------------  
   
   
-### validateAndLogInAppPurchaseIos(...)  
+### validateAndLogInAppPurchaseIos  
    * iOS only 
 ```typescript  
 validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void>  
@@ -646,7 +647,7 @@ validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void
 --------------------  
   
   
-### getSdkVersion()  
+### getSdkVersion
   
 ```typescript  
 getSdkVersion() => Promise<void>  
@@ -662,7 +663,7 @@ AppsFlyer.getSdkVersion()
 --------------------  
   
   
-### enableFacebookDeferredApplinks(...)  
+### enableFacebookDeferredApplinks  
   
 ```typescript  
 enableFacebookDeferredApplinks(enable: AFFbDAL) => Promise<void>  
@@ -684,7 +685,7 @@ AppsFlyer.enableFacebookDeferredApplinks({enableFacebookDAL: true})
 --------------------  
   
   
-### sendPushNotificationData(...)  
+### sendPushNotificationData  
   
 ```typescript  
 sendPushNotificationData(payload: AFPushPayload) => Promise<void>  
@@ -704,7 +705,25 @@ Measure and get data from push-notification campaigns.
 ```
 --------------------  
   
+### setCurrentDeviceLanguage
+```typescript  
+setCurrentDeviceLanguage(language: AFLanguage): Promise<AFRes>;
+```  
+
+Set the language of the device. The data will be displayed in Raw Data Reports  
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`language`** | <code><a href="#aflanguage">AFLanguage</a></code> |  
   
+**Returns:** <code>Promise<void></code> 
+
+```typescript  
+    AppsFlyer.setCurrentDeviceLanguage({language: 'en'})
+      .then(res => console.log(res.res))
+      .catch(e => console.log(e));
+```  
+
 ## Interfaces  
   
   
@@ -763,7 +782,12 @@ Measure and get data from push-notification campaigns.
 | Prop      | Type                |  
 | --------- | ------------------- |  
 | **`res`** | <code>string</code> |  
+
+#### AFLanguage  
   
+| Prop      | Type                |  
+| --------- | ------------------- |  
+| **`language`** | <code>string</code> |    
   
 #### AFEvent  
   

@@ -63,7 +63,7 @@ public class AppsFlyerPlugin: CAPPlugin {
         }
         #endif
         
-        NotificationCenter.default.addObserver(self, selector: #selector(sendLaunch), name: Notification.Name("UIApplicationDidBecomeActiveNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(sendLaunch), name: UIApplication.didBecomeActiveNotification, object: nil)
         
         appsflyer.start(completionHandler: { (dictionnary, error) in
             if (error != nil){
@@ -345,7 +345,7 @@ public class AppsFlyerPlugin: CAPPlugin {
                         call.reject((error)?.localizedDescription ?? "error" )
                         return
                     }
-                    call.reject((error)?.localizedDescription ?? "error" , emptyInApp.jsonStringRepresentaiton)
+                    call.reject((error)?.localizedDescription ?? "error" , emptyInApp.jsonStringRepresentation)
                     
                 })
         }else{
@@ -405,12 +405,15 @@ extension AppsFlyerPlugin{
             return
         }
         guard let url =  object["url"] else {
+            afLogger(msg: "handleUrlOpened url is nil")
             return
         }
         guard let options =  object["options"] else {
+            afLogger(msg: "handleUrlOpened options is nil")
+
             return
         }
-        
+        afLogger(msg: "handleUrlOpened with \((url as! URL).absoluteString)")
         AppsFlyerAttribution.shared.handleOpenUrl(open: url as! URL, options: options as! [UIApplication.OpenURLOptionsKey: Any])
         
     }
@@ -421,9 +424,11 @@ extension AppsFlyerPlugin{
         }
         let user = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
         guard let url = object["url"] else {
+            afLogger(msg: "handleUrlOpened options is url")
             return
         }
         user.webpageURL = (url as! URL)
+        afLogger(msg: "handleUniversalLink with \(user.webpageURL?.absoluteString ?? "null")")
         AppsFlyerAttribution.shared.continueUserActivity(userActivity: user)
         
     }
@@ -481,6 +486,10 @@ extension AppsFlyerPlugin : DeepLinkDelegate{
     
 }
 
-
+extension AppsFlyerPlugin{
+    private func afLogger(msg : String){
+        NSLog ("AppsFlyer [Debug][Capacitor]: \(msg)");
+    }
+}
 
 

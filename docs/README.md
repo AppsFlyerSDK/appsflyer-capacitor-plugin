@@ -1,4 +1,4 @@
-<img src="https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin/tree/main/assets/AFLogo_primary.png"  width="600">
+<img src="https://www.appsflyer.com/wp-content/uploads/2016/11/logo-1.svg"  width="600">
 
 # Capacitor AppsFlyer plugin for Android and iOS.
 
@@ -22,7 +22,7 @@
 - [API](#api) 
 
 ## <a id="plugin-build-for"> This plugin is built for
-- iOS AppsFlyerSDK **v6.3.5**
+- iOS AppsFlyerSDK **v6.3.2**
 - Android AppsFlyerSDK **v6.3.2**
 
 ## <a id="installation">📲Installation

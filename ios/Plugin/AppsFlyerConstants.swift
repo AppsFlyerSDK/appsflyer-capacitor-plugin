@@ -8,12 +8,12 @@
 import Foundation
 
 class AppsFlyerConstants {
-    static  let AF_APP_ID = "appID"
+    static let AF_APP_ID = "appID"
     static let AF_DEV_KEY = "devKey"
-    static  let AF_DEBUG = "isDebug"
-    static  let AF_CONVERSION_LISTENER = "registerConversionListener"
+    static let AF_DEBUG = "isDebug"
+    static let AF_CONVERSION_LISTENER = "registerConversionListener"
     static let AF_OAOA = "registerConversionListener"
-    static  let AF_UDL = "registerOnDeepLink"
+    static let AF_UDL = "registerOnDeepLink"
     static let AF_ATT = "waitForATTUserAuthorization"
     static let AF_EVENT_NAME = "eventName"
     static let AF_EVENT_VALUE = "eventValue"
@@ -48,7 +48,7 @@ class AppsFlyerConstants {
     static let AF_REFERRER_CUSTOMER_ID = "referrerCustomerId"
     static let AF_BASE_DEEPLINK = "baseDeeplink"
     static let AF_LINK_READY = "link"
-    static let   AF_CURRENCY = "currency"
+    static let AF_CURRENCY = "currency"
     static let AF_PRICE = "price"
     static let AF_ADDITIONAL_PARAMETERS = "additionalParameters"
     static let AF_IN_APP_PURCHASE = "inAppPurchase"
@@ -58,4 +58,6 @@ class AppsFlyerConstants {
     static let AF_MIN_TIME = "minTimeBetweenSessions"
     static let AF_PARAMETERS = "parameters"
     static let AF_CONTAINS = "contains"
+    static let AF_LANGUAGE = "language"
+    
 }

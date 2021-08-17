@@ -1,6 +1,7 @@
 {
   "name": "appsflyer-capacitor-plugin",
-  "version": "6.3.2",
+  "version": "6.3.5",
+  "iosSdkVersion": "6.3.5",
   "description": "AppsFlyer SDK plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -22,10 +23,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin.git"
+    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin"
   },
   "bugs": {
-    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin.git/issues"
+    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin/issues"
   },
   "keywords": [
     "capacitor",

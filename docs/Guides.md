@@ -109,9 +109,9 @@ Since users may or may not have the mobile app installed, there are 2 types of d
 2. Direct Deep Linking (**Legacy APIs**)  - Directly serving personalized content to existing users, which already have the mobile app installed.  
 3. Unified deep linking - Unified deep linking sends new and existing users to a specific in-app activity as soon as the app is opened.<br>
 
-For more info about <ins>Deferred Deep Linking</ins> please check out the [OneLink™ Deferred deep linking Guide](https://dev.appsflyer.com/hc/docs/android-legacy-apis#deferred-deep-linking).
-For more info about <ins>Direct Deep linking</ins> please check out the [OneLink™ Direct Deep Linking Guide](https://dev.appsflyer.com/hc/docs/android-legacy-apis#deep-linking).
-For more info about <ins>Unified Deep Linking</ins> please check out the [OneLink™ Direct Deep Linking Guide](https://dev.appsflyer.com/hc/docs/unified-deep-linking-udl).
+For more info about <ins>Deferred Deep Linking</ins> please check out the [OneLink™ Deferred deep linking Guide](https://dev.appsflyer.com/hc/docs/android-legacy-apis#deferred-deep-linking). <br>
+For more info about <ins>Direct Deep linking</ins> please check out the [OneLink™ Direct Deep Linking Guide](https://dev.appsflyer.com/hc/docs/android-legacy-apis#deep-linking). <br>
+For more info about <ins>Unified Deep Linking</ins> please check out the [OneLink™ Direct Deep Linking Guide](https://dev.appsflyer.com/hc/docs/unified-deep-linking-udl). <br>
 
 ### ❗️Important!
 * **Deferred deep linking using the legacy method of onConversionDataSuccess may not work for iOS 14.5+, since it requires attribution data that may not be available due to privacy protection.

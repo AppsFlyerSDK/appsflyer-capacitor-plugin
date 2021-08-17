@@ -1,7 +1,7 @@
 package capacitor.plugin.appsflyer.sdk
 
 object AppsFlyerConstants {
-    const val TAG = "AppsFlyer_6.3.20_Cap:"
+    const val TAG = "AppsFlyer_6.3.50_Cap"
     const val AF_APP_ID = "appID"
     const val AF_DEV_KEY = "devKey"
     const val AF_DEBUG = "isDebug"
@@ -49,7 +49,7 @@ object AppsFlyerConstants {
     const val AF_MIN_TIME = "minTimeBetweenSessions"
     const val AF_PARAMETERS= "parameters"
     const val AF_CONTAINS = "contains"
-
+    const val AF_NULL_DEV_KEY = "Dev key is null"
 
 
 

@@ -32,7 +32,7 @@ extension String {
 }
 
 extension Dictionary {
-    var jsonStringRepresentaiton: String? {
+    var jsonStringRepresentation: String? {
         guard let theJSONData = try? JSONSerialization.data(withJSONObject: self,
                                                             options: []) else {
             return nil
@@ -40,4 +40,9 @@ extension Dictionary {
 
         return String(data: theJSONData, encoding: .utf8)
     }
+}
+
+extension Notification.Name{
+    public static let appsflyerBridge = Notification.Name(AppsFlyerConstants.AF_BRIDGE_SET)
+
 }
