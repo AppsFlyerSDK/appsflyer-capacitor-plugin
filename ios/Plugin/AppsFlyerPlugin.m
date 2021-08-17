@@ -30,9 +30,10 @@ CAP_PLUGIN(AppsFlyerPlugin, "AppsFlyerPlugin",
            CAP_PLUGIN_METHOD(getSdkVersion, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(enableFacebookDeferredApplinks, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(sendPushNotificationData, CAPPluginReturnNone);
+           CAP_PLUGIN_METHOD(setCurrentDeviceLanguage, CAPPluginReturnPromise);
 
            
-
+           
            
 
 

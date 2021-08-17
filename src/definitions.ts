@@ -27,6 +27,7 @@ import type {
     AFUid,
     AFUninstall,
     AFUrls,
+    AFLanguage,
     OnAppOpenAttribution,
     OnConversionDataResult,
     OnDeepLink
@@ -187,6 +188,12 @@ export interface AppsFlyerPlugin {
      * Measure and get data from push-notification campaigns.
      */
     sendPushNotificationData(payload: AFPushPayload): Promise<void>;
+
+    /**
+     * Set the language of the device. The data will be displayed in Raw Data Reports
+     * 
+     */
+    setCurrentDeviceLanguage(language: AFLanguage): Promise<AFRes>;
 
 }
 
