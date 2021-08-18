@@ -1,0 +1,30 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      AppsFlyer
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">AppsFlyer</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div id="container">
+    <strong>AppsFlyer ionic-cordova App</strong>
+    <ion-button color="primary" (click)="logEvent()">Log event</ion-button>
+    <ion-button color="primary" (click)="brandedDomains()">set branded domains</ion-button>
+    <ion-button color="primary" (click)="resolveDeepLinksUrls()">set Resolve DeepLink</ion-button>
+    <ion-button color="primary" (click)="getSDKVersion()">get sdk version</ion-button>
+    <ion-button color="primary" (click)="getAppsFlyerID()">get AppsFlyer ID</ion-button>
+    <ion-button color="primary" (click)="anonymizeUser()">Set Anonymize User</ion-button>
+    <ion-button color="primary" (click)="stop()">Stop SDK</ion-button>
+    <ion-button color="primary" (click)="generateInviteLink()">generate Invite Link</ion-button>
+    <ion-button color="primary" (click)="validateAndLogInAppPurchase()">validate And Log IAP</ion-button>
+    <ion-button color="primary" (click)="setSharingFilter()">set Sharing Filter</ion-button>
+    <ion-button color="primary" (click)="setSharingFilterForAllPartners()">set Sharing Filter For All Partners</ion-button>
+  </div>
+</ion-content>
