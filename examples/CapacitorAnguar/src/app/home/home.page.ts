@@ -14,8 +14,8 @@ export class HomePage {
   constructor(public platform: Platform) {
     this.platform.ready().then(() => {
       const options: AFInit = {
-        appID: '1534996322',
-        devKey: '4ux8wjmC9qP6qc3UWZ5Ldh',
+        appID: 'your_ios_app_id',
+        devKey: 'replace_with_your_dev_key',
         isDebug: true,
         waitForATTUserAuthorization: 10,
         registerOnDeepLink: true,
@@ -105,7 +105,7 @@ export class HomePage {
   }
 
   brandedDomains() {
-    AppsFlyer.setOneLinkCustomDomain({domains: ['paz', 'lavi', 'aaa']});
+    AppsFlyer.setOneLinkCustomDomain({domains: ['af', 'lavi', 'aaa']});
     this.myLogger('brandedDomains');
 
   }
@@ -199,7 +199,7 @@ export class HomePage {
     AppsFlyer.setCurrentDeviceLanguage({language: 'en'})
       .then(res => console.log(res.res))
       .catch(e => console.log(e));
-    AppsFlyer.setAppInviteOneLink({onelinkID: 'waF3'}).then();
+    AppsFlyer.setAppInviteOneLink({onelinkID: 'your_onelink_id'}).then();
     AppsFlyer.setCustomerUserId({cuid: 'csadadadad'});
     AppsFlyer.setCurrencyCode({currencyCode: 'ILS'});
     AppsFlyer.updateServerUninstallToken({token: 'fdsffddfbnjdfoiuvhof'});

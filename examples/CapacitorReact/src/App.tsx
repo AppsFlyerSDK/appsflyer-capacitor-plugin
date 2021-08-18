@@ -31,8 +31,8 @@ function initAppsFlyer() {
   setConversions();
   runAppsFlyerAPIs();
   AppsFlyer.initSDK({
-    appID: '1534996322',
-    devKey: '4ux8wjmC9qP6qc3UWZ5Ldh',
+    appID: 'your_ios_app_id',
+    devKey: 'replace_with_your_dev_key',
     isDebug: true,
     waitForATTUserAuthorization: 10,
     registerOnDeepLink: true,
@@ -99,13 +99,13 @@ function runAppsFlyerAPIs() {
   AppsFlyer.setCurrentDeviceLanguage({language: 'en'})
       .then(res => console.log(res.res))
       .catch(e => console.log(e));
-  AppsFlyer.setAppInviteOneLink({onelinkID: 'waF3'}).then();
+  AppsFlyer.setAppInviteOneLink({onelinkID: 'your_onelink_id'}).then();
   AppsFlyer.setCustomerUserId({cuid: 'csadadadad'});
   AppsFlyer.setCurrencyCode({currencyCode: 'ILS'});
   AppsFlyer.updateServerUninstallToken({token: 'fdsffddfbnjdfoiuvhof'});
   AppsFlyer.setOneLinkCustomDomain({domains: ['promotion.greatapp.com', 'click.greatapp.com', 'deals.greatapp.com']});
   AppsFlyer.appendParametersToDeepLinkingURL({
-    contains: 'paz',
+    contains: 'af',
     parameters: {
       is_retargeting: 'true', //Required
       pid: 'cap_app', //Required
@@ -113,7 +113,7 @@ function runAppsFlyerAPIs() {
     }
   });
   AppsFlyer.setResolveDeepLinkURLs({urls: ['af', 'appsflyer']});
-  AppsFlyer.addPushNotificationDeepLinkPath({path: ['paz', 'a', 'b']});
+  AppsFlyer.addPushNotificationDeepLinkPath({path: ['af', 'a', 'b']});
   AppsFlyer.setAdditionalData({
     additionalData: {
       capacitor: 'plugin',
