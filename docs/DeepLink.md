@@ -1,8 +1,8 @@
 # Deep linking
 
 - [Deep linking types and their implementation](#Deep-Linking)
-- [Android and iOS set-up](#setup)
-
+- [Android Deeplink Setup](#android-deeplink)
+- [iOS Deeplink Setup](#ios-deeplink)
 
 ![alt text](https://massets.appsflyer.com/wp-content/uploads/2018/03/21101417/app-installed-Recovered.png "")
 
