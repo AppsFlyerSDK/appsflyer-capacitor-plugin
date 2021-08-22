@@ -6,8 +6,8 @@ Recording in-app events is performed by calling sendEvent with event name and va
 
 **Note:** An In-App Event name must be no longer than 45 characters. Events names with more than 45 characters do not appear in the dashboard, but only in the raw Data, Pull and Push APIs.
 Find more info about recording events [here](https://support.appsflyer.com/hc/en-us/articles/115005544169-Rich-in-app-events-guide#introduction).
-- [LogEvent](#LogEvent)
-- [purchaseValidation](#InAppPurchaseValidation)
+- [Log Event](#LogEvent)
+- [Purchase Validation](#InAppPurchaseValidation)
 	 - [Android](#validateAndLogInAppPurchaseAndroid)  
 	 - [iOS](#validateAndLogInAppPurchaseIos)  
   
@@ -46,9 +46,9 @@ API for server verification of in-app purchases. An af_purchase event with the r
   
 | Param              | Type                                                                      |  
 | ------------------ | ------------------------------------------------------------------------- |  
-| **`purchaseData`** | <code><a href="#afandroidinapppurchase">AFAndroidInAppPurchase</a></code> |  
+| **`purchaseData`** | <code><a href="#/API.md/afandroidinapppurchase">AFAndroidInAppPurchase</a></code> |  
   
-**Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
+**Returns:** <code>Promise<<a href="#/API.md/afres">AFRes</a>></code>  
   ```typescript
 	AppsFlyer.validateAndLogInAppPurchaseAndroid({
         additionalParameters: {aa: 'cc'},
@@ -72,9 +72,9 @@ validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void
   
 | Param              | Type                                                              |  
 | ------------------ | ----------------------------------------------------------------- |  
-| **`purchaseData`** | <code><a href="#afiosinapppurchase">AFIosInAppPurchase</a></code> |  
+| **`purchaseData`** | <code><a href="#/API.md/afiosinapppurchase">AFIosInAppPurchase</a></code> |  
   
-**Returns:** <code>Promise<<a href="#afres">AFRes</a>></code>  
+**Returns:** <code>Promise<<a href="#/API.md/afres">AFRes</a>></code>  
   ```typescript
      AppsFlyer.validateAndLogInAppPurchaseIos({
         additionalParameters: {aa: 'cc'},
