@@ -3,10 +3,9 @@
 # AppsFlyer Capacitor plugin for Android and iOS.
 
 
-[![npm version](https://badge.fury.io/js/appsflyer-capacitor-plugin.svg)](https://badge.fury.io/js/cordova-plugin-appsflyer-sdk)
+[![npm version](https://badge.fury.io/js/appsflyer-capacitor-plugin.svg)](https://badge.fury.io/js/appsflyer-capacitor-plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) 
-[![Downloads](https://img.shields.io/npm/dm/appsflyer-capacitor-plugin.svg)](https://www.npmjs.com/package/cordova-plugin-appsflyer-sdk)
-
+[![Downloads](https://img.shields.io/npm/dm/appsflyer-capacitor-plugin)](https://www.npmjs.com/package/appsflyer-capacitor-plugin)
 
 🛠 In order for us to provide optimal support, we would kindly ask you to submit any issues to support@appsflyer.com
 
