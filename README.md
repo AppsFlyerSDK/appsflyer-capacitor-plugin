@@ -4,7 +4,6 @@
 
 
 [![npm version](https://badge.fury.io/js/appsflyer-capacitor-plugin.svg)](https://badge.fury.io/js/cordova-plugin-appsflyer-sdk)
-[![Build Status](https://travis-ci.org/AppsFlyerSDK/appsflyer-capacitor-plugin.svg?branch=master)](https://travis-ci.org/AppsFlyerSDK/appsflyer-cordova-plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) 
 [![Downloads](https://img.shields.io/npm/dm/appsflyer-capacitor-plugin.svg)](https://www.npmjs.com/package/cordova-plugin-appsflyer-sdk)
 
