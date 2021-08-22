@@ -20,7 +20,7 @@ class AppsFlyerAttribution: NSObject {
     private override init() {
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(self.receiveBridgeReadyNotification),
-                                               name: Notification.Name(AppsFlyerConstants.AF_BRIDGE_SET), object: nil)
+                                               name: Notification.Name.appsflyerBridge, object: nil)
     }
     
     
@@ -34,7 +34,7 @@ class AppsFlyerAttribution: NSObject {
        
     }
     
-    public  func handleOpenUrl(open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:])  {
+    public func handleOpenUrl(open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:])  {
         if(bridgReady){
             AppsFlyerLib.shared().handleOpen(url, options:options)
         }else{
@@ -44,7 +44,7 @@ class AppsFlyerAttribution: NSObject {
     }
     
   @objc  func receiveBridgeReadyNotification(){
-        NSLog ("AppsFlyer [Debug]: handle deep link");
+        NSLog ("AppsFlyer [Debug][Capacitor]: handle deep link");
         if(userActivity != nil){
             AppsFlyerLib.shared().continue(userActivity, restorationHandler: nil)
             userActivity = nil

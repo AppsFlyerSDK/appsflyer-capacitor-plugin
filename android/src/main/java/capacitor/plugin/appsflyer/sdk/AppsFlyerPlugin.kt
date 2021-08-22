@@ -109,13 +109,16 @@ class AppsFlyerPlugin : Plugin() {
                 init(
                     devKey,
                     if (conversion == true) getConversionListener() else null,
-                    activity.applicationContext
+                    context.applicationContext
                 )
+            }?: run{
+                call.reject(AppsFlyerConstants.AF_NULL_DEV_KEY)
+
             }
             if (udl == true) {
                 subscribeForDeepLink(getDeepLinkListener())
             }
-            start(activity, null, object : AppsFlyerRequestListener {
+            start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
                 override fun onSuccess() {
                     val ret = JSObject()
                     ret.put("res", "ok")
@@ -136,7 +139,7 @@ class AppsFlyerPlugin : Plugin() {
         val eventName = call.getString(AF_EVENT_NAME)
         val eventValue = AFHelpers.jsonToMap(call.getObject(AF_EVENT_VALUE))
         AppsFlyerLib.getInstance()
-            .logEvent(activity, eventName, eventValue, object : AppsFlyerRequestListener {
+            .logEvent(activity ?: context.applicationContext, eventName, eventValue, object : AppsFlyerRequestListener {
                 override fun onSuccess() {
                     val ret = JSObject()
                     ret.put("res", "ok")
