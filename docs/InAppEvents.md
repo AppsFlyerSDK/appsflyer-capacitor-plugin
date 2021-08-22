@@ -46,10 +46,10 @@ API for server verification of in-app purchases. An af_purchase event with the r
   
 | Param              | Type                                                                      |  
 | ------------------ | ------------------------------------------------------------------------- |  
-| **`purchaseData`** | <code>[AFAndroidInAppPurchase](API.md/afandroidinapppurchase)</code>      |  
+| **`purchaseData`** | <code>[AFAndroidInAppPurchase](/API.md/afandroidinapppurchase)</code>      |  
 
   
-**Returns:** <code>Promise<[AFRes](API.md/afres)></code>  
+**Returns:** <code>Promise<[AFRes](/API.md/afres)></code>  
   ```typescript
 	AppsFlyer.validateAndLogInAppPurchaseAndroid({
         additionalParameters: {aa: 'cc'},
@@ -73,9 +73,9 @@ validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void
   
 | Param              | Type                                                              |  
 | ------------------ | ----------------------------------------------------------------- |  
-| **`purchaseData`** | <code>[AFIosInAppPurchase](API.md/afiosinapppurchase)</code> |  
+| **`purchaseData`** | <code>[AFIosInAppPurchase](/API.md/afiosinapppurchase)</code> |  
   
-**Returns:** <code>Promise<[AFRes](API.md/afres)></code>  
+**Returns:** <code>Promise<[AFRes](/API.md/afres)></code>  
   ```typescript
      AppsFlyer.validateAndLogInAppPurchaseIos({
         additionalParameters: {aa: 'cc'},
