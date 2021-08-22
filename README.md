@@ -30,10 +30,10 @@
 -->
 
  ##  📖 Guides
-- [Adding the SDK to your project](/Docs/Installation.md)
-- [Initializing the SDK](/Docs/BasicIntegration.md)
-- [In-app Events](/Docs/InAppEvents.md)
-- [Deep Linking](/Docs/DeepLink.md)
-- [Advanced API](/Docs/AdvancedAPI.md)
-- [Testing the integration](/Docs/Testing.md)
-- [API](/Docs/API.md)
+- [Adding the SDK to your project](/docs/Installation.md)
+- [Initializing the SDK](/docs/BasicIntegration.md)
+- [In-app Events](/docs/InAppEvents.md)
+- [Deep Linking](/docs/DeepLink.md)
+- [Advanced API](/docs/AdvancedAPI.md)
+- [Testing the integration](/docs/Testing.md)
+- [API](/docs/API.md)
