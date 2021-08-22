@@ -34,7 +34,7 @@ class AppsFlyerAttribution: NSObject {
        
     }
     
-    public  func handleOpenUrl(open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:])  {
+    public func handleOpenUrl(open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:])  {
         if(bridgReady){
             AppsFlyerLib.shared().handleOpen(url, options:options)
         }else{
