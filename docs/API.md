@@ -918,6 +918,7 @@ Allows sending custom data for partner integration purposes.
 | **`useUninstallSandbox`** | <code>boolean</code> |  
 | **`useReceiptValidationSandbox`** | <code>boolean</code> |  
 | **`minTimeBetweenSessions`** | <code>number</code>  |  
+| **`deepLinkTimeout`** | <code>number</code>  |  
   
   
 #### AFRes  
