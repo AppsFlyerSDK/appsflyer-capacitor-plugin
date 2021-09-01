@@ -35,7 +35,8 @@ import type {
     AFEmails,
     AFLatLng,
     AFPhone,
-    AFPartnerData
+    AFPartnerData,
+    AFLogInvite
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -232,5 +233,11 @@ export interface AppsFlyerPlugin {
      * Allows sending custom data for partner integration purposes.
      */
     setPartnerData(data : AFPartnerData): Promise<AFRes>;
+
+    /**
+     * Use to log a user-invite in-app event (af_invite).
+     * 
+     */
+    logInvite(data : AFLogInvite): Promise<AFRes>;
 }
 

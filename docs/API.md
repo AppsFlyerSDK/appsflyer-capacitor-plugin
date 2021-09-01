@@ -51,6 +51,7 @@ The list of available methods for this plugin is described below.
 * [`logLocation`](#loglocation)  
 * [`setPhoneNumber`](#setphonenumber)  
 * [`setPartnerData`](#setpartnerdata)  
+* [`logInvite`](#loginvite)  
 * [`setSharingFilterForPartners`](#setsharingfilterforpartners)  
 * [`setSharingFilter`](#setsharingfilter)  - Deprecated
 * [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  - Deprecated
@@ -842,6 +843,7 @@ Will be sent as an SHA-256 encrypted string.
       .then(res => console.log(res.res))
       .catch(e => console.log(e));
 ```  
+--------------------  
 
 ### setPartnerData
 ```typescript  
@@ -866,6 +868,27 @@ Allows sending custom data for partner integration purposes.
     }).then(res => console.log(res.res))
       .catch(e => console.log(e));
 ```  
+
+--------------------  
+
+### logInvite
+```typescript  
+logInvite(data : AFLogInvite): Promise<AFRes>;
+```  
+
+Use to log a user-invite in-app event (af_invite).
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`data`** | <code><a href="#afloginvite">AFLogInvite</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+```typescript  
+     AppsFlyer.logInvite({channel: 'email', eventParameters: {abc: 'xyz', apps: 'Flyer'}})
+      .then(res => console.log(res.res))
+      .catch(e => console.log(e));
+``` 
 
 ## Interfaces  
   
@@ -1145,6 +1168,12 @@ Allows sending custom data for partner integration purposes.
 | ----------------- | ----------------------------------------------- |  
 | **`pushPayload`** | <code><a href="#stringmap">StringMap</a></code> |  
   
+#### AFLogInvite  
+  
+| Prop              | Type                                            |  
+| ----------------- | ----------------------------------------------- |  
+| **`eventParameters`** | <code><a href="#stringmap">StringMap</a></code> |  
+| **`channel`** |  <code>string</code>|  
   
 ## Enums  
   
