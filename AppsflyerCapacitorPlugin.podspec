@@ -14,7 +14,10 @@ Pod::Spec.new do |s|
   s.ios.deployment_target  = '12.0'
   s.dependency 'Capacitor'
   s.swift_version = '5.1'
-
+  
+  #for fixing xcode static lib build error
+  s.static_framework = true
+  
     # AppsFlyerFramework
     if defined?($AppsFlyerStrictMode)
       Pod::UI.puts "#{s.name}: Using AppsFlyerFramework/Strict mode"
