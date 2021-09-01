@@ -32,6 +32,7 @@ public class AppsFlyerPlugin: CAPPlugin {
         let debug = call.getBool(AppsFlyerConstants.AF_DEBUG, false)
         let sandbox = call.getBool(AppsFlyerConstants.AF_SANDBOX, false)
         let receiptSandbox = call.getBool(AppsFlyerConstants.AF_RECEIPT_SANDBOX , false)
+       
         conversion = call.getBool(AppsFlyerConstants.AF_CONVERSION_LISTENER, true)
         oaoa = call.getBool(AppsFlyerConstants.AF_OAOA, true)
         udl = call.getBool(AppsFlyerConstants.AF_UDL, false)
@@ -46,6 +47,9 @@ public class AppsFlyerPlugin: CAPPlugin {
             appsflyer.minTimeBetweenSessions = UInt(minTime)
         }
         
+        if let timeout = call.getInt(AppsFlyerConstants.AF_DEEP_LINK_TIME_OUT){
+            appsflyer.deepLinkTimeout = UInt(timeout)
+        }
         
         if conversion || oaoa {
             appsflyer.delegate = self
@@ -108,6 +112,7 @@ public class AppsFlyerPlugin: CAPPlugin {
             return
         }
         AppsFlyerLib.shared().currencyCode = code
+        
         
     }
     
@@ -189,22 +194,27 @@ public class AppsFlyerPlugin: CAPPlugin {
         
     }
     
+    @available(*, deprecated, message: "Use setSharingFilterForPartners")
     @objc func setSharingFilter(_ call: CAPPluginCall){
-        let arr = call.getArray(AppsFlyerConstants.AF_FILTERS)
-        var filters :[String] = []
-        if arr != nil {
-            for f in arr! {
-                filters.append(f as! String)
-            }
-        }
+        let filters = call.getArray(AppsFlyerConstants.AF_FILTERS , String.self)
+   
         AppsFlyerLib.shared().sharingFilter = filters
         
     }
     
-    
+    @available(*, deprecated, message: "Use setSharingFilterForPartners")
     @objc func setSharingFilterForAllPartners(_ call: CAPPluginCall){
         
         AppsFlyerLib.shared().setSharingFilterForAllPartners()
+        
+    }
+    
+    @objc func setSharingFilterForPartners(_ call: CAPPluginCall){
+        guard let filters = call.getArray(AppsFlyerConstants.AF_FILTERS , String.self) else{
+            return call.reject("cannot extract the filters value")
+        }
+        // Mark: TODO:
+        AppsFlyerLib.shared().sharingFilter = filters
         
     }
     
@@ -397,8 +407,95 @@ public class AppsFlyerPlugin: CAPPlugin {
         
     }
     
+    @objc func logCrossPromoteImpression(_ call: CAPPluginCall){
+        guard let appID = call.getString(AppsFlyerConstants.AF_APP_ID) else {
+            call.reject("cannot extract the appID value")
+            return
+        }
+        guard let campaign = call.getString(AppsFlyerConstants.AF_CAMPAIGN) else {
+            call.reject("cannot extract the campaign value")
+            return
+        }
+        guard let parameters = call.getObject(AppsFlyerConstants.AF_PARAMETERS) else {
+            call.reject("cannot extract the parameters value")
+            return
+        }
+        AppsFlyerCrossPromotionHelper.logCrossPromoteImpression(appID, campaign: campaign, parameters: parameters)
+        call.resolve(["res": "ok"])
+
+    }
     
+    @objc func setUserEmails(_ call: CAPPluginCall){
+        guard let emails = call.getArray(AppsFlyerConstants.AF_EMAILS, String.self) else {
+            call.reject("cannot extract the emails value")
+            return
+        }
+        if let enc = call.getBool(AppsFlyerConstants.AF_ENCODE) , enc == true{
+            AppsFlyerLib.shared().setUserEmails(emails, with: EmailCryptTypeSHA256)
+
+        }else{
+            AppsFlyerLib.shared().setUserEmails(emails, with: EmailCryptTypeNone)
+
+        }
+        call.resolve(["res": "ok"])
+        
+    }
     
+    @objc func logLocation(_ call: CAPPluginCall){
+        guard let longitude = call.getDouble(AppsFlyerConstants.AF_LONGITUDE) else {
+            call.reject("cannot extract the longitude value")
+            return
+        }
+        guard let latitude = call.getDouble(AppsFlyerConstants.AF_LATITUDE) else {
+            call.reject("cannot extract the longitude value")
+            return
+        }
+        
+        AppsFlyerLib.shared().logLocation(longitude: longitude, latitude: latitude)
+        call.resolve(["res": "ok"])
+        
+    }
+    
+    @objc func setPhoneNumber(_ call: CAPPluginCall){
+        guard let phone = call.getString(AppsFlyerConstants.AF_PHONE) else {
+            call.reject("cannot extract the phone value")
+            return
+        }
+     
+        AppsFlyerLib.shared().phoneNumber = phone
+        call.resolve(["res": "ok"])
+        
+    }
+    
+    @objc func setPartnerData(_ call: CAPPluginCall){
+        guard let data = call.getObject(AppsFlyerConstants.AF_DATA) else {
+            call.reject("cannot extract the data value")
+            return
+        }
+        guard let pid = call.getString(AppsFlyerConstants.AF_PARTNER_ID) else {
+            call.reject("cannot extract the partnerId value")
+            return
+        }
+     
+        AppsFlyerLib.shared().setPartnerData(partnerId: pid, partnerInfo: data)
+        call.resolve(["res": "ok"])
+        
+    }
+    
+    @objc func logInvite(_ call: CAPPluginCall){
+        guard let data = call.getObject(AppsFlyerConstants.AF_EVENT_PARAMETERS) else {
+            call.reject("cannot extract the eventParameters value")
+            return
+        }
+        guard let channel = call.getString(AppsFlyerConstants.AF_CHANNEL) else {
+            call.reject("cannot extract the channel value")
+            return
+        }
+     
+        AppsFlyerShareInviteHelper.logInvite(channel, parameters: data)
+        call.resolve(["res": "ok"])
+        
+    }
 }
 
 extension AppsFlyerPlugin{

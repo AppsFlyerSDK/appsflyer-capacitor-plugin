@@ -59,5 +59,14 @@ class AppsFlyerConstants {
     static let AF_PARAMETERS = "parameters"
     static let AF_CONTAINS = "contains"
     static let AF_LANGUAGE = "language"
-    
+    static let AF_EMAILS = "emails"
+    static let AF_ENCODE = "encode"
+    static let AF_LATITUDE = "latitude"
+    static let AF_LONGITUDE = "longitude"
+    static let AF_PHONE = "phone"
+    static let AF_DEEP_LINK_TIME_OUT = "deepLinkTimeout"
+    static let AF_EVENT_PARAMETERS = "eventParameters"
+    static let AF_PARTNER_ID = "partnerId"
+    static let AF_DATA = "data"
+
 }
