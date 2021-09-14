@@ -213,8 +213,8 @@ public class AppsFlyerPlugin: CAPPlugin {
         guard let filters = call.getArray(AppsFlyerConstants.AF_FILTERS , String.self) else{
             return call.reject("cannot extract the filters value")
         }
-        // Mark: TODO:
-        AppsFlyerLib.shared().sharingFilter = filters
+
+        AppsFlyerLib.shared().setSharingFilterForPartners(filters) 
         
     }
     

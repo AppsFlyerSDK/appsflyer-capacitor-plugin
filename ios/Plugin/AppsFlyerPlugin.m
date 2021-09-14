@@ -37,6 +37,8 @@ CAP_PLUGIN(AppsFlyerPlugin, "AppsFlyerPlugin",
            CAP_PLUGIN_METHOD(setPhoneNumber, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(setPartnerData, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(logInvite, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(setSharingFilterForPartners, CAPPluginReturnPromise);
+
 
            
 

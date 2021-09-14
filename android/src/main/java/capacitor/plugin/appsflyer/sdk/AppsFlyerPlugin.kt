@@ -539,7 +539,7 @@ class AppsFlyerPlugin : Plugin() {
     fun logInvite(call: PluginCall) {
         val data = AFHelpers.jsonToStringMap(call.getObject(AF_EVENT_PARAMETERS)) ?: return call.reject("cannot extract the eventParameters value")
         val channel = call.getString(AF_CHANNEL) ?: return call.reject("cannot extract the channel value")
-        ShareInviteHelper.logInvite(context, channel, data)
+        ShareInviteHelper.logInvite(activity.application, channel, data)
         val ret = JSObject()
         ret.put("res", "ok")
         call.resolve(ret)
