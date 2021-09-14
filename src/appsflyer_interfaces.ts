@@ -3,12 +3,13 @@ export interface AFInit{
     appID: string;
     isDebug?: boolean;
     waitForATTUserAuthorization?: number;
-    registerConversionListener? : boolean;
-    registerOnAppOpenAttribution? : boolean;
-    registerOnDeepLink? : boolean;
-    useUninstallSandbox? :boolean;
-    useReceiptValidationSandbox? :boolean;
-    minTimeBetweenSessions?:number
+    registerConversionListener?: boolean;
+    registerOnAppOpenAttribution?: boolean;
+    registerOnDeepLink?: boolean;
+    useUninstallSandbox?: boolean;
+    useReceiptValidationSandbox?: boolean;
+    minTimeBetweenSessions?: number
+    deepLinkTimeout?: number
 
 }
 
@@ -64,6 +65,24 @@ export interface AFIosInAppPurchase extends AFInAppPurchase{
     transactionId: string;
 }
 
+export interface AFPromotion {
+    appID:string,
+    campaign:string,
+    parameters:StringMap,
+}
+
+export interface AFLatLng{
+    latitude: number,
+    longitude: number
+}
+export interface AFPartnerData{
+    data: any,
+    partnerId: string
+}
+export interface AFLogInvite{
+    eventParameters: StringMap,
+    channel: string
+}
 export interface AFLink {link:string}
 export interface AFRes {res:string}
 export interface AFUninstall {token: string}
@@ -75,6 +94,8 @@ export interface AFOnelinkID {onelinkID: string}
 export interface AFOnelinkDomain {domains: string[]}
 export interface AFUrls {urls: string[]}
 export interface AFPath {path: string[]}
+export interface AFEmails {emails: string[],
+    encode?: boolean}
 export interface AFStop {stop: boolean}
 export interface AFIsStopped {isStopped: boolean}
 export interface AFFilters{filters: string[]}
@@ -83,6 +104,7 @@ export interface AFDisable{shouldDisable: boolean}
 export interface AFFbDAL{enableFacebookDAL: boolean}
 export interface AFPushPayload{pushPayload: StringMap}
 export interface AFLanguage{language: string}
+export interface AFPhone{phone: string}
 export interface AFHost{hostPrefixName: string;
     hostName: string;
 }

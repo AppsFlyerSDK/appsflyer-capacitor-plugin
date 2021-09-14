@@ -49,8 +49,16 @@ object AppsFlyerConstants {
     const val AF_MIN_TIME = "minTimeBetweenSessions"
     const val AF_PARAMETERS= "parameters"
     const val AF_CONTAINS = "contains"
+    const val AF_EMAILS = "emails"
+    const val AF_ENCODE = "encode"
     const val AF_NULL_DEV_KEY = "Dev key is null"
-
+    const val AF_LATITUDE = "latitude"
+    const val AF_LONGITUDE = "longitude"
+    const val AF_PHONE = "phone"
+    const val AF_DATA = "data"
+    const val AF_PARTNER_ID = "partnerId"
+    const val AF_DEEP_LINK_TIME_OUT = "deepLinkTimeout"
+    const val AF_EVENT_PARAMETERS = "eventParameters"
 
 
 

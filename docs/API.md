@@ -31,8 +31,6 @@ The list of available methods for this plugin is described below.
 * [`appendParametersToDeepLinkingURL`](#appendparameterstodeeplinkingurl)  
 * [`setResolveDeepLinkURLs`](#setresolvedeeplinkurls)  
 * [`addPushNotificationDeepLinkPath`](#addpushnotificationdeeplinkpath)  
-* [`setSharingFilter`](#setsharingfilter)  
-* [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  
 * [`setAdditionalData`](#setadditionaldata)  
 * [`getAppsFlyerUID`](#getappsflyeruid)  
 * [`anonymizeUser`](#anonymizeuser)  
@@ -48,6 +46,15 @@ The list of available methods for this plugin is described below.
 * [`enableFacebookDeferredApplinks`](#enablefacebookdeferredapplinks)  
 * [`sendPushNotificationData`](#sendpushnotificationdata)  
 * [`setCurrentDeviceLanguage`](#setcurrentdevicelanguage)  
+* [`logCrossPromoteImpression`](#logcrosspromoteimpression)  
+* [`setUserEmails`](#setuseremails)  
+* [`logLocation`](#loglocation)  
+* [`setPhoneNumber`](#setphonenumber)  
+* [`setPartnerData`](#setpartnerdata)  
+* [`logInvite`](#loginvite)  
+* [`setSharingFilterForPartners`](#setsharingfilterforpartners)  
+* [`setSharingFilter`](#setsharingfilter)  - Deprecated
+* [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  - Deprecated
  
   
 </docgen-index>  
@@ -378,9 +385,28 @@ More info can be found [here](https://support.appsflyer.com/hc/en-us/articles/20
 
 --------------------  
   
+### <a id="setsharingfilterforpartners"> setSharingFilterForPartners 
+
+```typescript  
+setSharingFilterForPartners(filters: AFFilters) => Promise<void>  
+```  
   
-### setSharingFilter  
+Stops events from propagating to the specified AppsFlyer partners.  
   
+| Param         | Type                                            |  
+| ------------- | ----------------------------------------------- |  
+| **`filters`** | <code><a href="#affilters">AFFilters</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  ```typescript
+AppsFlyer.setSharingFilterForPartners({filters: ['google_int']}); // set filter for spesific partners
+AppsFlyer.setSharingFilterForPartners({filters: ['all']}); // set filters for spesific partners
+AppsFlyer.setSharingFilterForPartners({filters: ['None']}); // remove all filters
+```
+--------------------    
+  
+### <a id="setsharingfilter"> setSharingFilter - Deprecated
+
 ```typescript  
 setSharingFilter(filters: AFFilters) => Promise<void>  
 ```  
@@ -398,7 +424,7 @@ AppsFlyer.setSharingFilter({filters: ['google_int']});
 --------------------  
   
   
-### setSharingFilterForAllPartners
+### <a id="setsharingfilterforallpartners"> setSharingFilterForAllPartners - Deprecated
   
 ```typescript  
 setSharingFilterForAllPartners() => Promise<void>  
@@ -724,6 +750,146 @@ Set the language of the device. The data will be displayed in Raw Data Reports
       .catch(e => console.log(e));
 ```  
 
+--------------------  
+  
+### logCrossPromoteImpression
+```typescript  
+    logCrossPromoteImpression(data: AFPromotion): Promise<AFRes>;
+```  
+
+logs an impression as part of a cross-promotion campaign. Make sure to use the promoted App ID as it appears within the AppsFlyer dashboard.
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`data`** | <code><a href="#afpromotion">AFPromotion</a></code> |  
+  
+**Returns:** <code>Promise<void></code> 
+
+```typescript  
+   if (isPlatform('ios')) {
+          AppsFlyer.logCrossPromoteImpression({
+              appID: 'id1192323960',
+              campaign: 'test',
+              parameters: {pid: 'capacitorTest', deep_link_value: 'af'}
+          });
+      } else {
+          AppsFlyer.logCrossPromoteImpression({
+              appID: 'com.appsflyer.android.deviceid',
+              campaign: 'test',
+              parameters: {pid: 'capacitorTest', deep_link_value: 'af'}
+          });
+      }
+```  
+
+--------------------  
+
+### setUserEmails
+```typescript  
+setUserEmails(emails: AFEmails): Promise<AFRes>;
+```  
+
+Set the user emails and encrypt them.
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`emails`** | <code><a href="#afemails">AFEmails</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+```typescript  
+    AppsFlyer.setUserEmails({emails: ['abc@appsflyer.com', 'af@af.com'], encode: true})
+      .then(res => console.log(res.res))
+      .catch(e => console.log(e));
+```  
+
+
+--------------------  
+
+### logLocation
+```typescript  
+logLocation(latLng : AFLatLng): Promise<AFRes>;
+```  
+
+Manually log the location of the user
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`latLng`** | <code><a href="#aflatLng">AFLatLng</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+```typescript  
+    AppsFlyer.logLocation({latitude: -32.25562, longitude: 32.545414})
+      .then(res => console.log(res.res))
+      .catch(e => console.log(e));
+```  
+--------------------  
+
+### setPhoneNumber
+```typescript  
+setPhoneNumber(phone : AFPhone): Promise<AFRes>;
+```  
+
+Will be sent as an SHA-256 encrypted string.
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`phone`** | <code><a href="#afphone">AFPhone</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+```typescript  
+    AppsFlyer.setPhoneNumber({phone: '0123456789'})
+      .then(res => console.log(res.res))
+      .catch(e => console.log(e));
+```  
+--------------------  
+
+### setPartnerData
+```typescript  
+setPartnerData(data : AFPartnerData): Promise<AFRes>;
+```  
+
+Allows sending custom data for partner integration purposes.
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`data`** | <code><a href="#afpartnerdata">AFPartnerData</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+```typescript  
+    AppsFlyer.setPartnerData({
+        data: {
+            apps: 'flyer',
+            af: 'IL'
+        },
+        partnerId: 'af_int'
+    }).then(res => console.log(res.res))
+      .catch(e => console.log(e));
+```  
+
+--------------------  
+
+### logInvite
+```typescript  
+logInvite(data : AFLogInvite): Promise<AFRes>;
+```  
+
+Use to log a user-invite in-app event (af_invite).
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`data`** | <code><a href="#afloginvite">AFLogInvite</a></code> |  
+  
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+```typescript  
+     AppsFlyer.logInvite({channel: 'email', eventParameters: {abc: 'xyz', apps: 'Flyer'}})
+      .then(res => console.log(res.res))
+      .catch(e => console.log(e));
+``` 
+
 ## Interfaces  
   
   
@@ -775,6 +941,7 @@ Set the language of the device. The data will be displayed in Raw Data Reports
 | **`useUninstallSandbox`** | <code>boolean</code> |  
 | **`useReceiptValidationSandbox`** | <code>boolean</code> |  
 | **`minTimeBetweenSessions`** | <code>number</code>  |  
+| **`deepLinkTimeout`** | <code>number</code>  |  
   
   
 #### AFRes  
@@ -788,6 +955,12 @@ Set the language of the device. The data will be displayed in Raw Data Reports
 | Prop      | Type                |  
 | --------- | ------------------- |  
 | **`language`** | <code>string</code> |    
+
+#### AFPhone  
+  
+| Prop      | Type                |  
+| --------- | ------------------- |  
+| **`phone`** | <code>string</code> |    
   
 #### AFEvent  
   
@@ -842,6 +1015,19 @@ Set the language of the device. The data will be displayed in Raw Data Reports
   
 #### StringMap  
   
+#### AFEmails  
+  
+| Prop       | Type            |  
+| ---------- | --------------- |  
+| **`emails`** | <code>string[]</code> |  
+| **`encode`** | <code>boolean</code> | 
+ 
+ #### AFLatLng  
+  
+| Prop       | Type            |  
+| ---------- | --------------- |  
+| **`latitude`** | <code>number</code> |  
+| **`longitude`** | <code>number</code> |  
   
 #### AFUrls  
   
@@ -864,12 +1050,20 @@ Set the language of the device. The data will be displayed in Raw Data Reports
 | **`filters`** | <code>string[]</code> |  
   
   
+#### AFPartnerData  
+  
+| Prop                 | Type             |  
+| -------------------- | ---------------- |  
+| **`data`** | <code>any</code> |  
+| **`partnerId`** | <code>string</code> |  
+
+  
+  
 #### AFData  
   
 | Prop                 | Type             |  
 | -------------------- | ---------------- |  
 | **`additionalData`** | <code>any</code> |  
-  
   
 #### AFUid  
   
@@ -913,6 +1107,13 @@ Set the language of the device. The data will be displayed in Raw Data Reports
 | **`hostPrefixName`** | <code>string</code> |  
 | **`hostName`** | <code>string</code> |  
   
+#### AFPromotion  
+  
+| Prop                 | Type                |  
+| -------------------- | ------------------- |  
+| **`appID`** | <code>string</code> |  
+| **`campaign`** | <code>string</code> |  
+| **`parameters`** |  <code><a href="#stringmap">StringMap</a></code>  |  
   
 #### AFLinkGenerator  
   
@@ -967,6 +1168,12 @@ Set the language of the device. The data will be displayed in Raw Data Reports
 | ----------------- | ----------------------------------------------- |  
 | **`pushPayload`** | <code><a href="#stringmap">StringMap</a></code> |  
   
+#### AFLogInvite  
+  
+| Prop              | Type                                            |  
+| ----------------- | ----------------------------------------------- |  
+| **`eventParameters`** | <code><a href="#stringmap">StringMap</a></code> |  
+| **`channel`** |  <code>string</code>|  
   
 ## Enums  
   

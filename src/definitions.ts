@@ -30,7 +30,13 @@ import type {
     AFLanguage,
     OnAppOpenAttribution,
     OnConversionDataResult,
-    OnDeepLink
+    OnDeepLink,
+    AFPromotion,
+    AFEmails,
+    AFLatLng,
+    AFPhone,
+    AFPartnerData,
+    AFLogInvite
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -111,13 +117,20 @@ export interface AppsFlyerPlugin {
 
     /**
      * Stops events from propagating to the specified AppsFlyer partners.
+     * @deprecated deprecated since 6.4.0. Use setSharingFilterForPartners instead
      */
     setSharingFilter(filters: AFFilters): Promise<void>
 
     /**
      * Stops events from propagating to all AppsFlyer partners. Overwrites setSharingFilter.
+     *  @deprecated deprecated since 6.4.0. Use setSharingFilterForPartners instead
      */
     setSharingFilterForAllPartners(): Promise<void>
+
+    /**
+     * Stops events from propagating to the specified AppsFlyer partners.
+     */
+    setSharingFilterForPartners(filters: AFFilters): Promise<void>
 
     /**
      * Set additional data to be sent to AppsFlyer. See
@@ -195,5 +208,36 @@ export interface AppsFlyerPlugin {
      */
     setCurrentDeviceLanguage(language: AFLanguage): Promise<AFRes>;
 
+    /**
+     * logs an impression as part of a cross-promotion campaign. Make sure to use the promoted App ID as it appears within the AppsFlyer dashboard.
+     *
+     */
+    logCrossPromoteImpression(data: AFPromotion): Promise<AFRes>;
+
+    /**
+     * Set the user emails and encrypt them.
+     */
+    setUserEmails(emails: AFEmails): Promise<AFRes>;
+
+    /**
+     * Manually log the location of the user
+     */
+    logLocation(latLng : AFLatLng): Promise<AFRes>;
+
+    /**
+     * Will be sent as an SHA-256 encrypted string.
+     */
+    setPhoneNumber(phone : AFPhone): Promise<AFRes>;
+
+    /**
+     * Allows sending custom data for partner integration purposes.
+     */
+    setPartnerData(data : AFPartnerData): Promise<AFRes>;
+
+    /**
+     * Use to log a user-invite in-app event (af_invite).
+     * 
+     */
+    logInvite(data : AFLogInvite): Promise<AFRes>;
 }
 
