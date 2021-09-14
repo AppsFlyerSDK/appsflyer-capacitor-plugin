@@ -31,6 +31,16 @@ CAP_PLUGIN(AppsFlyerPlugin, "AppsFlyerPlugin",
            CAP_PLUGIN_METHOD(enableFacebookDeferredApplinks, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(sendPushNotificationData, CAPPluginReturnNone);
            CAP_PLUGIN_METHOD(setCurrentDeviceLanguage, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(logCrossPromoteImpression, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(setUserEmails, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(logLocation, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(setPhoneNumber, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(setPartnerData, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(logInvite, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(setSharingFilterForPartners, CAPPluginReturnPromise);
+
+
+           
 
            
            

@@ -24,6 +24,7 @@ export class HomePage {
         registerOnDeepLink: true,
         registerConversionListener: true,
         registerOnAppOpenAttribution: false,
+        deepLinkTimeout: 4000, // default 3000 ms
         useReceiptValidationSandbox: true, // iOS only
         useUninstallSandbox: true // iOS only
       };
