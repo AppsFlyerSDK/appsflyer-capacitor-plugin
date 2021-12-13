@@ -1,4 +1,22 @@
 # Release Notes
+### 6.4.0
+Release date: *2021-Sep-14* 
+
+**Overview and Highlights:**
+- Capacitor >> Update Plugin to v6.4.0 
+- Capacitor >> Add APIs
+  - added `logCrossPromoteImpression` API
+  - added `setUserEmails` API
+  - added `logLocation` API  
+  - added `setPhoneNumber` API
+  - added `setPartnerData` API
+  - added `deepLinkTimeout` Parameter
+  - added `logInvite` API
+  - added `setSharingFilterForPartners` API
+- deprecate `setSharingFilterForAllPartners` API
+- deprecate `setSharingFilter` API
+
+
 ### 6.3.50
 Release date: *2021-Aug-22* 
 
