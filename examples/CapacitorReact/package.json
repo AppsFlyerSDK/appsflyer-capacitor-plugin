@@ -21,7 +21,7 @@
     "@types/react-dom": "^16.9.10",
     "@types/react-router": "^5.1.11",
     "@types/react-router-dom": "^5.1.7",
-    "appsflyer-capacitor-plugin": "^6.4.4",
+    "appsflyer-capacitor-plugin": "file:../..",
     "capacitor-plugin-app-tracking-transparency": "^2.0.0",
     "ionicons": "^5.4.0",
     "react": "^17.0.1",
