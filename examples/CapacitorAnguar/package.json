@@ -30,7 +30,7 @@
     "@capacitor/keyboard": "1.0.2",
     "@capacitor/status-bar": "1.0.2",
     "@ionic/angular": "^5.5.2",
-    "appsflyer-capacitor-plugin": "file:../../Capacitor/appsflyer-capacitor-plugin",
+    "appsflyer-capacitor-plugin": "^6.4.0",
     "capacitor-plugin-app-tracking-transparency": "^2.0.0",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
