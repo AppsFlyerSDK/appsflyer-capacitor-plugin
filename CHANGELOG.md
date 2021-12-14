@@ -1,5 +1,5 @@
 # Release Notes
-### 6.4.4-rc2
+### 6.4.4
 Release date: *2021-December-13*
 - Updated AppsFlyer Android SDK to v6.4.3
 - Updated AppsFlyer iOS SDK to v6.4.4
