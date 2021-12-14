@@ -120,15 +120,15 @@ Example:
     2. Scroll down and select `Privacy - Tracking Usage Description`.
     3. Add as the value the wording you want to present to the user when asking for permission to collect the IDFA.
 3. Set a value to the `waitForATTUserAuthorization` property in the initialization options     
-4. In the `AppDelegate.swift` file, add: 
+4. In the `CAPBridgeViewController.swift` file, add: 
 ```swift
-   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-           if #available(iOS 14, *){
-            ATTrackingManager.requestTrackingAuthorization { (status) in
-            }
-        }
-        return true
-    }
+override func viewDidLoad() {
+  super.viewDidLoad()
+  
+  if #available(iOS 14, *) {
+    ATTrackingManager.requestTrackingAuthorization { (status) in }
+  }
+}
 ```
 For more info visit our Support integration guide [Here](https://support.appsflyer.com/hc/en-us/articles/360011451918#integration) <br>
 
