@@ -1,4 +1,11 @@
 # Release Notes
+### 6.5.2
+Release date: *2022-February-07*
+- Updated AppsFlyer Android SDK to v6.5.2
+- Updated AppsFlyer iOS SDK to v6.5.2
+
+**Overview and Highlights:**
+- Capacitor >> iOS >> `is_deferred` not available  
 ### 6.4.4
 Release date: *2021-December-13*
 - Updated AppsFlyer Android SDK to v6.4.3
