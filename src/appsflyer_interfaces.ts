@@ -90,6 +90,7 @@ export interface AFUid {uid: string}
 export interface AFCurrency {currencyCode: string}
 export interface AFCuid {cuid: string}
 export interface AFAnonymizeUser {anonymizeUser: boolean}
+export interface AFDisableNetworkData {disable: boolean}
 export interface AFOnelinkID {onelinkID: string}
 export interface AFOnelinkDomain {domains: string[]}
 export interface AFUrls {urls: string[]}
