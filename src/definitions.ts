@@ -36,7 +36,6 @@ import type {
     AFLatLng,
     AFPhone,
     AFPartnerData,
-    AFDisableNetworkData,
     AFLogInvite
 } from "./appsflyer_interfaces";
 
@@ -246,6 +245,6 @@ export interface AppsFlyerPlugin {
      *
      * @param disable Defaults to false
      */
-    setDisableNetworkData(disable : AFDisableNetworkData): Promise<void>;
+    setDisableNetworkData(disable : AFDisable): Promise<void>;
 }
 
