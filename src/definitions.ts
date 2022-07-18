@@ -36,6 +36,7 @@ import type {
     AFLatLng,
     AFPhone,
     AFPartnerData,
+    AFDisableNetworkData,
     AFLogInvite
 } from "./appsflyer_interfaces";
 
@@ -239,5 +240,12 @@ export interface AppsFlyerPlugin {
      * 
      */
     logInvite(data : AFLogInvite): Promise<AFRes>;
+
+    /**
+     * Use to opt-out of collecting the network operator name (carrier) and sim operator name from the device.
+     *
+     * @param disable Defaults to false
+     */
+    setDisableNetworkData(disable : AFDisableNetworkData): Promise<void>;
 }
 
