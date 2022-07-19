@@ -74,7 +74,7 @@ object AFHelpers {
 
     private fun afLogger(message: String?) {
         if (!message.isNullOrEmpty())
-            Log.d(AppsFlyerConstants.TAG, message)
+            Log.d(TAG, message)
     }
 
 
