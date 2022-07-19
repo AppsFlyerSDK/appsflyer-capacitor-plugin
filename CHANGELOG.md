@@ -1,4 +1,13 @@
 # Release Notes
+### 6.8.0-rc1
+Release date: *2022-July-20*
+- Updated AppsFlyer Android SDK to v6.8.0
+- Updated AppsFlyer iOS SDK to v6.8.0
+
+**Overview and Highlights:**
+- Capacitor >> update SDKs versions 
+- Capacitor >> readme >> add AD_ID docs
+- Capacitor >> Android >> add `setDisableNetworkData` API
 ### 6.5.2
 Release date: *2022-February-07*
 - Updated AppsFlyer Android SDK to v6.5.2
