@@ -1,5 +1,5 @@
 # Release Notes
-### 6.8.0-rc2
+### 6.8.0
 Release date: *2022-July-20*
 - Updated AppsFlyer Android SDK to v6.8.0
 - Updated AppsFlyer iOS SDK to v6.8.0
