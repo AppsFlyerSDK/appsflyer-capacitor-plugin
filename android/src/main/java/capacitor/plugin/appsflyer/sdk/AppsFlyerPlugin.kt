@@ -2,62 +2,7 @@ package capacitor.plugin.appsflyer.sdk
 
 import android.Manifest
 import android.content.Intent
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_ADDITIONAL_DATA
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_ADDITIONAL_PARAMETERS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_ADD_PARAMETERS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_ANONYMIZE_USER
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_APP_ID
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_BASE_DEEPLINK
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_BRAND_DOMAIN
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_CAMPAIGN
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_CHANNEL
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_CONTAINS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_CONVERSION_LISTENER
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_CUID
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_CURRENCY
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_CURRENCY_CODE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_DATA
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_DEBUG
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_DEEPLINK_URLS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_DEEP_LINK_TIME_OUT
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_DEV_KEY
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_DISABLE_SKAD
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_EMAILS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_ENCODE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_EVENT_NAME
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_EVENT_PARAMETERS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_EVENT_VALUE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_FB
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_FILTERS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_HOST_NAME
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_HOST_PREFIX
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_IS_STOP
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_LATITUDE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_LINK_READY
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_LONGITUDE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_MIN_TIME
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_OAOA
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_ONELINK_DOMAIN
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_ONELINK_ID
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PARAMETERS
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PARTNER_ID
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PATH
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PHONE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PRICE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PUBLIC_KEY
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PURCHASE_DATA
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_PUSH_PAYLOAD
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_REFERRER_CUSTOMER_ID
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_REFERRER_IMAGE_URL
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_REFERRER_NAME
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_SIGNATURE
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_STOP
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_TOKEN
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_UDL
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.AF_UID
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.CONVERSION_CALLBACK
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.OAOA_CALLBACK
-import capacitor.plugin.appsflyer.sdk.AppsFlyerConstants.UDL_CALLBACK
+
 import com.appsflyer.*
 import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.appsflyer.deeplink.DeepLinkListener
@@ -79,8 +24,9 @@ import org.json.JSONObject
         strings = arrayOf(
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_NETWORK_STATE,
-            Manifest.permission.ACCESS_WIFI_STATE
-        ))]
+            "com.google.android.gms.permission.AD_ID"
+        )
+    )]
 )
 class AppsFlyerPlugin : Plugin() {
     private var conversion: Boolean? = null
@@ -120,15 +66,15 @@ class AppsFlyerPlugin : Plugin() {
                     if (conversion == true) getConversionListener() else null,
                     context.applicationContext
                 )
-            }?: run{
-                call.reject(AppsFlyerConstants.AF_NULL_DEV_KEY)
+            } ?: run {
+                call.reject(AF_NULL_DEV_KEY)
 
             }
             if (udl == true) {
-                if (timeout != null){
+                if (timeout != null) {
                     subscribeForDeepLink(getDeepLinkListener(), timeout)
-                }else{
-                subscribeForDeepLink(getDeepLinkListener())
+                } else {
+                    subscribeForDeepLink(getDeepLinkListener())
                 }
             }
             start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
@@ -152,17 +98,21 @@ class AppsFlyerPlugin : Plugin() {
         val eventName = call.getString(AF_EVENT_NAME)
         val eventValue = AFHelpers.jsonToMap(call.getObject(AF_EVENT_VALUE))
         AppsFlyerLib.getInstance()
-            .logEvent(activity ?: context.applicationContext, eventName, eventValue, object : AppsFlyerRequestListener {
-                override fun onSuccess() {
-                    val ret = JSObject()
-                    ret.put("res", "ok")
-                    call.resolve(ret)
-                }
+            .logEvent(
+                activity ?: context.applicationContext,
+                eventName,
+                eventValue,
+                object : AppsFlyerRequestListener {
+                    override fun onSuccess() {
+                        val ret = JSObject()
+                        ret.put("res", "ok")
+                        call.resolve(ret)
+                    }
 
-                override fun onError(i: Int, s: String) {
-                    call.reject(s, i.toString())
-                }
-            })
+                    override fun onError(i: Int, s: String) {
+                        call.reject(s, i.toString())
+                    }
+                })
     }
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
@@ -276,6 +226,7 @@ class AppsFlyerPlugin : Plugin() {
         AppsFlyerLib.getInstance().setSharingFilterForPartners(*filters)
 
     }
+
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun setAdditionalData(call: PluginCall) {
         val data = call.getObject(AF_ADDITIONAL_DATA)
@@ -297,12 +248,16 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun anonymizeUser(call: PluginCall) {
-        val anonymizeUser = call.getBoolean(AF_ANONYMIZE_USER)
-        if (anonymizeUser == null) {
-            call.reject("Missing boolean value anonymizeUser")
-        }
-        AppsFlyerLib.getInstance().anonymizeUser(anonymizeUser!!)
+        call.getBoolean(AF_ANONYMIZE_USER)?.let {
+            AppsFlyerLib.getInstance().anonymizeUser(it)
+        } ?: run { call.reject("Missing boolean value anonymizeUser") }
+    }
 
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    fun setDisableNetworkData(call: PluginCall) {
+        call.getBoolean(AF_DISABLE)?.let {
+            AppsFlyerLib.getInstance().setDisableNetworkData(it)
+        } ?: run { call.reject("Missing boolean value disable") }
     }
 
     @PluginMethod()
@@ -328,13 +283,9 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun disableAdvertisingIdentifier(call: PluginCall) {
-        val disable = call.getBoolean(AF_DISABLE_SKAD)
-        if (disable != null) {
-            AppsFlyerLib.getInstance().setDisableAdvertisingIdentifiers(disable)
-        } else {
-            call.reject("Missing boolean value shouldDisable")
-
-        }
+        call.getBoolean(AF_DISABLE_SKAD)?.let {
+            AppsFlyerLib.getInstance().setDisableAdvertisingIdentifiers(it)
+        } ?: run { call.reject("Missing boolean value shouldDisable") }
     }
 
     @PluginMethod()
@@ -464,14 +415,18 @@ class AppsFlyerPlugin : Plugin() {
         AppsFlyerLib.getInstance().sendPushNotificationData(activity)
 
     }
+
     @PluginMethod()
     fun logCrossPromoteImpression(call: PluginCall) {
-        val appID = call.getString(AF_APP_ID) ?: return call.reject("cannot extract the appID value")
-        val campaign = call.getString(AF_CAMPAIGN) ?: return call.reject("cannot extract the campaign value")
-        val parameters = AFHelpers.jsonToStringMap(call.getObject(AF_PARAMETERS)) ?: return call.reject("cannot extract the parameters value")
+        val appID =
+            call.getString(AF_APP_ID) ?: return call.reject("cannot extract the appID value")
+        val campaign =
+            call.getString(AF_CAMPAIGN) ?: return call.reject("cannot extract the campaign value")
+        val parameters = AFHelpers.jsonToStringMap(call.getObject(AF_PARAMETERS))
+            ?: return call.reject("cannot extract the parameters value")
 
         CrossPromotionHelper.logCrossPromoteImpression(
-            context.applicationContext ,
+            context.applicationContext,
             appID,
             campaign,
             parameters
@@ -484,16 +439,17 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod()
     fun setUserEmails(call: PluginCall) {
-        val emails =  call.getArray(AF_EMAILS)?.run {
+        val emails = call.getArray(AF_EMAILS)?.run {
             toList<String>().toTypedArray()
-        } ?:  return call.reject("cannot extract the emails value")
+        } ?: return call.reject("cannot extract the emails value")
 
         val enc = call.getBoolean(AF_ENCODE)
 
-        if(enc != true){
+        if (enc != true) {
             AppsFlyerLib.getInstance().setUserEmails(*emails)
-        }else{
-            AppsFlyerLib.getInstance().setUserEmails(AppsFlyerProperties.EmailsCryptType.SHA256 ,*emails)
+        } else {
+            AppsFlyerLib.getInstance()
+                .setUserEmails(AppsFlyerProperties.EmailsCryptType.SHA256, *emails)
         }
 
         val ret = JSObject()
@@ -504,9 +460,11 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod()
     fun logLocation(call: PluginCall) {
-      val longitude = call.getDouble(AF_LONGITUDE) ?: return call.reject("cannot extract the longitude value")
-      val latitude = call.getDouble(AF_LATITUDE) ?: return call.reject("cannot extract the latitude value")
-        AppsFlyerLib.getInstance().logLocation(context.applicationContext , latitude , longitude)
+        val longitude =
+            call.getDouble(AF_LONGITUDE) ?: return call.reject("cannot extract the longitude value")
+        val latitude =
+            call.getDouble(AF_LATITUDE) ?: return call.reject("cannot extract the latitude value")
+        AppsFlyerLib.getInstance().logLocation(context.applicationContext, latitude, longitude)
         val ret = JSObject()
         ret.put("res", "ok")
         call.resolve(ret)
@@ -525,10 +483,12 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod()
     fun setPartnerData(call: PluginCall) {
-        val data = AFHelpers.jsonToMap(call.getObject(AF_DATA)) ?: return call.reject("cannot extract the data value")
-        val pid = call.getString(AF_PARTNER_ID) ?: return call.reject("cannot extract the partnerId value")
+        val data = AFHelpers.jsonToMap(call.getObject(AF_DATA))
+            ?: return call.reject("cannot extract the data value")
+        val pid = call.getString(AF_PARTNER_ID)
+            ?: return call.reject("cannot extract the partnerId value")
 
-        AppsFlyerLib.getInstance().setPartnerData(pid,data)
+        AppsFlyerLib.getInstance().setPartnerData(pid, data)
         val ret = JSObject()
         ret.put("res", "ok")
         call.resolve(ret)
@@ -537,8 +497,10 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod()
     fun logInvite(call: PluginCall) {
-        val data = AFHelpers.jsonToStringMap(call.getObject(AF_EVENT_PARAMETERS)) ?: return call.reject("cannot extract the eventParameters value")
-        val channel = call.getString(AF_CHANNEL) ?: return call.reject("cannot extract the channel value")
+        val data = AFHelpers.jsonToStringMap(call.getObject(AF_EVENT_PARAMETERS))
+            ?: return call.reject("cannot extract the eventParameters value")
+        val channel =
+            call.getString(AF_CHANNEL) ?: return call.reject("cannot extract the channel value")
         ShareInviteHelper.logInvite(activity.application, channel, data)
         val ret = JSObject()
         ret.put("res", "ok")

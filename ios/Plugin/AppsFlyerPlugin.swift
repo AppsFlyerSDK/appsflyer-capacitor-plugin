@@ -234,6 +234,10 @@ public class AppsFlyerPlugin: CAPPlugin {
     
   }
   
+  @objc func setDisableNetworkData(_ call: CAPPluginCall){
+    call.unavailable("Android only method - has no effact on iOS apps")
+  }
+
   @objc func anonymizeUser(_ call: CAPPluginCall){
     guard let anonymize = call.getBool(AppsFlyerConstants.AF_ANONYMIZE_USER) else{
       call.reject("Missing boolean value anonymizeUser")

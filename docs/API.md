@@ -52,6 +52,7 @@ The list of available methods for this plugin is described below.
 * [`setPhoneNumber`](#setphonenumber)  
 * [`setPartnerData`](#setpartnerdata)  
 * [`logInvite`](#loginvite)  
+* [`setDisableNetworkData`](#setDisableNetworkData)
 * [`setSharingFilterForPartners`](#setsharingfilterforpartners)  
 * [`setSharingFilter`](#setsharingfilter)  - Deprecated
 * [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  - Deprecated
@@ -553,6 +554,23 @@ Disables collection of various Advertising IDs by the SDK. This includes Apple I
 **Returns:** <code>Promise<void></code>  
   ```typescript
 AppsFlyer.disableAdvertisingIdentifier({shouldDisable:true});
+```
+--------------------  
+  
+### setDisableNetworkData  
+  
+```typescript  
+setDisableNetworkData(disable: AFDisable) => Promise<void>  
+```  
+  
+Use to opt-out of collecting the network operator name (carrier) and sim operator name from the device. (Android Only)  
+| Param      | Type                                            |  
+| ---------- | ----------------------------------------------- |  
+| **`disable`** | <code><a href="#afdisable">AFDisable</a></code> |  
+  
+**Returns:** <code>Promise<void></code>  
+  ```typescript
+AppsFlyer.setDisableNetworkData({shouldDisable:true});
 ```
 --------------------  
   
