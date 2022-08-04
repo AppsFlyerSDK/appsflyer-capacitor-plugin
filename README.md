@@ -17,15 +17,11 @@
 - Android AppsFlyer SDK **6.8.0️**
 - iOS AppsFlyer SDK **6.8.0️**
 
-<!---
-## <a id="breaking-changes"> 	❗❗ Breaking changes when updating to ✏️v*.*.*✏️❗❗
+-
+## <a id="breaking-changes"> 	❗❗ Breaking changes when updating to ✏️v7.0.0✏️❗❗
 
-✏️✏️ Breaking changes if there is  ✏️✏️ 
+✏️✏️ This plugin now supports Capacitor 4 only. For Capacitor 3 please use version 6.8.0 !  ✏️✏️ 
 
-## <a id="migration"> ⏩ Migration 
-  
-✏️✏️ Migration guided if needed✏️✏️ 
--->
 
  ##  📖 Guides
 - [Adding the SDK to your project](/docs/Installation.md)
