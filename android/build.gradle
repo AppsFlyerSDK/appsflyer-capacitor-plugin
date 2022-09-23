@@ -62,7 +62,7 @@ dependencies {
     implementation "androidx.core:core-ktx:1.6.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    implementation 'com.appsflyer:af-android-sdk:6.8.0'
+    implementation 'com.appsflyer:af-android-sdk:6.8.2'
     implementation "com.android.installreferrer:installreferrer:2.2"
 
 
