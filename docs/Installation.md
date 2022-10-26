@@ -8,7 +8,7 @@ The plugin available via npm. To install the plugin, please run the following co
  npx cap sync  
  ```
 
-## <a id="cap-3"> Capacitor 3 - Latest Version
+## <a id="cap3"> Capacitor 3 - Latest Version
 The latest version that supports Capacitor 3 uses the following SDK versions: 
 - Android AppsFlyer SDK **6.9.2️**
 - iOS AppsFlyer SDK **6.8.1️**

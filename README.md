@@ -19,7 +19,7 @@
 
 ## <a id="breaking-changes"> 	❗❗ Breaking changes when updating to v6.9.2❗❗
 Starting from v6.9.2, this plugin works only with Capacitor 4. </br>
-If you are still interested in using Capacitor 3, please follow the instructions [here](/docs/Installation.md#cap-3) to install the latest version that supports Capacitor 3.
+If you are still interested in using Capacitor 3, please follow the instructions [here](/docs/Installation.md#cap3) to install the latest version that supports Capacitor 3.
 
 
 <!---
