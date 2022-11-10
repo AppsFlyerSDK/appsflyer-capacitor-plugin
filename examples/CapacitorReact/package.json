@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@capacitor/android": "3.1.2",
-    "@capacitor/app": "1.0.2",
-    "@capacitor/core": "3.1.2",
-    "@capacitor/haptics": "1.0.2",
-    "@capacitor/ios": "3.1.2",
-    "@capacitor/keyboard": "1.0.2",
-    "@capacitor/status-bar": "1.0.2",
+    "@capacitor/android": "^4.0.0",
+    "@capacitor/app": "^4.0.0",
+    "@capacitor/core": "^4.0.0",
+    "@capacitor/haptics": "^4.0.0",
+    "@capacitor/ios": "^4.0.0",
+    "@capacitor/keyboard": "^4.0.0",
+    "@capacitor/status-bar": "^4.0.0",
     "@ionic/react": "^5.5.0",
     "@ionic/react-router": "^5.5.0",
     "@testing-library/jest-dom": "^5.11.9",
@@ -48,7 +48,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "installFromNpm": "npm install appsflyer-capacitor-plugin  && npx cap sync",
+    "installQA": "npm install appsflyer-capacitor-plugin@QA  && npx cap sync",
+    "removePlugin": "npm uninstall  appsflyer-capacitor-plugin  && npx cap sync"
   },
   "eslintConfig": {
     "extends": [
@@ -69,7 +72,7 @@
     ]
   },
   "devDependencies": {
-    "@capacitor/cli": "3.1.2"
+    "@capacitor/cli": "^4.0.0"
   },
   "description": "An Ionic project"
 }

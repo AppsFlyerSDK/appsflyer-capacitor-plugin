@@ -46,15 +46,12 @@ object AFHelpers {
     fun jsonToBundle(json: JSObject?): Bundle? {
         val bundle = Bundle()
       json?.run {
-
-
                 val iterator: Iterator<*> = keys()
                 while (iterator.hasNext()) {
                     val key = iterator.next() as String
                     val value =get(key) as String
                     bundle.putString(key,value )
                 }
-
             }
         return bundle
     }
