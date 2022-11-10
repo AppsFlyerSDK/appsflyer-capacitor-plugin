@@ -60,9 +60,9 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation "androidx.core:core-ktx:1.6.0"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
-    implementation 'com.appsflyer:af-android-sdk:6.8.2'
+    implementation 'com.appsflyer:af-android-sdk:6.9.2'
     implementation "com.android.installreferrer:installreferrer:2.2"
 
 
