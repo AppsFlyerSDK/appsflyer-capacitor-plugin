@@ -1,6 +1,6 @@
 package capacitor.plugin.appsflyer.sdk
 
-const val TAG = "AppsFlyer_6.3.50_Cap"
+const val TAG = "AppsFlyer_Cap"
 const val AF_APP_ID = "appID"
 const val AF_DEV_KEY = "devKey"
 const val AF_DEBUG = "isDebug"
