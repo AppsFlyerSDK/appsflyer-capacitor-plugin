@@ -3,6 +3,10 @@ name: Create Release Branch
 on:
   workflow_dispatch:
     inputs:
+      branchFrom:
+        default: 'develop'
+        description: 'The name of the branch to checkout to create a release from'
+        required: true
       versionName:
         description: 'Name of version  (ie 5.5.0)'
         required: true
