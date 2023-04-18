@@ -13,7 +13,7 @@ newPluginVersion=$1
 echo "pwd: $(pwd)"
 echo "New Plugin Version 1: $newPluginVersion"
 echo "Updating AppsFlyerPlugin.swift file"
-gsed -i -r -e "s/APPSFLYER_PLUGIN_VERSION = \"[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\"/APPSFLYER_PLUGIN_VERSION = \"$newPluginVersion\"/gi" ios/Plugin/AppsFlyerPlugin.swift
+sed -i -r -e "s/APPSFLYER_PLUGIN_VERSION = \"[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\"/APPSFLYER_PLUGIN_VERSION = \"$newPluginVersion\"/gi" ios/Plugin/AppsFlyerPlugin.swift
 echo "Updating Package.json file"
-gsed -i -r -e "s/\"version\": \"[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\"/\"version\": \"$newPluginVersion\"/gi" package.json
+sed -i -r -e "s/\"version\": \"[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\"/\"version\": \"$newPluginVersion\"/gi" package.json
 git add AppsFlyerPlugin.swift package.json
