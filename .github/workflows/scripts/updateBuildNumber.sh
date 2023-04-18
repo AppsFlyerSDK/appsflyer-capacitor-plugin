@@ -13,5 +13,5 @@ newBuildNumber=$1
 echo "pwd: $(pwd)"
 echo "New iOS SDK Version 1: newBuildNumber"
 echo "Updating Package.json file"
-gsed -i -r -e "s/\"buildNumber\": \"[0-9]+\"/\"buildNumber\": \"$newBuildNumber\"/gi" package.json
+sed -i -r -e "s/\"buildNumber\": \"[0-9]+\"/\"buildNumber\": \"$newBuildNumber\"/gi" package.json
 git add package.json
