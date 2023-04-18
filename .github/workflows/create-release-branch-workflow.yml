@@ -1,0 +1,45 @@
+
+name: Create Release Branch
+on:
+  workflow_dispatch:
+    inputs:
+      branchFrom:
+        default: 'develop'
+        description: 'The name of the branch to checkout to create a release from'
+        required: true
+      versionName:
+        description: 'Name of version  (ie 5.5.0)'
+        required: true
+      BuildNumber:
+        description: 'Version number (5500)'
+        required: true
+      iosVersion:
+        description: 'iOS SDK version number (5.5.0)'
+        required: true
+      AndroidVersion:
+        description: 'Android SDK version number (5.5.0)'
+        required: true
+
+jobs:
+  createRelease:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Create New Branch
+      run: |
+        major=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 1)
+        minor=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 2)
+        patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
+        branchName=$(printf "Release/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
+        export branchName
+        git checkout -b $branchName ${{ github.event.inputs.branchFrom }}
+    - name: Update Codebase
+      run: |
+        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.event.inputs.BuildNumber }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
+        git commit -m "update versions using CI"
+        git push 
+
+    - name: create pull request
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh pr create -B main --title 'Merge $branchName into main' --body 'Created by Github action'
