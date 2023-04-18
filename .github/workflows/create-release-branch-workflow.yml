@@ -3,10 +3,6 @@ name: Create Release Branch
 on:
   workflow_dispatch:
     inputs:
-      branchFrom:
-        default: 'develop'
-        description: 'The name of the branch to checkout to create a release from'
-        required: true
       versionName:
         description: 'Name of version  (ie 5.5.0)'
         required: true
@@ -39,7 +35,7 @@ jobs:
         patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
         branchName=$(printf "Release/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
-        git checkout -b $branchName ${{ github.event.inputs.branchFrom }}
+        git checkout -b $branchName
     - name: Update Codebase
       run: |
         .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.event.inputs.BuildNumber }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
