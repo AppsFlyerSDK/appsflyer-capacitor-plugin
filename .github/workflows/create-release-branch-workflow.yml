@@ -25,6 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Login to Github
+      env:
+        COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
+        COMMIT_EMAIL: ${{ secrets.CI_COMMIT_EMAIL }}
+      run: |
+        git config --global user.name $COMMIT_AUTHOR
+        git config --global user.email $COMMIT_EMAIL
     - name: Create New Branch
       run: |
         major=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 1)
