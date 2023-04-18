@@ -166,7 +166,6 @@ export interface AppsFlyerPlugin {
 
     /**
      * Opt-out of Apple Search Ads attributions.
-     * @Deprecated deprecated since 6.10.2.  This API has no effect, since the SDK is no longer fetching Apple Search Ads data from the iAd Framework.
      */
     disableCollectASA(stop: AFDisable): Promise<void>
 
