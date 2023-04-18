@@ -23,7 +23,7 @@ jobs:
           BRANCH_NAME: ${{github.ref_name}}
         run: |
           fixed_version_found=false
-          plugin_version=$(echo "$BRANCH_NAME" | grep -Eo '[0-9].[0-9].[0-9]+')
+          plugin_version=$(echo "$BRANCH_NAME" | grep -Eo '[0-9].[0-9]+.[0-9]+')
           jira_fixed_version="Capacitor SDK v$plugin_version"
           # echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
           echo "JIRA_FIXED_VERSION=$jira_fixed_version" >> $GITHUB_ENV
@@ -31,7 +31,7 @@ jobs:
           .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$jira_fixed_version"
       - name: Update package.json file
         run: |
-          plugin_rc_version=$(echo "${{github.ref_name}}" | grep -Eo '[0-9].[0-9].[0-9]+-rc[0-9]+')
+          plugin_rc_version=$(echo "${{github.ref_name}}" | grep -Eo '[0-9].[0-9]+.[0-9]+-rc[0-9]+')
           echo "Updating plugin to version $plugin_rc_version"
           npm version $plugin_rc_version --no-git-tag-version
           echo "Updating package.json and AppsFlyerPlugin.swift to version $plugin_rc_version"

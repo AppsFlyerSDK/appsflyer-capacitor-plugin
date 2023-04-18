@@ -31,7 +31,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine release tag and release branch
         run: |
-          TAG=$(echo "${{ steps.vars.outputs.branch }}" | grep -Eo '[0-9].[0-9].[0-9]+')
+          TAG=$(echo "${{ steps.vars.outputs.branch }}" | grep -Eo '[0-9].[0-9]+.[0-9]+')
           echo "PLUGIN_VERSION=$TAG" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
           echo "push new release >> $TAG"
