@@ -11,7 +11,7 @@ newIosVersion=$1
 
 # Output the arguments
 echo "pwd: $(pwd)"
-echo "New iOS SDK Version 1: newIosVersion"
+echo "New iOS SDK Version: $newIosVersion"
 echo "Updating Package.json file"
 sed -i -r -e "s/\"iosSdkVersion\": \"[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\"/\"iosSdkVersion\": \"$newIosVersion\"/gi" package.json
 echo "Updating README.md file"
