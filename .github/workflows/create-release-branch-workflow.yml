@@ -40,7 +40,7 @@ jobs:
       run: |
         .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.event.inputs.BuildNumber }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
         git commit -m "update versions using CI"
-        git push 
+        git push -u origin --all
 
     - name: create pull request
       env:
