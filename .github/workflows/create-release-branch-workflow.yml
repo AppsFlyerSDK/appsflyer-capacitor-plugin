@@ -29,8 +29,6 @@ on:
 jobs:
   createRelease:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v3
     - name: Login to Github
@@ -48,7 +46,7 @@ jobs:
         patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
         branchName=$(printf "releases/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
-        echo "BRANCH_NAME=$branchName" >> $GITHUB_OUTPUT
+        echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
         git checkout -b $branchName
     - name: Update Codebase
       run: |
@@ -58,7 +56,7 @@ jobs:
 
     - name: create pull request
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
 
 #  deployToQA:
