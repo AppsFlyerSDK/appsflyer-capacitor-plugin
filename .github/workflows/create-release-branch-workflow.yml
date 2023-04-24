@@ -29,8 +29,8 @@ on:
 jobs:
   createRelease:
     runs-on: ubuntu-latest
-    outputs:
-      output1: ${{ steps.createBranch.outputs.test }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v3
     - name: Login to Github
@@ -61,10 +61,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
 
-  deployToQA:
-    if: ${{ github.event.inputs.DeployToQA }}
-    needs: [ createRelease ]
-    env:
-      BRANCH_NAME: ${{needs.createRelease.outputs.output1}}
-    uses: "./.github/workflows/release-QA-workflow.yml@$BRANCH_NAME"
-    secrets: inherit
+#  deployToQA:
+#    if: ${{ github.event.inputs.DeployToQA }}
+#    needs: [ createRelease ]
+#    uses: ./.github/workflows/release-QA-workflow.yml
+#    secrets: inherit
