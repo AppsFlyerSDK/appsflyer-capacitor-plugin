@@ -39,6 +39,7 @@ jobs:
         patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
         branchName=$(printf "Release/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
+        echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
         git checkout -b $branchName
     - name: Update Codebase
       run: |
@@ -49,4 +50,4 @@ jobs:
     - name: create pull request
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh pr create -B main --title "Merge $branchName into main" --body 'Created by Github action'
+      run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
