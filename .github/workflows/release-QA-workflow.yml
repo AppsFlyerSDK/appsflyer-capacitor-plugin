@@ -7,18 +7,9 @@ on:
     branches:
       - 'main'
 
-#  push:
-#    branches:
-#      - releases/[0-9]+.x.x/[0-9]+.[0-9]+.x/[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
-#    paths-ignore:
-#      - '**.md'
-#      - '**.yml'
-#      - 'examples/**'
-#      - 'assets/**'
-#      - 'docs/**'
-
 jobs:
-
+  Print-Ref-Head:
+    run: echo "head_ref = ${{github.head_ref}}"
   Build-Sample-Apps:
     if: startsWith(github.head_ref, 'Release/')
     uses: ./.github/workflows/build-apps-workflow.yml
