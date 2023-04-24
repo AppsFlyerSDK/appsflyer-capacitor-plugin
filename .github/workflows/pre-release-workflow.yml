@@ -1,15 +1,11 @@
 name: Prepare plugin for production
 
 on:
-  pull_request:
-    types:
-      - opened
-    branches:
-      - 'master'
+  workflow_call:
 
 jobs:
   Prepare-Plugin-For-Production:
-    if: startsWith(github.head_ref, 'releases/')
+    if: startsWith(github.head_ref, 'Release/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -26,12 +22,14 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Update package.json file
         run: |
-          plugin_version=$(echo "${{ steps.vars.outputs.branch }}" | grep -Eo '[0-9].[0-9]+.[0-9]+')
+          plugin_version=$(echo "${{ steps.vars.outputs.branch }}" | grep -Eo '[0-9]+.[0-9]+.[0-9]+')
           # we export plugin_version and release branch name as env so we can use them in the next step
           echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
           echo "GIT_BRANCH_RELEASE=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
           echo "Updating plugin to version $plugin_version"
-          npm version $plugin_version
+          chmod +x .github/workflows/scripts/updatePluginVersion.sh
+          .github/workflows/scripts/updatePluginVersion.sh $plugin_version
+          git commit -m "Update Plugin Version"
           git push origin HEAD:${{ steps.vars.outputs.branch }} --force
 
       - name: Update CHANGELOG.md
