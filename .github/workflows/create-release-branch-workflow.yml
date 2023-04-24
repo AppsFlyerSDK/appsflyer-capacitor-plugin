@@ -37,7 +37,7 @@ jobs:
         major=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 1)
         minor=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 2)
         patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
-        branchName=$(printf "Release/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
+        branchName=$(printf "releases/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
         echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
         git checkout -b $branchName
