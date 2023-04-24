@@ -19,6 +19,11 @@ on:
       AndroidVersion:
         description: 'Android SDK version number (5.5.0)'
         required: true
+      DeployToQA:
+        required: false
+        type: boolean
+        default: false
+
 
 jobs:
   createRelease:
@@ -51,3 +56,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
+
+  deployToQA:
+    if: startsWith(github.head_ref, 'releases/') && ${{ github.event.inputs.DeployToQA }}
+    needs: [ createRelease ]
+    uses: ./.github/workflows/release-QA-workflow.yml
+    secrets: inherit

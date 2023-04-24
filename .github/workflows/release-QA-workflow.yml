@@ -1,5 +1,6 @@
 name: Release plugin to QA
 on:
+  workflow_call:
   pull_request:
     types:
       - opened
