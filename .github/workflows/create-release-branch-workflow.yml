@@ -29,6 +29,8 @@ on:
 jobs:
   createRelease:
     runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.createBranch.outputs.test }}
     steps:
     - uses: actions/checkout@v3
     - name: Login to Github
@@ -39,13 +41,14 @@ jobs:
         git config --global user.name $COMMIT_AUTHOR
         git config --global user.email $COMMIT_EMAIL
     - name: Create New Branch
+      id: createBranch
       run: |
         major=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 1)
         minor=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 2)
         patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
         branchName=$(printf "releases/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
-        echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
+        echo "BRANCH_NAME=$branchName" >> $GITHUB_OUTPUT
         git checkout -b $branchName
     - name: Update Codebase
       run: |
@@ -61,5 +64,7 @@ jobs:
   deployToQA:
     if: ${{ github.event.inputs.DeployToQA }}
     needs: [ createRelease ]
-    uses: ./.github/workflows/release-QA-workflow.yml
+    env:
+      BRANCH_NAME: ${{needs.createRelease.outputs.output1}}
+    uses: "./.github/workflows/release-QA-workflow.yml@$BRANCH_NAME"
     secrets: inherit
