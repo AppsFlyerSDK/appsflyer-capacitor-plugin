@@ -21,7 +21,7 @@ on:
         required: true
       DeployToQA:
         required: false
-        description: 'Should the workflow trigger RC deployment'
+        description: 'Deploy to QA (publish RC)'
         type: boolean
         default: false
 
@@ -59,7 +59,7 @@ jobs:
       run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
 
   deployToQA:
-    if: startsWith(github.head_ref, 'releases/') && ${{ github.event.inputs.DeployToQA }}
+    if: ${{ github.event.inputs.DeployToQA }}
     needs: [ createRelease ]
     uses: ./.github/workflows/release-QA-workflow.yml
     secrets: inherit
