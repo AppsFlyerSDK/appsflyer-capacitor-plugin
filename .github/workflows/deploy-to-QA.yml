@@ -9,6 +9,10 @@ jobs:
     environment: Staging
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19.x
       - name: Login to Github
         env:
           COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
@@ -35,7 +39,7 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=$CI_NPM_TOKEN" > ~/.npmrc
           npm run build
-          npm publish --tag QA
+          npm publish --tag QA --dry-run
       - name: Generate and send slack report
         env:
           SLACK_TOKEN: ${{ secrets.CI_SLACK_TOKEN }}
