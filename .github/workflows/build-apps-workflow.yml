@@ -27,6 +27,7 @@ jobs:
       - name: install capacitor-appsflyer on an Android app
         run: |
           cd examples/CapacitorReact
+          npm install
           npm install ../../
           npx cap add android
           npm run build
