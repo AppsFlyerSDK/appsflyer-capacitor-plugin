@@ -38,7 +38,7 @@ jobs:
           gradle wrapper
           echo "ls: $(ls)"
           chmod +x ./gradlew
-          ./gradlew assembleRelease
+          ./gradlew clean assembleRelease
   # Build-Capacitor-ios:
   #   runs-on: macos-latest
   #   steps:
