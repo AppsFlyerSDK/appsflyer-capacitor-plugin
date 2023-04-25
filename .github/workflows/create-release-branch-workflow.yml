@@ -55,6 +55,7 @@ jobs:
         git push -u origin --all
 
     - name: create pull request
+      if: ${{ github.event.inputs.DeployToQA }}
       env:
         GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
