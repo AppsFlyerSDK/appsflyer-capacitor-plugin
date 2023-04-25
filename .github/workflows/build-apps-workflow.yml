@@ -29,6 +29,7 @@ jobs:
           cd examples/CapacitorReact
           npm install ../../
           npx cap add android
+          npm run build
           npx cap sync android
       - name: Build apk
         run: |
