@@ -18,12 +18,21 @@ jobs:
     uses: ./.github/workflows/pre-release-workflow.yml
     secrets: inherit
 
-  Deploy-To-Production:
+  Build-Sample-Apps:
     needs: [ Pre-Release-To-Prod ]
+    uses: ./.github/workflows/build-apps-workflow.yml
+    secrets: inherit
+
+  Deploy-To-Production:
+    needs: [ Build-Sample-Apps ]
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 19.x
       - name: Login to Github
         env:
           COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}

@@ -19,6 +19,12 @@ on:
       AndroidVersion:
         description: 'Android SDK version number (5.5.0)'
         required: true
+      DeployToQA:
+        required: false
+        description: 'Deploy to QA (publish RC)'
+        type: boolean
+        default: false
+
 
 jobs:
   createRelease:
@@ -33,11 +39,12 @@ jobs:
         git config --global user.name $COMMIT_AUTHOR
         git config --global user.email $COMMIT_EMAIL
     - name: Create New Branch
+      id: createBranch
       run: |
         major=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 1)
         minor=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 2)
         patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
-        branchName=$(printf "Release/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
+        branchName=$(printf "releases/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
         echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
         git checkout -b $branchName
@@ -49,5 +56,11 @@ jobs:
 
     - name: create pull request
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
+
+#  deployToQA:
+#    if: ${{ github.event.inputs.DeployToQA }}
+#    needs: [ createRelease ]
+#    uses: ./.github/workflows/release-QA-workflow.yml
+#    secrets: inherit
