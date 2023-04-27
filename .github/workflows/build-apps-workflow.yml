@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 19.x
+          node-version: 16.x
 
       - name: Install plugin dependencies
         run: npm install
@@ -27,7 +27,10 @@ jobs:
       - name: install capacitor-appsflyer on an Android app
         run: |
           cd examples/CapacitorReact
+          npm install
           npm install ../../
+          npx cap add android
+          npm run build
           npx cap sync android
       - name: Build apk
         run: |
@@ -36,7 +39,9 @@ jobs:
           gradle wrapper
           echo "ls: $(ls)"
           chmod +x ./gradlew
-          ./gradlew assembleRelease
+          ./gradlew wrapper --gradle-version 7.6.1
+          ./gradlew clean assembleRelease
+
   # Build-Capacitor-ios:
   #   runs-on: macos-latest
   #   steps:
