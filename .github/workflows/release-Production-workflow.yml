@@ -33,6 +33,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
+      - name: Install dependency
+        run: |
+          npm i rimraf
       - name: Login to Github
         env:
           COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}

@@ -13,6 +13,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.x
+      - name: Install dependency
+        run: |
+          npm i rimraf
       - name: Login to Github
         env:
           COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
@@ -34,12 +37,14 @@ jobs:
           echo "JIRA_FIXED_VERSION=$jira_fixed_version" >> $GITHUB_ENV
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
           .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN $jira_fixed_version
+      - name: Build Plugin
+        run: |
+          npm run build
       - name: Push to NPM
         env:
           CI_NPM_TOKEN: ${{ secrets.CI_NPM_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=$CI_NPM_TOKEN" > ~/.npmrc
-          npm run build
           npm publish --tag QA --dry-run
 
       - id: set_var
