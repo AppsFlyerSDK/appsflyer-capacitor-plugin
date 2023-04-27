@@ -48,7 +48,7 @@ jobs:
         git push -u origin --all
 
     - name: create pull request
-      if: ${{ inputs.DeployToQA == 'true' }}
+      if: ${{ inputs.DeployToQA }}
       env:
         GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       run: |
