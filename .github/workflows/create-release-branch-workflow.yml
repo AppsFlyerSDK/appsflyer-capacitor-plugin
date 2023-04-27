@@ -3,15 +3,8 @@ name: Create Release Branch
 on:
   workflow_dispatch:
     inputs:
-      branchFrom:
-        default: 'develop'
-        description: 'The name of the branch to checkout to create a release from'
-        required: true
       versionName:
         description: 'Name of version  (ie 5.5.0)'
-        required: true
-      BuildNumber:
-        description: 'Version number (5500)'
         required: true
       iosVersion:
         description: 'iOS SDK version number (5.5.0)'
@@ -50,17 +43,12 @@ jobs:
         git checkout -b $branchName
     - name: Update Codebase
       run: |
-        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.event.inputs.BuildNumber }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
+        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.run_number }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
         git commit -m "update versions using CI"
         git push -u origin --all
 
     - name: create pull request
+      if: ${{ github.event.inputs.DeployToQA }} == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
-
-#  deployToQA:
-#    if: ${{ github.event.inputs.DeployToQA }}
-#    needs: [ createRelease ]
-#    uses: ./.github/workflows/release-QA-workflow.yml
-#    secrets: inherit
