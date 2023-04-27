@@ -30,7 +30,7 @@ jobs:
           chmod +x .github/workflows/scripts/updatePluginVersion.sh
           chmod +x .github/workflows/scripts/updateBuildNumber.sh
           .github/workflows/scripts/updatePluginVersion.sh $plugin_version
-          .github/workflows/scripts/updateBuildNumber.sh ${{github.workflow}}
+          .github/workflows/scripts/updateBuildNumber.sh ${{github.run_number}}
           git commit -m "Update Plugin Version"
           git push origin HEAD:${{ steps.vars.outputs.branch }} --force
 

@@ -46,7 +46,7 @@ jobs:
         git checkout -b $branchName
     - name: Update Codebase
       run: |
-        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.workflow }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
+        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.run_number }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
         git commit -m "update versions using CI"
         git push -u origin --all
 
