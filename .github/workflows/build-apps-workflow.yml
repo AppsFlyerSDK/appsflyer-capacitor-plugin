@@ -41,6 +41,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew wrapper --gradle-version 7.6.1
           ./gradlew clean assembleRelease
+
   # Build-Capacitor-ios:
   #   runs-on: macos-latest
   #   steps:
