@@ -32,7 +32,7 @@ jobs:
           echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
           echo "JIRA_FIXED_VERSION=$jira_fixed_version" >> $GITHUB_ENV
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
-          .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$jira_fixed_version"
+          .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN $jira_fixed_version
       - name: Push to NPM
         env:
           CI_NPM_TOKEN: ${{ secrets.CI_NPM_TOKEN }}
@@ -63,6 +63,6 @@ jobs:
           BUILD_NUMBER: ${{fromJson(steps.set_var.outputs.packageJson).buildNumber}}
         run: |
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
-          .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$JIRA_FIXED_VERSION"
+          .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN $JIRA_FIXED_VERSION
           CHANGES=$(cat "$JIRA_FIXED_VERSION-releasenotes".txt)
           curl -X POST -H 'Content-type: application/json' --data '{"jira_fixed_version": "'"${{env.JIRA_FIXED_VERSION}}"'", "deploy_type": "QA", "install_tag": "QA", "git_branch": "'"$RELEASE_BRANCH_NAME"'", "changes_and_fixes": "'"$CHANGES"'", "plugin_version": "'"${{env.PLUGIN_VERSION}}"'", "android_dependencie": "'"${{env.ANDROID_SDK_VERSION}}"'", "ios_dependencie": "'"${{env.IOS_SDK_VERSION}}"'"}' "$SLACK_TOKEN"

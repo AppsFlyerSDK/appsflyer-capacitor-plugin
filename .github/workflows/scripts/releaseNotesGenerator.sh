@@ -1,6 +1,8 @@
 JIRA_TOKEN=$1
 JIRA_FIXED_VERSION=$2
 
+echo "Trying to fetch release note for $JIRA_FIXED_VERSION"
+
 fixed_version_found=false
 curl -X GET https://appsflyer.atlassian.net/rest/api/3/project/11723/versions --user $JIRA_TOKEN | jq -r '.[] | .name+""+.id' | while read version ; do
 if [[ "$version" == *"$JIRA_FIXED_VERSION"* ]] ;then
