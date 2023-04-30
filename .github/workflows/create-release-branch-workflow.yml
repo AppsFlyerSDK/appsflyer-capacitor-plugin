@@ -3,15 +3,8 @@ name: Create Release Branch
 on:
   workflow_dispatch:
     inputs:
-      branchFrom:
-        default: 'develop'
-        description: 'The name of the branch to checkout to create a release from'
-        required: true
       versionName:
         description: 'Name of version  (ie 5.5.0)'
-        required: true
-      BuildNumber:
-        description: 'Version number (5500)'
         required: true
       iosVersion:
         description: 'iOS SDK version number (5.5.0)'
@@ -19,6 +12,12 @@ on:
       AndroidVersion:
         description: 'Android SDK version number (5.5.0)'
         required: true
+      DeployToQA:
+        required: false
+        description: 'Deploy to QA (open PR and publish RC)'
+        type: boolean
+        default: false
+
 
 jobs:
   createRelease:
@@ -33,21 +32,24 @@ jobs:
         git config --global user.name $COMMIT_AUTHOR
         git config --global user.email $COMMIT_EMAIL
     - name: Create New Branch
+      id: createBranch
       run: |
-        major=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 1)
-        minor=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 2)
-        patch=$(echo ${{ github.event.inputs.versionName }}| cut -d'.' -f 3)
-        branchName=$(printf "Release/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
+        major=$(echo ${{ inputs.versionName }}| cut -d'.' -f 1)
+        minor=$(echo ${{ inputs.versionName }}| cut -d'.' -f 2)
+        patch=$(echo ${{ inputs.versionName }}| cut -d'.' -f 3)
+        branchName=$(printf "releases/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
         echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
         git checkout -b $branchName
     - name: Update Codebase
       run: |
-        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ github.event.inputs.versionName }} buildNumber=${{ github.event.inputs.BuildNumber }} iOSVersion=${{ github.event.inputs.iosVersion }} androidVersion=${{ github.event.inputs.AndroidVersion }}
+        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ inputs.versionName }} buildNumber=${{ github.run_number }} iOSVersion=${{ inputs.iosVersion }} androidVersion=${{ inputs.AndroidVersion }}
         git commit -m "update versions using CI"
         git push -u origin --all
 
     - name: create pull request
+      if: ${{ inputs.DeployToQA }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
+        GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+      run: |
+        gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
