@@ -97,11 +97,12 @@ jobs:
           SLACK_TOKEN: ${{ secrets.CI_SLACK_TOKEN }}
           JIRA_TOKEN: ${{ secrets.CI_JIRA_TOKEN }}
           JIRA_FIXED_VERSION: "Capacitor SDK v${{env.PLUGIN_VERSION}}"
+          PACKAGE_JSON: ${{env.packageJson}}
           RELEASE_BRANCH_NAME: ${{env.RELEASE_BRANCH_NAME}}
-          ANDROID_SDK_VERSION: ${{fromJson(env.packageJson).androidSdkVersion}}
-          IOS_SDK_VERSION: ${{fromJson(env.packageJson).iosSdkVersion}}
-          PLUGIN_VERSION: ${{fromJson(env.packageJson).version}}
-          BUILD_NUMBER: ${{fromJson(env.packageJson).buildNumber}}
+          ANDROID_SDK_VERSION: ${{fromJson($PACKAGE_JSON).androidSdkVersion}}
+          IOS_SDK_VERSION: ${{fromJson($PACKAGE_JSON).iosSdkVersion}}
+          PLUGIN_VERSION: ${{fromJson($PACKAGE_JSON).version}}
+          BUILD_NUMBER: ${{fromJson($PACKAGE_JSON).buildNumber}}
         run: |
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
           .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$JIRA_FIXED_VERSION"
