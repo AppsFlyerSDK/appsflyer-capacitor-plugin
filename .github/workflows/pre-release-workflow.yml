@@ -3,12 +3,12 @@ name: Prepare plugin for production
 #on:
 #  workflow_call:
 on:
-  pull_request_review:
-    types: [submitted]
+  pull_request:
+    types: [ labeled ]
 
 jobs:
   Prepare-Plugin-For-Production:
-    if: startsWith(github.head_ref, 'releases/') && github.event.review.state == 'approved'
+    if: startsWith(github.head_ref, 'releases/') && github.event.label.name == 'Ready For Production'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -50,3 +50,12 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG.md"
           git push origin HEAD:${{ env.GIT_BRANCH_RELEASE }} --force
+
+  Approve-Pull-Request:
+    needs: [ Prepare-Plugin-For-Production ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: approve pull request
+        run: | # approve the pull request of the current branch
+          gh pr review --approve
