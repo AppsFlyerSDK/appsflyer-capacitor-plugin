@@ -1,6 +1,6 @@
 name: Release plugin to QA
-
 on:
+  workflow_call:
   pull_request:
     types:
       - opened
@@ -8,15 +8,14 @@ on:
       - 'main'
 
 jobs:
-  Print-Ref-Head:
-    run: echo "head_ref = ${{github.head_ref}}"
+
   Build-Sample-Apps:
-    if: startsWith(github.head_ref, 'Release/')
+    if: startsWith(github.head_ref, 'releases/')
     uses: ./.github/workflows/build-apps-workflow.yml
     secrets: inherit
 
   Deploy-To-QA:
-    if: startsWith(github.head_ref, 'Release/')
+    if: startsWith(github.head_ref, 'releases/')
     needs: [Build-Sample-Apps]
     uses: ./.github/workflows/deploy-to-QA.yml
     secrets: inherit
