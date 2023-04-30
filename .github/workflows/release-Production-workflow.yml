@@ -90,7 +90,7 @@ jobs:
           content="${content//$'\n'/'%0A'}"
           content="${content//$'\r'/'%0D'}"
           # end of optional handling for multi line json
-          echo "packageJson=$content" >> $GITHUB_OUTPUT 
+          echo "packageJson=$content" >> "$GITHUB_OUTPUT" 
 
       - name: Generate and send slack report
         env:
