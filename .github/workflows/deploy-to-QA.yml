@@ -67,11 +67,10 @@ jobs:
 #          PLUGIN_VERSION: ${{fromJson(steps.set_var.outputs.PACKAGE_JSON).version}}
 #          BUILD_NUMBER: ${{fromJson(steps.set_var.outputs.PACKAGE_JSON).buildNumber}}
         run: |
-          echo "GITHUB_OUTPUT file ${{steps.set_var.outputs.PACKAGE_JSON}}" 
-          ANDROID_SDK_VERSION=${{fromJson(steps.set_var.outputs.PACKAGE_JSON).androidSdkVersion}}
-          IOS_SDK_VERSION=${{fromJson(steps.set_var.outputs.PACKAGE_JSON).iosSdkVersion}}
-          PLUGIN_VERSION=${{fromJson(steps.set_var.outputs.PACKAGE_JSON).version}}
-          BUILD_NUMBER=${{fromJson(steps.set_var.outputs.PACKAGE_JSON).buildNumber}}
+          ANDROID_SDK_VERSION=`cat package.json | jq .androidSdkVersion`
+          IOS_SDK_VERSION=`cat package.json | jq .iosSdkVersion`
+          PLUGIN_VERSION=`cat package.json | jq .version`
+          BUILD_NUMBER=`cat package.json | jq .buildNumber`
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
           .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$JIRA_FIXED_VERSION"
           CHANGES=$(cat "$JIRA_FIXED_VERSION-releasenotes".txt)
