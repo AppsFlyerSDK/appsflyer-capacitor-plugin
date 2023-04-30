@@ -55,18 +55,17 @@ jobs:
           content="${content//$'\n'/'%0A'}"
           content="${content//$'\r'/'%0D'}"
           # end of optional handling for multi line json
-          echo "packageJson=$content" >> $GITHUB_ENV
+          echo "PACKAGE_JSON=$content" >> "$GITHUB_OUTPUT"
       - name: Generate and send slack report
         env:
           SLACK_TOKEN: ${{ secrets.CI_SLACK_TOKEN }}
           JIRA_TOKEN: ${{ secrets.CI_JIRA_TOKEN }}
           JIRA_FIXED_VERSION: "Capacitor SDK v${{env.PLUGIN_VERSION}}"
-          PACKAGE_JSON: ${{env.packageJson}}
           RELEASE_BRANCH_NAME: ${{env.RELEASE_BRANCH_NAME}}
-          ANDROID_SDK_VERSION: ${{fromJson($PACKAGE_JSON).androidSdkVersion}}
-          IOS_SDK_VERSION: ${{fromJson($PACKAGE_JSON).iosSdkVersion}}
-          PLUGIN_VERSION: ${{fromJson($PACKAGE_JSON).version}}
-          BUILD_NUMBER: ${{fromJson($PACKAGE_JSON).buildNumber}}
+          ANDROID_SDK_VERSION: ${{fromJson(step.set_var.outputs.PACKAGE_JSON).androidSdkVersion}}
+          IOS_SDK_VERSION: ${{fromJson(step.set_var.outputs.PACKAGE_JSON).iosSdkVersion}}
+          PLUGIN_VERSION: ${{fromJson(step.set_var.outputs.PACKAGE_JSON).version}}
+          BUILD_NUMBER: ${{fromJson(step.set_var.outputs.PACKAGE_JSON).buildNumber}}
         run: |
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
           .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$JIRA_FIXED_VERSION"
