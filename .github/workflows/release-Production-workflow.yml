@@ -43,7 +43,7 @@ jobs:
         run: |
           git config --global user.name $COMMIT_AUTHOR
           git config --global user.email $COMMIT_EMAIL
-      - uses: mdecoleman/pr-branch-name2.0.0
+      - uses: mdecoleman/pr-branch-name@v2.0.0
         id: vars
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
