@@ -80,4 +80,4 @@ jobs:
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
           .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$JIRA_FIXED_VERSION"
           CHANGES=$(cat "$JIRA_FIXED_VERSION-releasenotes".txt)
-          curl -X POST -H 'Content-type: application/json' --data '{"jira_fixed_version": "'"${{env.JIRA_FIXED_VERSION}}"'", "deploy_type": "QA", "install_tag": "QA", "git_branch": "'"${{github.ref_name}}"'", "changes_and_fixes": "'"$CHANGES"'", "plugin_version": "'"${{env.PLUGIN_VERSION}}"'", "android_dependency": "'"${{env.ANDROID_SDK_VERSION}}"'", "ios_dependency": "'"${{env.IOS_SDK_VERSION}}"'"}' "$SLACK_TOKEN"
+          curl -X POST -H 'Content-type: application/json' --data '{"jira_fixed_version": "'"${{env.JIRA_FIXED_VERSION}}"'", "deploy_type": "QA", "install_tag": "QA", "git_branch": "'"$RELEASE_BRANCH_NAME"'", "changes_and_fixes": "'"$CHANGES"'", "plugin_version": "'"${{env.PLUGIN_VERSION}}"'", "android_dependency": "'"${{env.ANDROID_SDK_VERSION}}"'", "ios_dependency": "'"${{env.IOS_SDK_VERSION}}"'"}' "$SLACK_TOKEN"

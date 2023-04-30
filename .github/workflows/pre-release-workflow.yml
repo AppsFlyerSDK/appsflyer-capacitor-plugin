@@ -56,8 +56,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: mdecoleman/pr-branch-name@2.0.0
+        id: vars
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Export branch name
+        run: |
+          echo "RELEASE_BRANCH_NAME=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
       - name: approve pull request
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: | # approve the pull request of the current branch
-          gh pr review --approve
+          gh pr review "$PR_NUMBER" --approve
