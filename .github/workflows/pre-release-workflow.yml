@@ -1,7 +1,5 @@
 name: Prepare plugin for production
 
-#on:
-#  workflow_call:
 on:
   pull_request:
     types: [ labeled ]

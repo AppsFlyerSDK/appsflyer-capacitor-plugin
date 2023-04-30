@@ -14,7 +14,7 @@ on:
         required: true
       DeployToQA:
         required: false
-        description: 'Deploy to QA (publish RC)'
+        description: 'Deploy to QA (open PR and publish RC)'
         type: boolean
         default: false
 
