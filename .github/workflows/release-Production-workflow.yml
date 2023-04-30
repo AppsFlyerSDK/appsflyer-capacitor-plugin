@@ -13,13 +13,13 @@ on:
       - 'docs/**'
       - 'assets/**'
 jobs:
-  Pre-Release-To-Prod:
-    if: github.event.pull_request.merged == true
-    uses: ./.github/workflows/pre-release-workflow.yml
-    secrets: inherit
+#  Pre-Release-To-Prod:
+#    if: github.event.pull_request.merged == true
+#    uses: ./.github/workflows/pre-release-workflow.yml
+#    secrets: inherit
 
   Build-Sample-Apps:
-    needs: [ Pre-Release-To-Prod ]
+#    needs: [ Pre-Release-To-Prod ]
     uses: ./.github/workflows/build-apps-workflow.yml
     secrets: inherit
 
