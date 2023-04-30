@@ -13,17 +13,29 @@ on:
       - 'docs/**'
       - 'assets/**'
 jobs:
-  Pre-Release-To-Prod:
-    if: github.event.pull_request.merged == true
-    uses: ./.github/workflows/pre-release-workflow.yml
+#  Pre-Release-To-Prod:
+#    if: github.event.pull_request.merged == true
+#    uses: ./.github/workflows/pre-release-workflow.yml
+#    secrets: inherit
+
+  Build-Sample-Apps:
+#    needs: [ Pre-Release-To-Prod ]
+    uses: ./.github/workflows/build-apps-workflow.yml
     secrets: inherit
 
   Deploy-To-Production:
-    needs: [ Pre-Release-To-Prod ]
+    needs: [ Build-Sample-Apps ]
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      - name: Install dependency
+        run: |
+          npm i rimraf
       - name: Login to Github
         env:
           COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
@@ -31,7 +43,7 @@ jobs:
         run: |
           git config --global user.name $COMMIT_AUTHOR
           git config --global user.email $COMMIT_EMAIL
-      - uses: mdecoleman/pr-branch-name@1.2.0
+      - uses: mdecoleman/pr-branch-name2.0.0
         id: vars
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -72,20 +84,20 @@ jobs:
 
       - id: set_var
         run: |
-          content=`cat ./path/to/package.json`
+          content=`cat package.json`
           # the following lines are only required for multi line json
           content="${content//'%'/'%25'}"
           content="${content//$'\n'/'%0A'}"
           content="${content//$'\r'/'%0D'}"
           # end of optional handling for multi line json
-          echo "::set-output name=packageJson::$content"
+          echo "packageJson=$content" >> $GITHUB_OUTPUT 
 
       - name: Generate and send slack report
         env:
           SLACK_TOKEN: ${{ secrets.CI_SLACK_TOKEN }}
           JIRA_TOKEN: ${{ secrets.CI_JIRA_TOKEN }}
           JIRA_FIXED_VERSION: "Capacitor SDK v${{env.PLUGIN_VERSION}}"
-          RELEASE_BRACH_NAME: ${{env.RELEASE_BRANCH_NAME}}
+          RELEASE_BRANCH_NAME: ${{env.RELEASE_BRANCH_NAME}}
           ANDROID_SDK_VERSION: ${{fromJson(steps.set_var.outputs.packageJson).androidSdkVersion}}
           IOS_SDK_VERSION: ${{fromJson(steps.set_var.outputs.packageJson).iosSdkVersion}}
           PLUGIN_VERSION: ${{fromJson(steps.set_var.outputs.packageJson).version}}
@@ -94,4 +106,4 @@ jobs:
           chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
           .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$JIRA_FIXED_VERSION"
           CHANGES=$(cat "$JIRA_FIXED_VERSION-releasenotes".txt)
-          curl -X POST -H 'Content-type: application/json' --data '{"jira_fixed_version": "'"${{env.JIRA_FIXED_VERSION}}"'", "deploy_type": "Production", "install_tag": "latest", "git_branch": "'"$RELEASE_BRACH_NAME"'", "changes_and_fixes": "'"$CHANGES"'", "plugin_version": "'"${{env.PLUGIN_VERSION}}"'", "android_dependencie": "'"${{env.ANDROID_SDK_VERSION}}"'", "ios_dependencie": "'"${{env.IOS_SDK_VERSION}}"'"}' "$SLACK_TOKEN"
+          curl -X POST -H 'Content-type: application/json' --data '{"jira_fixed_version": "'"${{env.JIRA_FIXED_VERSION}}"'", "deploy_type": "Production", "install_tag": "latest", "git_branch": "'"$RELEASE_BRANCH_NAME"'", "changes_and_fixes": "'"$CHANGES"'", "plugin_version": "'"${{env.PLUGIN_VERSION}}"'", "android_dependency": "'"${{env.ANDROID_SDK_VERSION}}"'", "ios_dependency": "'"${{env.IOS_SDK_VERSION}}"'"}' "$SLACK_TOKEN"
