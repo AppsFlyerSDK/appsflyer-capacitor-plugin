@@ -7,6 +7,7 @@ import com.appsflyer.*
 import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.appsflyer.deeplink.DeepLinkListener
 import com.appsflyer.deeplink.DeepLinkResult
+import com.appsflyer.internal.platform_extension.PluginInfo
 import com.appsflyer.share.CrossPromotionHelper
 import com.appsflyer.share.ShareInviteHelper
 import com.getcapacitor.JSObject
@@ -53,6 +54,13 @@ class AppsFlyerPlugin : Plugin() {
         val timeout = call.getInt(AF_DEEP_LINK_TIME_OUT)?.toLong()
 
         AppsFlyerLib.getInstance().apply {
+            setPluginInfo(
+                PluginInfo(
+                    com.appsflyer.internal.platform_extension.Plugin.CAPACITOR,
+                    BuildConfig.VERSION_NAME
+                   //, mapOf("build_number" to BuildConfig.VERSION_CODE.toString())
+                )
+            )
             if (debug == true) {
                 setDebugLog(true)
             }
@@ -578,5 +586,3 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 }
-
-
