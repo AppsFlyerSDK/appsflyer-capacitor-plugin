@@ -7,6 +7,7 @@ on:
 jobs:
   Prepare-Plugin-For-Production:
     if: startsWith(github.head_ref, 'releases/') && github.event.label.name == 'Ready For Production'
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: 16.x
 
+
       - name: Install plugin dependencies
         run: npm install
       - name: Build plugin
@@ -27,7 +28,6 @@ jobs:
       - name: install capacitor-appsflyer on an Android app
         run: |
           cd examples/CapacitorReact
-          npm install
           npm install ../../
           npx cap add android
           npm run build

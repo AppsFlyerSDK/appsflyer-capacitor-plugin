@@ -16,6 +16,7 @@ jobs:
       - name: Install dependency
         run: |
           npm i rimraf
+
       - name: Login to Github
         env:
           COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
@@ -52,6 +53,7 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=$CI_NPM_TOKEN" > ~/.npmrc
           npm publish --tag QA
+
 
       - name: Generate and send slack report
         env:

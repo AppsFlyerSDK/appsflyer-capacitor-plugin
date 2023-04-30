@@ -37,6 +37,7 @@ jobs:
         major=$(echo ${{ inputs.versionName }}| cut -d'.' -f 1)
         minor=$(echo ${{ inputs.versionName }}| cut -d'.' -f 2)
         patch=$(echo ${{ inputs.versionName }}| cut -d'.' -f 3)
+
         branchName=$(printf "releases/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
         export branchName
         echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
@@ -53,3 +54,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       run: |
         gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
+
