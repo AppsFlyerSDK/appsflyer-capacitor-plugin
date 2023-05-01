@@ -1,11 +1,13 @@
 name: Prepare plugin for production
 
 on:
-  workflow_call:
+  pull_request:
+    types: [ labeled ]
 
 jobs:
   Prepare-Plugin-For-Production:
-    if: startsWith(github.head_ref, 'releases/')
+    if: startsWith(github.head_ref, 'releases/') && github.event.label.name == 'Ready For Production'
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,7 +18,7 @@ jobs:
         run: |
           git config --global user.name $COMMIT_AUTHOR
           git config --global user.email $COMMIT_EMAIL
-      - uses: mdecoleman/pr-branch-name@1.2.0
+      - uses: mdecoleman/pr-branch-name@2.0.0
         id: vars
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -28,7 +30,9 @@ jobs:
           echo "GIT_BRANCH_RELEASE=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
           echo "Updating plugin to version $plugin_version"
           chmod +x .github/workflows/scripts/updatePluginVersion.sh
+          chmod +x .github/workflows/scripts/updateBuildNumber.sh
           .github/workflows/scripts/updatePluginVersion.sh $plugin_version
+          .github/workflows/scripts/updateBuildNumber.sh ${{github.run_number}}
           git commit -m "Update Plugin Version"
           git push origin HEAD:${{ steps.vars.outputs.branch }} --force
 
@@ -45,3 +49,22 @@ jobs:
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG.md"
           git push origin HEAD:${{ env.GIT_BRANCH_RELEASE }} --force
+
+  Approve-Pull-Request:
+    needs: [ Prepare-Plugin-For-Production ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: mdecoleman/pr-branch-name@2.0.0
+        id: vars
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Export branch name
+        run: |
+          echo "RELEASE_BRANCH_NAME=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
+      - name: approve pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: | # approve the pull request of the current branch
+          gh pr review "$PR_NUMBER" --approve
