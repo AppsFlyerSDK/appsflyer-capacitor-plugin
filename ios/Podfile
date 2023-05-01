@@ -1,3 +1,5 @@
+require_relative '../node_modules/@capacitor/ios/scripts/pods_helpers'
+
 platform :ios, '13.0'
 
 def capacitor_pods
@@ -10,9 +12,14 @@ end
 
 target 'Plugin' do
   capacitor_pods
-    pod 'AppsFlyerFramework', ' 6.10.1'
+    pod 'AppsFlyerFramework', ' 6.8.0'
+
 end
 
 target 'PluginTests' do
   capacitor_pods
+end
+
+post_install do |installer|
+  assertDeploymentTarget(installer)
 end
