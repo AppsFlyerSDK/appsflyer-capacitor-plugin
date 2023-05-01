@@ -4,6 +4,12 @@
 - Capacitor >> create CI for release
 - Capacitor >> Update Plugin to v6.10.3
 
+## 6.10.3
+ Release date: *2023-05-01*
+
+- Capacitor >> create CI for release
+- Capacitor >> Update Plugin to v6.10.3
+
 # Release Notes
 ### 6.9.2
 Release date: *2022-November-13*
