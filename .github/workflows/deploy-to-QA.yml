@@ -1,0 +1,72 @@
+name: Deploy To QA
+
+on:
+  workflow_call:
+
+jobs:
+  Deploy-to-QA:
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      - name: Install dependency
+        run: |
+          npm i rimraf
+
+      - name: Login to Github
+        env:
+          COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
+          COMMIT_EMAIL: ${{ secrets.CI_COMMIT_EMAIL }}
+        run: |
+          git config --global user.name $COMMIT_AUTHOR
+          git config --global user.email $COMMIT_EMAIL
+      - uses: mdecoleman/pr-branch-name@2.0.0
+        id: vars
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Export branch name
+        run: |
+          echo "RELEASE_BRANCH_NAME=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
+      - name: Check if fixed version is on Jira
+        env:
+          JIRA_TOKEN: ${{ secrets.CI_JIRA_TOKEN }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+        run: |
+          fixed_version_found=false
+          plugin_version=$(echo "$BRANCH_NAME" | grep -Eo '[0-9]+.[0-9]+.[0-9]+')
+          jira_fixed_version="Capacitor SDK v$plugin_version"
+          echo "PLUGIN_VERSION=$plugin_version" >> $GITHUB_ENV
+          echo "JIRA_FIXED_VERSION=$jira_fixed_version" >> $GITHUB_ENV
+          chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
+          .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$jira_fixed_version"
+      - name: Build Plugin
+        run: |
+          npm run build
+      - name: Push to NPM
+        env:
+          CI_NPM_TOKEN: ${{ secrets.CI_NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=$CI_NPM_TOKEN" > ~/.npmrc
+          npm publish --tag QA
+
+
+      - name: Generate and send slack report
+        env:
+          SLACK_TOKEN: ${{ secrets.CI_SLACK_TOKEN }}
+          JIRA_TOKEN: ${{ secrets.CI_JIRA_TOKEN }}
+          JIRA_FIXED_VERSION: "Capacitor SDK v${{env.PLUGIN_VERSION}}"
+          RELEASE_BRANCH_NAME: ${{env.RELEASE_BRANCH_NAME}}
+        run: |
+          ANDROID_SDK_VERSION=`cat package.json | jq .androidSdkVersion`
+          IOS_SDK_VERSION=`cat package.json | jq .iosSdkVersion`
+          PLUGIN_VERSION=`cat package.json | jq .version`
+          BUILD_NUMBER=`cat package.json | jq .buildNumber`
+          chmod +x .github/workflows/scripts/releaseNotesGenerator.sh
+          .github/workflows/scripts/releaseNotesGenerator.sh $JIRA_TOKEN "$JIRA_FIXED_VERSION"
+          CHANGES=$(cat "$JIRA_FIXED_VERSION-releasenotes".txt)
+          curl -X POST -H 'Content-type: application/json' --data '{"jira_fixed_version": "'"${{env.JIRA_FIXED_VERSION}}"'", "deploy_type": "QA", "install_tag": "QA", "git_branch": "'"$RELEASE_BRANCH_NAME"'", "changes_and_fixes": "'"$CHANGES"'", "plugin_version": "'"${{env.PLUGIN_VERSION}}"'", "android_dependency": "'"$ANDROID_SDK_VERSION"'", "ios_dependency": "'"$IOS_SDK_VERSION"'"}' "$SLACK_TOKEN"
