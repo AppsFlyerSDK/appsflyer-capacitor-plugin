@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 
 import com.appsflyer.*
+import com.appsflyer.capacitorjs.plugin.BuildConfig
 import com.appsflyer.attribution.AppsFlyerRequestListener
 import com.appsflyer.deeplink.DeepLinkListener
 import com.appsflyer.deeplink.DeepLinkResult

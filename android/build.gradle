@@ -53,6 +53,9 @@ apply plugin: 'kotlin-android'
 android {
     namespace 'com.appsflyer.capacitorjs.plugin'
     compileSdkVersion project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 33
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 22
         targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 33
