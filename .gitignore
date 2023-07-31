@@ -1,7 +1,10 @@
 # node files
 dist
 node_modules
-
+examples/CapacitorReact/android
+examples/CapacitorReact/ios
+examples/CapacitorReact/node_modules
+examples/CapacitorReact/package-lock.json
 # iOS files
 Pods
 Podfile.lock

@@ -13,7 +13,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '11'
+          java-version: '17'
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -39,7 +39,7 @@ jobs:
           gradle wrapper
           echo "ls: $(ls)"
           chmod +x ./gradlew
-          ./gradlew wrapper --gradle-version 7.6.1
+          ./gradlew wrapper --gradle-version 8.0.2
           ./gradlew clean assembleRelease
 
   # Build-Capacitor-ios:
