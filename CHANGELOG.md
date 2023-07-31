@@ -1,3 +1,8 @@
+## 6.12.1
+ Release date: *2023-07-31*
+
+- Capacitor >> Update version to Capacitor v5
+
 ## 6.10.3
  Release date: *2023-05-01*
 
