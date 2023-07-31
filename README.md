@@ -17,6 +17,12 @@
 - Android AppsFlyer SDK **6.10.3**
 - iOS AppsFlyer SDK **6.10.1**
 
+## <a id="breaking-changes-6-12-1"> 	❗❗ Breaking changes when updating to v6.12.1❗❗
+Starting from v6.12.1, this plugin works only with Capacitor 5. </br>
+If you are still interested in using Capacitor 4, please follow the instructions [here](/docs/Installation.md#cap4) to install the latest version that supports Capacitor 4.
+
+
+
 ## <a id="breaking-changes"> 	❗❗ Breaking changes when updating to v6.9.2❗❗
 Starting from v6.9.2, this plugin works only with Capacitor 4. </br>
 If you are still interested in using Capacitor 3, please follow the instructions [here](/docs/Installation.md#cap3) to install the latest version that supports Capacitor 3.

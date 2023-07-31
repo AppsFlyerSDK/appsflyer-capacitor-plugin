@@ -3,22 +3,20 @@ package capacitor.plugin.appsflyer.sdk
 import android.os.Bundle
 import android.util.Log
 import com.getcapacitor.JSObject
-import com.getcapacitor.PluginCall
 import org.json.JSONException
-import java.util.HashMap
 
 object AFHelpers {
 
     fun jsonToMap(json: JSObject?): Map<String, Any>? {
         var newMap: MutableMap<String, Any>? = null
         json?.run {
-             newMap = HashMap()
-                val iterator: Iterator<*> = keys()
-                while (iterator.hasNext()) {
-                    val key = iterator.next() as String
-                    newMap!![key] = get(key)
-                }
+            newMap = HashMap()
+            val iterator: Iterator<*> = keys()
+            while (iterator.hasNext()) {
+                val key = iterator.next() as String
+                newMap!![key] = get(key)
             }
+        }
         return newMap
     }
 
@@ -26,7 +24,7 @@ object AFHelpers {
     fun jsonToStringMap(json: JSObject?): Map<String, String>? {
         var newMap: MutableMap<String, String>? = null
         json?.run {
-             newMap = HashMap()
+            newMap = HashMap()
             try {
                 val iterator: Iterator<*> = keys()
                 while (iterator.hasNext()) {
@@ -45,14 +43,14 @@ object AFHelpers {
 
     fun jsonToBundle(json: JSObject?): Bundle? {
         val bundle = Bundle()
-      json?.run {
-                val iterator: Iterator<*> = keys()
-                while (iterator.hasNext()) {
-                    val key = iterator.next() as String
-                    val value =get(key) as String
-                    bundle.putString(key,value )
-                }
+        json?.run {
+            val iterator: Iterator<*> = keys()
+            while (iterator.hasNext()) {
+                val key = iterator.next() as String
+                val value = get(key) as String
+                bundle.putString(key, value)
             }
+        }
         return bundle
     }
 

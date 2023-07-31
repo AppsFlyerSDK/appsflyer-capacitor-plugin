@@ -9,6 +9,7 @@ import com.appsflyer.deeplink.DeepLinkListener
 import com.appsflyer.deeplink.DeepLinkResult
 import com.appsflyer.internal.platform_extension.PluginInfo
 import com.appsflyer.share.CrossPromotionHelper
+import com.appsflyer.share.LinkGenerator
 import com.appsflyer.share.ShareInviteHelper
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
@@ -245,7 +246,7 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun getAppsFlyerUID(call: PluginCall) {
         val id = AppsFlyerLib.getInstance().getAppsFlyerUID(context)
         val obj = JSObject().apply {
@@ -268,7 +269,7 @@ class AppsFlyerPlugin : Plugin() {
         } ?: run { call.reject("Missing boolean value disable") }
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun stop(call: PluginCall) {
         val shouldStop = call.getBoolean(AF_STOP)
         AppsFlyerLib.getInstance().apply {
@@ -283,7 +284,7 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun disableSKAdNetwork(call: PluginCall) {
         call.unavailable()
     }
@@ -296,7 +297,7 @@ class AppsFlyerPlugin : Plugin() {
         } ?: run { call.reject("Missing boolean value shouldDisable") }
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun disableCollectASA(call: PluginCall) {
         call.unavailable()
     }
@@ -313,7 +314,7 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun generateInviteLink(call: PluginCall) {
 
         val linkGenerator = ShareInviteHelper.generateInviteUrl(context).apply {
@@ -328,7 +329,7 @@ class AppsFlyerPlugin : Plugin() {
 
         }
 
-        val listener = object : CreateOneLinkHttpTask.ResponseListener {
+        val listener = object : LinkGenerator.ResponseListener {
             override fun onResponse(s: String?) {
                 val obj = JSObject().apply {
                     put(AF_LINK_READY, s)
@@ -388,7 +389,7 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun getSdkVersion(call: PluginCall) {
         val v = AppsFlyerLib.getInstance().sdkVersion
         val obj = JSObject().apply {
@@ -397,7 +398,7 @@ class AppsFlyerPlugin : Plugin() {
         call.resolve(obj)
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun enableFacebookDeferredApplinks(call: PluginCall) {
         val b = call.getBoolean(AF_FB)
         if (b != null) {
@@ -412,7 +413,7 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun sendPushNotificationData(call: PluginCall) {
         val json = call.getObject(AF_PUSH_PAYLOAD)
         val i = activity.intent
@@ -424,7 +425,7 @@ class AppsFlyerPlugin : Plugin() {
 
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun logCrossPromoteImpression(call: PluginCall) {
         val appID =
             call.getString(AF_APP_ID) ?: return call.reject("cannot extract the appID value")
@@ -445,7 +446,7 @@ class AppsFlyerPlugin : Plugin() {
 
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun setUserEmails(call: PluginCall) {
         val emails = call.getArray(AF_EMAILS)?.run {
             toList<String>().toTypedArray()
@@ -466,7 +467,7 @@ class AppsFlyerPlugin : Plugin() {
 
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun logLocation(call: PluginCall) {
         val longitude =
             call.getDouble(AF_LONGITUDE) ?: return call.reject("cannot extract the longitude value")
@@ -479,7 +480,7 @@ class AppsFlyerPlugin : Plugin() {
 
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun setPhoneNumber(call: PluginCall) {
         val phone = call.getString(AF_PHONE) ?: return call.reject("cannot extract the phone value")
         AppsFlyerLib.getInstance().setPhoneNumber(phone)
@@ -489,7 +490,7 @@ class AppsFlyerPlugin : Plugin() {
 
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun setPartnerData(call: PluginCall) {
         val data = AFHelpers.jsonToMap(call.getObject(AF_DATA))
             ?: return call.reject("cannot extract the data value")
@@ -503,7 +504,7 @@ class AppsFlyerPlugin : Plugin() {
 
     }
 
-    @PluginMethod()
+    @PluginMethod
     fun logInvite(call: PluginCall) {
         val data = AFHelpers.jsonToStringMap(call.getObject(AF_EVENT_PARAMETERS))
             ?: return call.reject("cannot extract the eventParameters value")
@@ -579,9 +580,7 @@ class AppsFlyerPlugin : Plugin() {
                     put("error", s)
 
                 }
-
                 notifyListeners(OAOA_CALLBACK, res)
-
             }
         }
     }
