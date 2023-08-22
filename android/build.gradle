@@ -2,9 +2,14 @@
 import groovy.json.JsonSlurper
 
 def getPackageJson() {
-    //  Read and parse package.json file from project root
+    // Read and parse package.json file from project root
     def dir = "$rootDir/../node_modules/appsflyer-capacitor-plugin/package.json"
     def inputFile = new File(dir)
+    if (!inputFile.exists()) {
+        // If the file doesn't exist, we are probably in a monorepo
+        dir = "$rootDir/../../../node_modules/appsflyer-capacitor-plugin/package.json"
+        inputFile = new File(dir)
+    }
     def packageJson = new JsonSlurper().parseText(inputFile.text)
     return packageJson
 }
