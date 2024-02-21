@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@capacitor/android": "^5.0.0",
+    "@capacitor/android": "5.7.0",
     "@capacitor/app": "^5.0.0",
     "@capacitor/core": "^5.0.0",
     "@capacitor/haptics": "^5.0.0",
@@ -49,10 +49,17 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "sync": "npx cap sync",
     "installFromNpm": "npm install appsflyer-capacitor-plugin  && npx cap sync",
     "installQA": "npm install appsflyer-capacitor-plugin@QA  && npx cap sync",
     "removePlugin": "npm uninstall  appsflyer-capacitor-plugin  && npx cap sync",
-    "installLocal": "npm install ../../  && npx cap sync"
+    "installLocal": "npm install ../../  && npx cap sync",
+    "addIos": "npx cap add ios",
+    "addAndroid": "npx cap add android",
+    "openIos": "npx cap open ios",
+    "openAndroid": "npx cap open android",
+    "runIos": "npx cap run ios",
+    "runAndroid": "npx cap run android"
   },
   "eslintConfig": {
     "extends": [

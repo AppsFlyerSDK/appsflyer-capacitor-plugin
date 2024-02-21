@@ -34,7 +34,8 @@ public class AppsFlyerPlugin: CAPPlugin {
         
         let debug = call.getBool(AppsFlyerConstants.AF_DEBUG, false)
         let sandbox = call.getBool(AppsFlyerConstants.AF_SANDBOX, false)
-        let receiptSandbox = call.getBool(AppsFlyerConstants.AF_RECEIPT_SANDBOX , false)
+        let receiptSandbox = call.getBool(AppsFlyerConstants.AF_RECEIPT_SANDBOX, false)
+        let manualStart = call.getBool(AppsFlyerConstants.AF_MANUAL_START, false)
         
         conversion = call.getBool(AppsFlyerConstants.AF_CONVERSION_LISTENER, true)
         oaoa = call.getBool(AppsFlyerConstants.AF_OAOA, true)
@@ -69,18 +70,29 @@ public class AppsFlyerPlugin: CAPPlugin {
             appsflyer.waitForATTUserAuthorization(timeoutInterval: Double(attInterval!))
         }
 #endif
-        
+
+        if !manualStart {
+            startSDK()
+        } else {
+            let result = [
+                         "success": true,
+                         "msg": "SDK initiated successfully. SDK has NOT been started yet"
+            ] as [String: Any]
+
+        call.resolve(result)
+        }
+    }
+
+    @obj func startSDK(_ call: CAPPluginCall) {
+
         NotificationCenter.default.addObserver(self, selector: #selector(sendLaunch), name: UIApplication.didBecomeActiveNotification, object: nil)
         
-        appsflyer.start(completionHandler: { (dictionnary, error) in
-            if (error != nil){
-                call.reject(error!.localizedDescription)
-                return
+        AppsFlyerLib.shared().start { dictionary, error in
+            if let error = error {
+                call.reject(error.localizedDescription)
             } else {
-                call.resolve(["res":"ok"])
-                return
+                call.resolve(["res": "ok"])
             }
-        })
     }
     
     @objc func logEvent(_ call: CAPPluginCall){
@@ -239,6 +251,31 @@ public class AppsFlyerPlugin: CAPPlugin {
     
     @objc func setDisableNetworkData(_ call: CAPPluginCall){
         call.unavailable("Android only method - has no effact on iOS apps")
+    }
+
+    @objc func enableTCFDataCollection(_ call: CAPPluginCall){
+        guard let shouldEnableTCFDataCollection = call.getBool(AppsFlyerConstants.AF_ENABLE_TCF_DATA_COLLECTION) else {
+            call.reject("Missing boolean value shouldEnableTCFDataCollection")
+            return
+        }
+        AppsFlyerLib.shared().enableTCFDataCollection = shouldEnableTCFDataCollection
+    }
+
+    @objc func setConsentData(_ call: CAPPluginCall) {
+        let isUserSubjectToGDPR = call.getBool(AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR) ?? false
+        let hasConsentForDataUsage = call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE) ?? false
+        let hasConsentForAdsPersonalization = call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION) ?? false
+
+        let consentObject: AppsFlyerConsent
+        if isUserSubjectToGDPR {
+            consentObject = AppsFlyerConsent.forGDPRUser(hasConsent: hasConsentForDataUsage, andAdsPersonalization: hasConsentForAdsPersonalization)
+        } else {
+            consentObject = AppsFlyerConsent.forNonGDPRUser()
+        }
+
+        AppsFlyerLib.shared().setConsentData(consentObject)
+
+        call.resolve()
     }
     
     @objc func anonymizeUser(_ call: CAPPluginCall){

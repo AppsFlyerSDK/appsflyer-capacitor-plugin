@@ -36,7 +36,9 @@ import type {
     AFLatLng,
     AFPhone,
     AFPartnerData,
-    AFLogInvite
+    AFLogInvite,
+    AFEnableTCFDataCollection,
+    AFConsentData
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -245,6 +247,20 @@ export interface AppsFlyerPlugin {
      *
      * @param disable Defaults to false
      */
-    setDisableNetworkData(disable : AFDisable): Promise<void>;
+    setDisableNetmanualStartworkData(disable : AFDisable): Promise<void>;
+
+    /**
+     * Use to opt-in/out the automatic collection of consent data, for users who use a CMP. 
+     * Flag value will be persisted between app sessions.
+     */
+    enableTCFDataCollection(shouldEnableTCFDataCollection: AFEnableTCFDataCollection): Promise<void>
+    
+    /**
+    * Use to set user consent data manualy. 
+    * if your app doesn't use a CMP compatible with TCF v2.2, use the following method to manualy provide the consent data directly to the SDK.
+    * @param  data: AppsFlyerConsent object.
+    */
+    setConsentData(data : AFConsentData): Promise<void>
+    
 }
 
