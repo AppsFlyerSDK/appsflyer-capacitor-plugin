@@ -39,6 +39,7 @@ import type {
     AFLogInvite,
     AFEnableTCFDataCollection,
     AFConsentData
+
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -64,6 +65,12 @@ export interface AppsFlyerPlugin {
      * Use this method to initialize and start AppsFlyer SDK. This API should be called as soon as the app launched.
      */
     initSDK(options: AFInit): Promise<AFRes>;
+
+    /**
+     * Use this method to start AppsFlyer SDK, only on manual init mode. 
+     * This API should be called as soon as.
+     */
+    startSDK(): Promise<AFRes>;
 
     /**
      * Log an in-app event.

@@ -72,7 +72,7 @@ public class AppsFlyerPlugin: CAPPlugin {
 #endif
 
         if !manualStart {
-            startSDK()
+            startSDK(call)
         } else {
             let result = [
                          "success": true,
