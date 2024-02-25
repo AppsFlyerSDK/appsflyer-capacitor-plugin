@@ -83,8 +83,8 @@ public class AppsFlyerPlugin: CAPPlugin {
         }
     }
 
-    @obj func startSDK(_ call: CAPPluginCall) {
-
+    @objc func startSDK(_ call: CAPPluginCall) {
+        
         NotificationCenter.default.addObserver(self, selector: #selector(sendLaunch), name: UIApplication.didBecomeActiveNotification, object: nil)
         
         AppsFlyerLib.shared().start { dictionary, error in
@@ -93,6 +93,7 @@ public class AppsFlyerPlugin: CAPPlugin {
             } else {
                 call.resolve(["res": "ok"])
             }
+        }
     }
     
     @objc func logEvent(_ call: CAPPluginCall){
@@ -258,7 +259,7 @@ public class AppsFlyerPlugin: CAPPlugin {
             call.reject("Missing boolean value shouldEnableTCFDataCollection")
             return
         }
-        AppsFlyerLib.shared().enableTCFDataCollection = shouldEnableTCFDataCollection
+        AppsFlyerLib.shared().enableTCFDataCollection(shouldEnableTCFDataCollection)
     }
 
     @objc func setConsentData(_ call: CAPPluginCall) {
@@ -268,9 +269,9 @@ public class AppsFlyerPlugin: CAPPlugin {
 
         let consentObject: AppsFlyerConsent
         if isUserSubjectToGDPR {
-            consentObject = AppsFlyerConsent.forGDPRUser(hasConsent: hasConsentForDataUsage, andAdsPersonalization: hasConsentForAdsPersonalization)
+            consentObject = AppsFlyerConsent(forGDPRUserWithHasConsentForDataUsage: hasConsentForDataUsage, hasConsentForAdsPersonalization: hasConsentForAdsPersonalization)
         } else {
-            consentObject = AppsFlyerConsent.forNonGDPRUser()
+            consentObject = AppsFlyerConsent(nonGDPRUser: ())
         }
 
         AppsFlyerLib.shared().setConsentData(consentObject)

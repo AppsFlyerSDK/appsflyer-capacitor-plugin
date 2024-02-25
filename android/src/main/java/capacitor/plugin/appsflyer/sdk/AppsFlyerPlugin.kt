@@ -283,7 +283,7 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
-    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    @PluginMethod
     fun startSDK(call: PluginCall) {
         AppsFlyerLib.getInstance()
             .start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
