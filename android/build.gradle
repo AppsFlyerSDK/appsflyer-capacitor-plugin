@@ -7,7 +7,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 
 String getPackageJsonPath() {
-    return findProperty("APPSFLYER_PACKAGE_JSON") ?: "$rootDir/../node_modules/appsflyer-capacitor-plugin/package.json"
+    return findProperty("APPSFLYER_PACKAGE_JSON") ?: "$buildDir/../node_modules/appsflyer-capacitor-plugin/package.json"
 }
 
 def findNodeModulesDir(File currentDir) {
