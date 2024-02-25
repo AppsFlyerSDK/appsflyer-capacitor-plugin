@@ -1,11 +1,74 @@
-// On top of your file import a JSON parser
 import groovy.json.JsonSlurper
 
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
+
+String getPackageJsonPath() {
+    return findProperty("APPSFLYER_PACKAGE_JSON") ?: "$buildDir/../node_modules/appsflyer-capacitor-plugin/package.json"
+}
+
+def findNodeModulesDir(File currentDir) {
+    def dir = currentDir
+    while (dir != null) {
+        def nodeModulesDir = new File(dir, 'node_modules')
+        if (nodeModulesDir.exists()) {
+            return nodeModulesDir
+        }
+        dir = dir.parentFile
+    }
+    return null
+}
+
+def findPackageJsonInDep(String packageName) {
+    def nodeModulesDir = findNodeModulesDir(project.rootDir)
+    if (nodeModulesDir == null) {
+        println "node_modules directory not found in any parent directories."
+        return null
+    }
+
+    def json = null
+
+    def walker = new SimpleFileVisitor<Path>() {
+        @Override
+        FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            if (file.toAbsolutePath().endsWith("appsflyer-capacitor-plugin/package.json")) {
+                try {
+                    def content = new JsonSlurper().parseText(file.toFile().text)
+                    if (content.name == packageName) {
+                        println "Found package.json: ${file.toAbsolutePath()}"
+                        json = content
+                        return FileVisitResult.TERMINATE
+                    }
+                } catch (Exception e) {
+                    println "Error parsing JSON in file: ${file.toAbsolutePath().toString()}\n${e.message}\n\t"
+                }
+            }
+            return FileVisitResult.CONTINUE
+        }
+    }
+    while (json == null && nodeModulesDir != null) {
+        Files.walkFileTree(nodeModulesDir.toPath(), walker)
+        // parentFile will give us exact same directory so we have to go 2 level upper
+        // and find another node_modules
+        nodeModulesDir = findNodeModulesDir(nodeModulesDir.parentFile.parentFile)
+    }
+    return json
+}
+
 def getPackageJson() {
-    //  Read and parse package.json file from project root
-    def dir = "$rootDir/../node_modules/appsflyer-capacitor-plugin/package.json"
-    def inputFile = new File(dir)
-    def packageJson = new JsonSlurper().parseText(inputFile.text)
+    def packageJson
+    def inputFile = new File(getPackageJsonPath())
+    if (inputFile.exists()) {
+        println "found package.json from ENV variable"
+        packageJson = new JsonSlurper().parseText(inputFile.text)
+    } else {
+        println "could not found package.json from ENV variable"
+        println "searching for package.json recursively"
+        packageJson = findPackageJsonInDep("appsflyer-capacitor-plugin")
+    }
     return packageJson
 }
 // Create an easy to use function
@@ -19,6 +82,7 @@ def getSDKVersionFromNpm() {
     // Return the version, you can get any value this way
     return getPackageJson()["androidSdkVersion"]
 }
+
 def getPluginBuildVersionFromNpm() {
     // Return the version, you can get any value this way
     return getPackageJson()["buildNumber"]
