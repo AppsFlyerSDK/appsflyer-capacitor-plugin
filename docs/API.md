@@ -56,6 +56,10 @@ The list of available methods for this plugin is described below.
 * [`setSharingFilterForPartners`](#setsharingfilterforpartners)  
 * [`setSharingFilter`](#setsharingfilter)  - Deprecated
 * [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  - Deprecated
+* [`startSDK`](#startSDK)  - New
+* [`enableTCFDataCollection`](#enableTCFDataCollection)  - New
+* [`setConsentData`](#setConsentData)  - New
+
  
   
 </docgen-index>  
@@ -908,6 +912,73 @@ Use to log a user-invite in-app event (af_invite).
       .catch(e => console.log(e));
 ``` 
 
+--------------------  
+
+### startSDK
+```typescript  
+startSDK(): Promise<AFRes>;
+```  
+
+Use this method to start AppsFlyer SDK, available only on manual start mode.
+
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+**Usage Example:**
+```typescript  
+     AppsFlyer.startSDK()
+      .then(res => console.log("AppsFlyer SDK Start Response: ", res.res))
+      .catch(err => console.error("AppsFlyer SDK Start Error: ", err));
+``` 
+
+--------------------  
+
+### enableTCFDataCollection
+```typescript  
+enableTCFDataCollection(shouldEnableTCFDataCollection: AFEnableTCFDataCollection): Promise<void>
+```  
+
+Use to opt-in/out the automatic collection of consent data, for users who use a CMP. 
+Flag value will be persisted between app sessions.
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`shouldEnableTCFDataCollection`** | <code><a href="#AFEnableTCFDataCollection">AFEnableTCFDataCollection</a></code> |  
+  
+**Returns:** <code>Promise</code>  
+
+**Usage Example:**
+```typescript  
+       AppsFlyer.enableTCFDataCollection({shouldEnableTCFDataCollection : <true/false>})
+``` 
+
+--------------------  
+
+### setConsentData
+```typescript  
+setConsentData(data : AFConsentData): Promise<void>
+```  
+
+Use to set user consent data manualy. 
+if your app doesn't use a CMP compatible with TCF v2.2, use the following method to manualy provide the consent data directly to the SDK.
+
+| Param         | Type                                                    |  
+| ------------- | ------------------------------------------------------- |  
+| **`data`** | <code><a href="#AFConsentData">AFConsentData</a></code> |  
+  
+**Returns:** <code>Promise</code>  
+
+**Usage Example:**
+If *GDPR doesn’t* to the user, perform the following:
+```typescript  
+       AppsFlyer.setConsentData({data: AppsFlyerConsent.forNonGDPRUser()})
+``` 
+If *GDPR applies* apply to the user perform the following:
+```typescript  
+       AppsFlyer.setConsentData({data : AppsFlyerConsent.forGDPRUser(<true/false>, <true/false>)});
+```
+*Please take a look how to properly setConsentData Manualy in [Set Consent For DMA Compliance](/docs/DMA.md#)*
+
+
 ## Interfaces  
   
   
@@ -1193,6 +1264,26 @@ Use to log a user-invite in-app event (af_invite).
 | **`eventParameters`** | <code><a href="#stringmap">StringMap</a></code> |  
 | **`channel`** |  <code>string</code>|  
   
+#### AFEnableTCFDataCollection  
+  
+| Prop              | Type                                            |  
+| ----------------- | ----------------------------------------------- |  
+| **`shouldEnableTCFDataCollection`** |  <code>boolean</code>| 
+
+#### AFConsentData  
+  
+| Prop              | Type                                            |  
+| ----------------- | ----------------------------------------------- |  
+| **`data`** |  <code><a href="#IAppsFlyerConsent">IAppsFlyerConsent</a></code>| 
+
+#### IAppsFlyerConsent  
+  
+| Prop              | Type                                            |  
+| ----------------- | ----------------------------------------------- |  
+| **`isUserSubjectToGDPR`** |  <code>boolean</code>| 
+| **`hasConsentForDataUsage`** |  <code>boolean</code>| 
+| **`hasConsentForAdsPersonalization`** |  <code>boolean</code>| 
+
 ## Enums  
   
   

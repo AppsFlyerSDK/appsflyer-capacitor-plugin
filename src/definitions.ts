@@ -67,7 +67,7 @@ export interface AppsFlyerPlugin {
     initSDK(options: AFInit): Promise<AFRes>;
 
     /**
-     * Use this method to start AppsFlyer SDK, only on manual init mode. 
+     * Use this method to start AppsFlyer SDK, only on manual start mode. 
      */
     startSDK(): Promise<AFRes>;
 
