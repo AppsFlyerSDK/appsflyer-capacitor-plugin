@@ -40,7 +40,7 @@ CAP_PLUGIN(AppsFlyerPlugin, "AppsFlyerPlugin",
            CAP_PLUGIN_METHOD(setSharingFilterForPartners, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(enableTCFDataCollection, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(setConsentData, CAPPluginReturnNone);
-           CAP_PLUGIN_METHOD(startSDK, CAPPluginReturnNone);
+           CAP_PLUGIN_METHOD(startSDK, CAPPluginReturnPromise);
 
 
 

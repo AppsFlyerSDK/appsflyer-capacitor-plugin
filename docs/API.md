@@ -56,9 +56,9 @@ The list of available methods for this plugin is described below.
 * [`setSharingFilterForPartners`](#setsharingfilterforpartners)  
 * [`setSharingFilter`](#setsharingfilter)  - Deprecated
 * [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  - Deprecated
-* [`startSDK`](#startSDK)  - New
-* [`enableTCFDataCollection`](#enableTCFDataCollection)  - New
-* [`setConsentData`](#setConsentData)  - New
+* [`startSDK`](#startSDK)  - Since 6.13.0
+* [`enableTCFDataCollection`](#enableTCFDataCollection)  - Since 6.13.0
+* [`setConsentData`](#setConsentData)  - Since 6.13.0
 
  
   
@@ -184,7 +184,27 @@ See also Init SDK guide [here](/Guides.md#init-sdk).
 
 
 --------------------  
-  
+
+
+### startSDK
+```typescript  
+startSDK(): Promise<AFRes>;
+```  
+
+Use this method to start AppsFlyer SDK only on manual start mode.
+
+**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
+
+**Usage Example:**
+```typescript  
+     AppsFlyer.startSDK()
+      .then(res => console.log("AppsFlyer SDK Start Response: ", res.res))
+      .catch(err => console.error("AppsFlyer SDK Start Error: ", err));
+``` 
+
+
+--------------------  
+
   
 ### logEvent  
   
@@ -910,24 +930,6 @@ Use to log a user-invite in-app event (af_invite).
      AppsFlyer.logInvite({channel: 'email', eventParameters: {abc: 'xyz', apps: 'Flyer'}})
       .then(res => console.log(res.res))
       .catch(e => console.log(e));
-``` 
-
---------------------  
-
-### startSDK
-```typescript  
-startSDK(): Promise<AFRes>;
-```  
-
-Use this method to start AppsFlyer SDK, available only on manual start mode.
-
-**Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
-
-**Usage Example:**
-```typescript  
-     AppsFlyer.startSDK()
-      .then(res => console.log("AppsFlyer SDK Start Response: ", res.res))
-      .catch(err => console.error("AppsFlyer SDK Start Error: ", err));
 ``` 
 
 --------------------  

@@ -2,7 +2,6 @@ package capacitor.plugin.appsflyer.sdk
 
 import android.Manifest
 import android.content.Intent
-import android.util.Log
 
 import com.appsflyer.*
 import com.appsflyer.attribution.AppsFlyerRequestListener
