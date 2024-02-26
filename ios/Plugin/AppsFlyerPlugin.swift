@@ -74,12 +74,7 @@ public class AppsFlyerPlugin: CAPPlugin {
         if !manualStart {
             startSDK(call)
         } else {
-            let result = [
-                         "success": true,
-                         "msg": "SDK initiated successfully. SDK has NOT been started yet"
-            ] as [String: Any]
-
-        call.resolve(result)
+            call.resolve(["res": "SDK initiated successfully. SDK has NOT started yet"])
         }
     }
 

@@ -253,7 +253,7 @@ export interface AppsFlyerPlugin {
      *
      * @param disable Defaults to false
      */
-    setDisableNetmanualStartworkData(disable : AFDisable): Promise<void>;
+    setDisableNetworkData(disable : AFDisable): Promise<void>;
 
     /**
      * Use to opt-in/out the automatic collection of consent data, for users who use a CMP. 

@@ -90,12 +90,10 @@ class AppsFlyerPlugin : Plugin() {
             }
 
             if (manualStart == false) {
-                Log.d("appsflyer_", "manual start: $manualStart")
                 startSDK(call)
             } else {
                 val result = JSObject().apply {
-                    put("success", true)
-                    put("msg", "SDK initiated successfully. SDK has NOT been started yet")
+                    put("res", "SDK initiated successfully. SDK has NOT been started yet")
                 }
                 call.resolve(result)
             }
@@ -547,9 +545,7 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun setConsentData(call: PluginCall) {
-        val consentData = call.getObject("data") ?: return with (call) {
-            reject("Missing consent data")
-        }
+        val consentData = call.getObject("data") ?: return call.reject("Missing consent data")
 
         val isUserSubjectToGDPR = consentData.optBoolean(AF_IS_SUBJECTED_TO_GDPR)
         val hasConsentForDataUsage = consentData.optBoolean(AF_CONSENT_FOR_DATA_USAGE)
