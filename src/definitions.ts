@@ -68,7 +68,6 @@ export interface AppsFlyerPlugin {
 
     /**
      * Use this method to start AppsFlyer SDK, only on manual init mode. 
-     * This API should be called as soon as.
      */
     startSDK(): Promise<AFRes>;
 

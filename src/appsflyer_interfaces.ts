@@ -114,13 +114,13 @@ export interface AFAppendToDeepLink{contains: string;
 
 export interface AFEnableTCFDataCollection { shouldEnableTCFDataCollection: boolean }
 
-export interface AppsFlyerConsent {
+export interface IAppsFlyerConsent {
     isUserSubjectToGDPR: boolean,
     hasConsentForDataUsage?: boolean,
     hasConsentForAdsPersonalization?: boolean
 }
 
-class AppsFlyerConsentClass {
+class AppsFlyerConsentClass implements IAppsFlyerConsent {
     public isUserSubjectToGDPR: boolean;
     public hasConsentForDataUsage?: boolean;
     public hasConsentForAdsPersonalization?: boolean;
@@ -131,11 +131,11 @@ class AppsFlyerConsentClass {
         this.hasConsentForAdsPersonalization = hasConsentForAdsPersonalization;
     }
 
-    static forGDPRUser(hasConsentForDataUsage: boolean, hasConsentForAdsPersonalization: boolean): AppsFlyerConsent {
+    static forGDPRUser(hasConsentForDataUsage: boolean, hasConsentForAdsPersonalization: boolean): IAppsFlyerConsent {
         return new AppsFlyerConsentClass(true, hasConsentForDataUsage, hasConsentForAdsPersonalization);
     }
 
-    static forNonGDPRUser(): AppsFlyerConsent {
+    static forNonGDPRUser(): IAppsFlyerConsent {
         return new AppsFlyerConsentClass(false);
     }
 }
@@ -146,5 +146,5 @@ export const AppsFlyerConsent = {
 };
 
 export interface AFConsentData {
-    data: AppsFlyerConsent
+    data: IAppsFlyerConsent
 }

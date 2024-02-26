@@ -2,6 +2,7 @@ package capacitor.plugin.appsflyer.sdk
 
 import android.Manifest
 import android.content.Intent
+import android.util.Log
 
 import com.appsflyer.*
 import com.appsflyer.attribution.AppsFlyerRequestListener
@@ -89,6 +90,7 @@ class AppsFlyerPlugin : Plugin() {
             }
 
             if (manualStart == false) {
+                Log.d("appsflyer_", "manual start: $manualStart")
                 startSDK(call)
             } else {
                 val result = JSObject().apply {
@@ -289,8 +291,7 @@ class AppsFlyerPlugin : Plugin() {
             .start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
                 override fun onSuccess() {
                     val result = JSObject().apply {
-                        put("success", true)
-                        put("data", "Launch sent successfully")
+                        put("res", "success")
                     }
                     call.resolve(result)
                 }
@@ -546,10 +547,13 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun setConsentData(call: PluginCall) {
-        val isUserSubjectToGDPR = call.getBoolean(AF_IS_SUBJECTED_TO_DGPR) ?: false
-        val hasConsentForDataUsage = call.getBoolean(AF_CONSENT_FOR_DATA_USAGE) ?: false
-        val hasConsentForAdsPersonalization =
-            call.getBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION) ?: false
+        val consentData = call.getObject("data") ?: return with (call) {
+            reject("Missing consent data")
+        }
+
+        val isUserSubjectToGDPR = consentData.optBoolean(AF_IS_SUBJECTED_TO_GDPR)
+        val hasConsentForDataUsage = consentData.optBoolean(AF_CONSENT_FOR_DATA_USAGE)
+        val hasConsentForAdsPersonalization = consentData.optBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION)
 
         val consentObject = if (isUserSubjectToGDPR) {
             AppsFlyerConsent.forGDPRUser(hasConsentForDataUsage, hasConsentForAdsPersonalization)

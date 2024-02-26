@@ -91,7 +91,7 @@ public class AppsFlyerPlugin: CAPPlugin {
             if let error = error {
                 call.reject(error.localizedDescription)
             } else {
-                call.resolve(["res": "ok"])
+                call.resolve(["res": "success"])
             }
         }
     }
@@ -263,9 +263,14 @@ public class AppsFlyerPlugin: CAPPlugin {
     }
 
     @objc func setConsentData(_ call: CAPPluginCall) {
-        let isUserSubjectToGDPR = call.getBool(AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR) ?? false
-        let hasConsentForDataUsage = call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE) ?? false
-        let hasConsentForAdsPersonalization = call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION) ?? false
+        guard let consentData = call.getObject("data") else {
+            call.reject("Consent data is missing")
+            return
+        }    
+        
+        let isUserSubjectToGDPR = consentData[AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR] as? Bool ?? false
+        let hasConsentForDataUsage = consentData[AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE] as? Bool ?? false
+        let hasConsentForAdsPersonalization = consentData[AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION] as? Bool ?? false
 
         let consentObject: AppsFlyerConsent
         if isUserSubjectToGDPR {

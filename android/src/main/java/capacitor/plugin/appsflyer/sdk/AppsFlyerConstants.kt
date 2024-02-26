@@ -61,7 +61,7 @@ const val AF_DEEP_LINK_TIME_OUT = "deepLinkTimeout"
 const val AF_EVENT_PARAMETERS = "eventParameters"
 const val AF_ENABLE_TCF_DATA_COLLECTION = "shouldEnableTCFDataCollection"
 const val AF_MANUAL_START = "manualStart"
-const val AF_IS_SUBJECTED_TO_DGPR = "isUserSubjectToGDPR"
+const val AF_IS_SUBJECTED_TO_GDPR = "isUserSubjectToGDPR"
 const val AF_CONSENT_FOR_DATA_USAGE = "hasConsentForDataUsage"
 const val AF_CONSENT_FOR_ADS_PERSONALIZATION = "hasConsentForAdsPersonalization"
 
