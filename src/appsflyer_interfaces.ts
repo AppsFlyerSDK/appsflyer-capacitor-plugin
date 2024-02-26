@@ -10,7 +10,7 @@ export interface AFInit{
     useReceiptValidationSandbox?: boolean;
     minTimeBetweenSessions?: number
     deepLinkTimeout?: number
-
+    manualStart?: boolean;
 }
 
 export interface AFEvent{
@@ -112,3 +112,39 @@ export interface AFAppendToDeepLink{contains: string;
     parameters: StringMap;
 }
 
+export interface AFEnableTCFDataCollection { shouldEnableTCFDataCollection: boolean }
+
+export interface IAppsFlyerConsent {
+    isUserSubjectToGDPR: boolean,
+    hasConsentForDataUsage?: boolean,
+    hasConsentForAdsPersonalization?: boolean
+}
+
+class AppsFlyerConsentClass implements IAppsFlyerConsent {
+    public isUserSubjectToGDPR: boolean;
+    public hasConsentForDataUsage?: boolean;
+    public hasConsentForAdsPersonalization?: boolean;
+
+    private constructor(isUserSubjectToGDPR: boolean, hasConsentForDataUsage?: boolean, hasConsentForAdsPersonalization?: boolean) {
+        this.isUserSubjectToGDPR = isUserSubjectToGDPR;
+        this.hasConsentForDataUsage = hasConsentForDataUsage;
+        this.hasConsentForAdsPersonalization = hasConsentForAdsPersonalization;
+    }
+
+    static forGDPRUser(hasConsentForDataUsage: boolean, hasConsentForAdsPersonalization: boolean): IAppsFlyerConsent {
+        return new AppsFlyerConsentClass(true, hasConsentForDataUsage, hasConsentForAdsPersonalization);
+    }
+
+    static forNonGDPRUser(): IAppsFlyerConsent {
+        return new AppsFlyerConsentClass(false);
+    }
+}
+
+export const AppsFlyerConsent = {
+    forGDPRUser: AppsFlyerConsentClass.forGDPRUser,
+    forNonGDPRUser: AppsFlyerConsentClass.forNonGDPRUser
+};
+
+export interface AFConsentData {
+    data: IAppsFlyerConsent
+}

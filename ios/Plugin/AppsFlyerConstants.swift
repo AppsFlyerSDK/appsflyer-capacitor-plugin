@@ -29,7 +29,7 @@ class AppsFlyerConstants {
     static let AF_ONELINK_ID = "onelinkID"
     static let AF_ONELINK_DOMAIN = "domains"
     static let AF_DEEPLINK_URLS = "urls"
-    static let  AF_PATH = "path"
+    static let AF_PATH = "path"
     static let AF_UID = "uid"
     static let AF_ANONYMIZE_USER = "anonymizeUser"
     static let AF_STOP = "stop"
@@ -68,5 +68,9 @@ class AppsFlyerConstants {
     static let AF_EVENT_PARAMETERS = "eventParameters"
     static let AF_PARTNER_ID = "partnerId"
     static let AF_DATA = "data"
-
+    static let AF_ENABLE_TCF_DATA_COLLECTION = "shouldEnableTCFDataCollection"
+    static let AF_MANUAL_START = "manualStart"
+    static let AF_IS_SUBJECTED_TO_DGPR = "isUserSubjectToGDPR"
+    static let AF_CONSENT_FOR_DATA_USAGE = "hasConsentForDataUsage"
+    static let AF_CONSENT_FOR_ADS_PERSONALIZATION = "hasConsentForAdsPersonalization"
 }

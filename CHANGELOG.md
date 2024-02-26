@@ -1,3 +1,8 @@
+## 6.13.0
+ Release date: *2024-02-26*
+
+- Capacitor >> MonoRepo structure project >> failed to build on Android since v6.10.3
+
 ## 6.12.1
  Release date: *2023-07-31*
 
