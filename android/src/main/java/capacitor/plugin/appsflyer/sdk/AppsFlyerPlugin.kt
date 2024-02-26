@@ -49,6 +49,7 @@ class AppsFlyerPlugin : Plugin() {
         val devKey = call.getString(AF_DEV_KEY)
         val debug = call.getBoolean(AF_DEBUG, false)
         val minTime = call.getInt(AF_MIN_TIME)
+        val manualStart = call.getBoolean(AF_MANUAL_START, false)
         conversion = call.getBoolean(AF_CONVERSION_LISTENER, true)
         oaoa = call.getBoolean(AF_OAOA, true)
         udl = call.getBoolean(AF_UDL, false)
@@ -59,7 +60,7 @@ class AppsFlyerPlugin : Plugin() {
                 PluginInfo(
                     com.appsflyer.internal.platform_extension.Plugin.CAPACITOR,
                     BuildConfig.VERSION_NAME
-                   //, mapOf("build_number" to BuildConfig.VERSION_CODE.toString())
+                    //, mapOf("build_number" to BuildConfig.VERSION_CODE.toString())
                 )
             )
             if (debug == true) {
@@ -86,18 +87,15 @@ class AppsFlyerPlugin : Plugin() {
                     subscribeForDeepLink(getDeepLinkListener())
                 }
             }
-            start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
-                override fun onSuccess() {
-                    val ret = JSObject()
-                    ret.put("res", "ok")
-                    call.resolve(ret)
-                }
 
-                override fun onError(p0: Int, p1: String) {
-                    call.reject(p1, p0.toString())
+            if (manualStart == false) {
+                startSDK(call)
+            } else {
+                val result = JSObject().apply {
+                    put("res", "SDK initiated successfully. SDK has NOT been started yet")
                 }
-
-            })
+                call.resolve(result)
+            }
         }
 
     }
@@ -282,6 +280,23 @@ class AppsFlyerPlugin : Plugin() {
             call.resolve(obj)
 
         }
+    }
+
+    @PluginMethod
+    fun startSDK(call: PluginCall) {
+        AppsFlyerLib.getInstance()
+            .start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
+                override fun onSuccess() {
+                    val result = JSObject().apply {
+                        put("res", "success")
+                    }
+                    call.resolve(result)
+                }
+
+                override fun onError(errCode: Int, msg: String) {
+                    call.reject("Error Code: $errCode, Message: $msg")
+                }
+            })
     }
 
     @PluginMethod
@@ -515,6 +530,35 @@ class AppsFlyerPlugin : Plugin() {
         ret.put("res", "ok")
         call.resolve(ret)
 
+    }
+
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    fun enableTCFDataCollection(call: PluginCall) {
+        val shouldEnable = call.getBoolean(AF_ENABLE_TCF_DATA_COLLECTION)
+        if (shouldEnable != null) {
+            AppsFlyerLib.getInstance().enableTCFDataCollection(shouldEnable)
+        } else {
+            call.reject("Missing boolean value $AF_ENABLE_TCF_DATA_COLLECTION")
+        }
+    }
+
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    fun setConsentData(call: PluginCall) {
+        val consentData = call.getObject("data") ?: return call.reject("Missing consent data")
+
+        val isUserSubjectToGDPR = consentData.optBoolean(AF_IS_SUBJECTED_TO_GDPR)
+        val hasConsentForDataUsage = consentData.optBoolean(AF_CONSENT_FOR_DATA_USAGE)
+        val hasConsentForAdsPersonalization = consentData.optBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION)
+
+        val consentObject = if (isUserSubjectToGDPR) {
+            AppsFlyerConsent.forGDPRUser(hasConsentForDataUsage, hasConsentForAdsPersonalization)
+        } else {
+            AppsFlyerConsent.forNonGDPRUser()
+        }
+
+        AppsFlyerLib.getInstance().setConsentData(consentObject)
+
+        call.resolve()
     }
 
     private fun getDeepLinkListener(): DeepLinkListener {
