@@ -17,7 +17,7 @@
 - [Uninstall](#uninstall)
     - [Android Uninstall Setup](#android-uninstall)
     - [iOS Uninstall Setup](#ios-uninstall)
-
+- [Install Referrers](#referrers)
 
 
 ##  <a id="init-sdk"> Init SDK
@@ -375,3 +375,14 @@ Note : If you use this method you will need to collect the APNs token using a th
 ```typescript
 AppsFlyer.updateServerUninstallToken({token: 'replace_with_token'});
 ```
+
+###  <a id="referrers"> Adding Install Referrer Libraries
+The AppsFlyer SDK supports several store referrer libraries. Using a store referrer improves attribution accuracy.
+
+You only need to add the referrer dependency, the SDK takes care of the rest:
+[Google Play Install Referrer](https://dev.appsflyer.com/hc/docs/install-android-sdk#google-play-install-referrer)<br>
+[Meta Install Referrer](https://dev.appsflyer.com/hc/docs/install-android-sdk#meta-install-referrer)<br>
+[Huawei Install Referrer](https://dev.appsflyer.com/hc/docs/install-android-sdk#huawei-install-referrer)<br>
+[Xiaomi GetApps store referrer](https://dev.appsflyer.com/hc/docs/install-android-sdk#xiaomi-getapps-store-referrer)<br>
+
+**Note:** Satring plugin version 6.14.3, Huawei referrer is collected in a different way than it used to be, please follow the new instructions provided [here.](https://dev.appsflyer.com/hc/docs/install-android-sdk#huawei-install-referrer)
