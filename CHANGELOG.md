@@ -1,3 +1,8 @@
+## 6.14.3
+ Release date: *2024-05-01*
+
+- Capacitor >> Update Plugin to v6.14.3
+
 ## 6.13.1
  Release date: *2024-03-07*
 
