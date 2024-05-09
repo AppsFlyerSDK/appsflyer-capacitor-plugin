@@ -47,19 +47,19 @@ export interface AppsFlyerPlugin {
     addListener(
         eventName: AFConstants.CONVERSION_CALLBACK,
         listenerFunc: (event: OnConversionDataResult) => void,
-    ): PluginListenerHandle;
+    ): Promise<PluginListenerHandle>;
 
     // register listener for onAppOpenAttribution and onAttributionFailure
     addListener(
         eventName: AFConstants.OAOA_CALLBACK,
         listenerFunc: (event: OnAppOpenAttribution) => void,
-    ): PluginListenerHandle;
+    ): Promise<PluginListenerHandle>;
 
     // register listener for onDeeplink
     addListener(
         eventName: AFConstants.UDL_CALLBACK,
         listenerFunc: (event: OnDeepLink) => void,
-    ): PluginListenerHandle;
+    ): Promise<PluginListenerHandle>;
 
     /**
      * Use this method to initialize and start AppsFlyer SDK. This API should be called as soon as the app launched.
