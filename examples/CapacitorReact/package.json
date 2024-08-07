@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@capacitor/android": "^5.0.0",
-    "@capacitor/app": "^5.0.0",
-    "@capacitor/core": "^5.0.0",
-    "@capacitor/haptics": "^5.0.0",
-    "@capacitor/ios": "^5.0.0",
-    "@capacitor/keyboard": "^5.0.0",
-    "@capacitor/status-bar": "^5.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0",
     "@ionic/react": "^5.5.0",
     "@ionic/react-router": "^5.5.0",
     "@testing-library/jest-dom": "^5.11.9",
@@ -36,7 +36,6 @@
     "workbox-cacheable-response": "^5.1.4",
     "workbox-core": "^5.1.4",
     "workbox-expiration": "^5.1.4",
-    "workbox-google-analytics": "^5.1.4",
     "workbox-navigation-preload": "^5.1.4",
     "workbox-precaching": "^5.1.4",
     "workbox-range-requests": "^5.1.4",
@@ -80,7 +79,7 @@
     ]
   },
   "devDependencies": {
-    "@capacitor/cli": "^5.0.0"
+    "@capacitor/cli": "^6.0.0"
   },
   "description": "An Ionic project"
 }
