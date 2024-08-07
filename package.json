@@ -1,9 +1,9 @@
 {
   "name": "appsflyer-capacitor-plugin",
-  "version": "6.14.3",
-  "iosSdkVersion": "6.14.3",
-  "androidSdkVersion": "6.14.0",
-  "buildNumber": "13",
+  "version": "6.15.0",
+  "iosSdkVersion": "6.15.0",
+  "androidSdkVersion": "6.15.0",
+  "buildNumber": "14",
   "description": "AppsFlyer SDK plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -21,7 +21,7 @@
     "rollup.config.js",
     "AppsflyerCapacitorPlugin.podspec"
   ],
-  "author": "Paz Lavi",
+  "author": "Dani Koza",
   "license": "MIT",
   "repository": {
     "type": "git",
