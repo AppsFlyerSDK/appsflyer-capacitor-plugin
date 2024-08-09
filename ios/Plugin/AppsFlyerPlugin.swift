@@ -188,7 +188,7 @@ public class AppsFlyerPlugin: CAPPlugin {
         for url in arr {
             urls.append(url as! String)
         }
-        AppsFlyerLib.shared().oneLinkCustomDomains = urls
+        AppsFlyerLib.shared().resolveDeepLinkURLs = urls
         
     }
     
