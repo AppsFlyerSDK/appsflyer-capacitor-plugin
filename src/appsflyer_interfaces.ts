@@ -156,4 +156,5 @@ export interface AFAdRevenueData {
     mediationNetwork: MediationNetwork;
     currencyIso4217Code: string;
     revenue: number;
+    additionalParameters?: StringMap;
   }

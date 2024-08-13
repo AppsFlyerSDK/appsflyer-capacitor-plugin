@@ -1,6 +1,6 @@
 import './ExploreContainer.css';
 import {IonButton, isPlatform} from '@ionic/react';
-import {AFEvent, AppsFlyer} from "appsflyer-capacitor-plugin";
+import {MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer} from "appsflyer-capacitor-plugin";
 import React from "react";
 
 interface ContainerProps {
@@ -102,6 +102,24 @@ function stop() {
         });
 }
 
+function logAdRevenueExample() {
+    const myAdditionalParams = {
+        spong: 'bob',
+        doctor: 'who'
+    };
+    const data: AFAdRevenueData = {
+        monetizationNetwork: "MoneyMoneyMoney",
+        mediationNetwork: MediationNetwork.IRONSOURCE,
+        currencyIso4217Code: "USD",
+        revenue: 200.0,
+        additionalParameters: myAdditionalParams
+    };
+    
+      AppsFlyer.logAdRevenue(data)
+      .then(r => alert('logAdRevenue triggered'))
+      .catch(e => alert('logAdRevenue returned error: ' + e));
+}
+
 function sendPushNotificationData() {
     AppsFlyer.sendPushNotificationData({
         pushPayload: {af: '{"pid":"media_int","is_retargeting":"true", "c":"test_campaign"}'} //replace with push payload
@@ -130,6 +148,7 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
                 Filter For
                 All
                 Partners</IonButton>
+            <IonButton color="primary" expand="block" onClick={() => logAdRevenueExample()}>Log Ad Revenue</IonButton>
         </div>
     );
 };
