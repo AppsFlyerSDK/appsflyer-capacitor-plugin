@@ -19,7 +19,7 @@
 
 ## <a id="breaking-changes-6-15-0"> 	❗❗ Breaking changes when updating to v6.15.0 ❗❗
 Starting from v6.15.0, this plugin works only with Capacitor 6. </br>
-If you are using versions older than Capacitor 6, please follow the version update instructions [here](https://capacitorjs.com/docs/updating/plugins/6-0) before using this AppsFlyer plugin version.
+If you are still interested in using Capacitor 5, please follow the instructions [here](/docs/Installation.md#cap5) to install the latest version that supports Capacitor 4.
 
 ## <a id="breaking-changes-6-12-1"> 	❗❗ Breaking changes when updating to v6.12.1 ❗❗
 Starting from v6.12.1, this plugin works only with Capacitor 5. </br>

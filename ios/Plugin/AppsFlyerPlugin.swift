@@ -119,12 +119,26 @@ public class AppsFlyerPlugin: CAPPlugin {
     
     @objc func logAdRevenue(_ call: CAPPluginCall) {
         let adRevenueData = call.jsObjectRepresentation
+        if adRevenueData.isEmpty {
+            call.reject("adRevenueData is missing, the data mandatory to use this API.")
+            return
+        }
         
-        guard let myMonetizationNetwork = adRevenueData[AppsFlyerConstants.AF_MONETIZATION_NETWORK] as? String,
-              let myCurrencyIso4217Code = adRevenueData[AppsFlyerConstants.AF_CURRENCY_ISO4217_CODE] as? String,
-              let revenue = adRevenueData[AppsFlyerConstants.AF_REVENUE] as? NSNumber,
-              let mediationNetworkString = adRevenueData[AppsFlyerConstants.AF_MEDIATION_NETWORK] as? String else {
-            call.reject("One or more parameters are missing or have invalid format.")
+        // Parse the fields from the adRevenueData object
+        guard let myMonetizationNetwork = adRevenueData[AppsFlyerConstants.AF_MONETIZATION_NETWORK] as? String else {
+            call.reject("monetizationNetwork is missing")
+            return
+        }
+        guard let myCurrencyIso4217Code = adRevenueData[AppsFlyerConstants.AF_CURRENCY_ISO4217_CODE] as? String else {
+            call.reject("currencyIso4217Code is missing")
+            return
+        }
+        guard let revenue = adRevenueData[AppsFlyerConstants.AF_REVENUE] as? NSNumber else {
+            call.reject("revenue is missing or not a number")
+            return
+        }
+        guard let mediationNetworkString = adRevenueData[AppsFlyerConstants.AF_MEDIATION_NETWORK] as? String else {
+            call.reject("mediationNetwork is missing")
             return
         }
         

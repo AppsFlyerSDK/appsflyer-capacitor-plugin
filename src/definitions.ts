@@ -1,6 +1,6 @@
 import type {PluginListenerHandle} from "@capacitor/core";
 
-import type {AFConstants} from "./appsflyer_constants";
+import type {AFConstants} from "./Appsflyer_constants";
 import type {
     AFAndroidInAppPurchase,
     AFAnonymizeUser,

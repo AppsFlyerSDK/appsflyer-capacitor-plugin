@@ -569,6 +569,9 @@ class AppsFlyerPlugin : Plugin() {
         val monetizationNetwork = adRevenueDataJson.getString(AF_MONETIZATION_NETWORK) ?: return call.reject("monetizationNetwork is missing")
         val currencyIso4217Code = adRevenueDataJson.getString(AF_CURRENCY_ISO4217_CODE) ?: return call.reject("currencyIso4217Code is missing")
         val revenue = adRevenueDataJson.getDouble(AF_REVENUE)
+        if (revenue.isNaN()) {
+            return call.reject("revenue is missing or not a number")
+        }
         val additionalParams = AFHelpers.jsonToMap(adRevenueDataJson.getJSObject(AF_ADDITIONAL_PARAMETERS)) // can be nullable
 
         // Convert the mediationNetwork string to the MediationNetwork enum
