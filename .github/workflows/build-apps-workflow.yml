@@ -39,7 +39,7 @@ jobs:
           gradle wrapper
           echo "ls: $(ls)"
           chmod +x ./gradlew
-          ./gradlew wrapper --gradle-version 8.0.2
+          ./gradlew wrapper --gradle-version 8.2
           ./gradlew clean assembleRelease
 
   # Build-Capacitor-ios:
