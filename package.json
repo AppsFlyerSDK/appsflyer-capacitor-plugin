@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@angular/cli": "^12.1.1",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/docgen": "^0.2.0",

@@ -120,11 +120,11 @@ function logAdRevenueExample() {
         .catch(e => alert('logAdRevenue returned error: ' + e));
 }
 
-function sendPushNotificationData() {
-    AppsFlyer.sendPushNotificationData({
-        pushPayload: { af: '{"pid":"media_int","is_retargeting":"true", "c":"test_campaign"}' } //replace with push payload
-    });
-}
+// function sendPushNotificationData() {
+//     AppsFlyer.sendPushNotificationData({
+//         pushPayload: { af: '{"pid":"media_int","is_retargeting":"true", "c":"test_campaign"}' } //replace with push payload
+//     });
+// }
 
 const ExploreContainer: React.FC<ContainerProps> = () => {
     return (

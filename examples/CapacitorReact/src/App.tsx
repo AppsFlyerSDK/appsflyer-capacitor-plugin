@@ -23,7 +23,6 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import { AFConstants, AppsFlyer } from "appsflyer-capacitor-plugin";
 import { AppTrackingTransparency } from "capacitor-plugin-app-tracking-transparency";
-import React, { useState } from "react";
 
 function initAppsFlyer() {
   setOAOA();
