@@ -7,6 +7,19 @@ The plugin available via npm. To install the plugin, please run the following co
  npm install appsflyer-capacitor-plugin  
  npx cap sync  
  ```
+
+## <a id="cap6"> Capacitor 6 - Latest Version
+The latest version that supports Capacitor 6 uses the following SDK versions:
+- Android AppsFlyer SDK **6.15.30**
+- iOS AppsFlyer SDK **6.15.10**
+
+The plugin available via npm under the tag `latest-6`. To install the plugin, please run the following commands in your project root directory. If you are updating from older versions of Capacitor please make sure you follow Capacitor's documentation regarding updatings.
+
+ ```bash  
+ npm install appsflyer-capacitor-plugin@latest-6
+ npx cap sync  
+ ```
+
 ## <a id="cap4"> Capacitor 4 - Latest Version
 The latest version that supports Capacitor 4 uses the following SDK versions:
 - Android AppsFlyer SDK **6.10.3️**

@@ -14,8 +14,12 @@
 
 ### <a id="plugin-build-for"> This plugin is built for
 
-- Android AppsFlyer SDK **6.14.0**
-- iOS AppsFlyer SDK **6.14.3**
+- Android AppsFlyer SDK **6.15.0**
+- iOS AppsFlyer SDK **6.15.0**
+
+## <a id="breaking-changes-6-15-0"> 	❗❗ Breaking changes when updating to v6.15.0 ❗❗
+Starting from v6.15.0, this plugin works only with Capacitor 6. </br>
+If you are using versions older than Capacitor 6, please follow the version update instructions [here](https://capacitorjs.com/docs/updating/plugins/6-0) before using this AppsFlyer plugin version.
 
 ## <a id="breaking-changes-6-12-1"> 	❗❗ Breaking changes when updating to v6.12.1 ❗❗
 Starting from v6.12.1, this plugin works only with Capacitor 5. </br>

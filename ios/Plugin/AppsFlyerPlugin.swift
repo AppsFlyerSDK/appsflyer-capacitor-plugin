@@ -5,7 +5,7 @@ import AppsFlyerLib
 
 @objc(AppsFlyerPlugin)
 public class AppsFlyerPlugin: CAPPlugin {
-    private let APPSFLYER_PLUGIN_VERSION = "6.14.3"
+    private let APPSFLYER_PLUGIN_VERSION = "6.15.0"
     private var conversion = true
     private var oaoa = true
     private var udl = false
@@ -70,14 +70,14 @@ public class AppsFlyerPlugin: CAPPlugin {
             appsflyer.waitForATTUserAuthorization(timeoutInterval: Double(attInterval!))
         }
 #endif
-
+        
         if !manualStart {
             startSDK(call)
         } else {
             call.resolve(["res": "SDK initiated successfully. SDK has NOT started yet"])
         }
     }
-
+    
     @objc func startSDK(_ call: CAPPluginCall) {
         
         NotificationCenter.default.addObserver(self, selector: #selector(sendLaunch), name: UIApplication.didBecomeActiveNotification, object: nil)
@@ -108,13 +108,82 @@ public class AppsFlyerPlugin: CAPPlugin {
         }
     }
     
-    @objc func setCustomerUserId(_ call: CAPPluginCall){
+    @objc func setCustomerUserId(_ call: CAPPluginCall) {
         guard  let cuid = call.getString(AppsFlyerConstants.AF_CUID) else {
             call.reject("Invalid Customer User ID")
             return
         }
         AppsFlyerLib.shared().customerUserID = cuid
+    }
+    
+    
+    @objc func logAdRevenue(_ call: CAPPluginCall) {
+        let adRevenueData = call.jsObjectRepresentation
         
+        guard let myMonetizationNetwork = adRevenueData[AppsFlyerConstants.AF_MONETIZATION_NETWORK] as? String,
+              let myCurrencyIso4217Code = adRevenueData[AppsFlyerConstants.AF_CURRENCY_ISO4217_CODE] as? String,
+              let revenue = adRevenueData[AppsFlyerConstants.AF_REVENUE] as? NSNumber,
+              let mediationNetworkString = adRevenueData[AppsFlyerConstants.AF_MEDIATION_NETWORK] as? String else {
+            call.reject("One or more parameters are missing or have invalid format.")
+            return
+        }
+        
+        let additionalParams = adRevenueData[AppsFlyerConstants.AF_ADDITIONAL_PARAMETERS] as? [String: Any]
+        
+        // Handle the mediation network mapping to AppsFlyer SDK enum
+        guard let myMediationNetwork = MediationNetworkType(rawValue: mediationNetworkString) else {
+            call.reject("Invalid mediation network")
+            return
+        }
+        
+        // Create the AFAdRevenueData instance
+        let myAdRevenueData = AFAdRevenueData(
+            monetizationNetwork: myMonetizationNetwork,
+            mediationNetwork: myMediationNetwork,
+            currencyIso4217Code: myCurrencyIso4217Code,
+            eventRevenue: revenue
+        )
+        
+        // Log the ad revenue to the AppsFlyer SDK
+        AppsFlyerLib.shared().logAdRevenue(myAdRevenueData, additionalParameters: additionalParams)
+        
+        call.resolve()
+    }
+    
+    // Helper function to map mediation network string to the AppsFlyer enum
+    private func MediationNetworkType(rawValue: String) -> MediationNetworkType? {
+        switch rawValue {
+        case "googleadmob":
+            return .googleAdMob
+        case "fyber":
+            return .fyber
+        case "ironsource":
+            return .ironSource
+        case "applovinmax":
+            return .applovinMax
+        case "appodeal":
+            return .appodeal
+        case "Admost":
+            return .admost
+        case "Topon":
+            return .topon
+        case "Tradplus":
+            return .tradplus
+        case "Yandex":
+            return .yandex
+        case "chartboost":
+            return .chartBoost
+        case "Unity":
+            return .unity
+        case "toponpte":
+            return .toponPte
+        case "customMediation":
+            return .custom
+        case "directMonetizationNetwork":
+            return .directMonetization
+        default:
+            return nil
+        }
     }
     
     @objc func setCurrencyCode(_ call: CAPPluginCall){
@@ -248,7 +317,7 @@ public class AppsFlyerPlugin: CAPPlugin {
     @objc func setDisableNetworkData(_ call: CAPPluginCall){
         call.unavailable("Android only method - has no effact on iOS apps")
     }
-
+    
     @objc func enableTCFDataCollection(_ call: CAPPluginCall){
         guard let shouldEnableTCFDataCollection = call.getBool(AppsFlyerConstants.AF_ENABLE_TCF_DATA_COLLECTION) else {
             call.reject("Missing boolean value shouldEnableTCFDataCollection")
@@ -256,26 +325,26 @@ public class AppsFlyerPlugin: CAPPlugin {
         }
         AppsFlyerLib.shared().enableTCFDataCollection(shouldEnableTCFDataCollection)
     }
-
+    
     @objc func setConsentData(_ call: CAPPluginCall) {
         guard let consentData = call.getObject("data") else {
             call.reject("Consent data is missing")
             return
-        }    
+        }
         
         let isUserSubjectToGDPR = consentData[AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR] as? Bool ?? false
         let hasConsentForDataUsage = consentData[AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE] as? Bool ?? false
         let hasConsentForAdsPersonalization = consentData[AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION] as? Bool ?? false
-
+        
         let consentObject: AppsFlyerConsent
         if isUserSubjectToGDPR {
             consentObject = AppsFlyerConsent(forGDPRUserWithHasConsentForDataUsage: hasConsentForDataUsage, hasConsentForAdsPersonalization: hasConsentForAdsPersonalization)
         } else {
             consentObject = AppsFlyerConsent(nonGDPRUser: ())
         }
-
+        
         AppsFlyerLib.shared().setConsentData(consentObject)
-
+        
         call.resolve()
     }
     

@@ -1,6 +1,5 @@
 {
 	"appId": "com.appsflyer.afexample1",
 	"appName": "CapacitorReact",
-	"webDir": "build",
-	"bundledWebRuntime": false
+	"webDir": "build"
 }
