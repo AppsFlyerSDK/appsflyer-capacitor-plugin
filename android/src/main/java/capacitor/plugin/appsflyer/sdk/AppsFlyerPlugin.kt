@@ -561,6 +561,36 @@ class AppsFlyerPlugin : Plugin() {
         call.resolve()
     }
 
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    fun logAdRevenue(call: PluginCall) {
+        val adRevenueDataJson = call.data ?: return call.reject("adRevenueData is missing, the data mandatory to use this API.")
+
+        // Parse the fields from the adRevenueDataJson object
+        val monetizationNetwork = adRevenueDataJson.getString(AF_MONETIZATION_NETWORK) ?: return call.reject("monetizationNetwork is missing")
+        val currencyIso4217Code = adRevenueDataJson.getString(AF_CURRENCY_ISO4217_CODE) ?: return call.reject("currencyIso4217Code is missing")
+        val revenue = adRevenueDataJson.getDouble(AF_REVENUE)
+        if (revenue.isNaN()) {
+            return call.reject("revenue is missing or not a number")
+        }
+        val additionalParams = AFHelpers.jsonToMap(adRevenueDataJson.getJSObject(AF_ADDITIONAL_PARAMETERS)) // can be nullable
+
+        // Convert the mediationNetwork string to the MediationNetwork enum
+        val mediationNetworkValue = adRevenueDataJson.getString(AF_MEDIATION_NETWORK) ?: return call.reject("mediationNetwork is missing")
+        val mediationNetwork = MediationNetwork.entries.find { it.value == mediationNetworkValue } ?: return call.reject("Invalid mediation network")
+
+        // Create the AFAdRevenueData object
+        val adRevenueData = AFAdRevenueData(
+            monetizationNetwork = monetizationNetwork,
+            mediationNetwork = mediationNetwork,
+            currencyIso4217Code = currencyIso4217Code,
+            revenue = revenue
+        )
+
+        AppsFlyerLib.getInstance().logAdRevenue(adRevenueData, additionalParams)
+
+        call.resolve()
+    }
+
     private fun getDeepLinkListener(): DeepLinkListener {
         return DeepLinkListener {
             if (udl == true) {

@@ -1,6 +1,6 @@
 import './ExploreContainer.css';
-import {IonButton, isPlatform} from '@ionic/react';
-import {AFEvent, AppsFlyer} from "appsflyer-capacitor-plugin";
+import { IonButton, isPlatform } from '@ionic/react';
+import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer } from "appsflyer-capacitor-plugin";
 import React from "react";
 
 interface ContainerProps {
@@ -22,13 +22,13 @@ function logEventClicked() {
 
 
 function brandedDomains() {
-    AppsFlyer.setOneLinkCustomDomain({domains: ['paz', 'lavi', 'aaa']});
+    AppsFlyer.setOneLinkCustomDomain({ domains: ['paz', 'lavi', 'aaa'] });
     myLogger('brandedDomains');
 
 }
 
 function resolveDeepLinksUrls() {
-    AppsFlyer.setResolveDeepLinkURLs({urls: ['af', 'apps', 'appsflyer']});
+    AppsFlyer.setResolveDeepLinkURLs({ urls: ['af', 'apps', 'appsflyer'] });
     myLogger('ResolveDeepLinksUrls');
 
 }
@@ -49,7 +49,7 @@ function getAppsFlyerID() {
 
 function generateInviteLink() {
     AppsFlyer.generateInviteLink({
-        addParameters: {code: '1256abc', page: '152'},
+        addParameters: { code: '1256abc', page: '152' },
         campaign: 'appsflyer_plugin',
         channel: 'sms',
     })
@@ -60,7 +60,7 @@ function generateInviteLink() {
 function validateAndLogInAppPurchase() {
     if (isPlatform('android')) {
         AppsFlyer.validateAndLogInAppPurchaseAndroid({
-            additionalParameters: {aa: 'cc'},
+            additionalParameters: { aa: 'cc' },
             currency: 'usd',
             price: '20',
             signature: 'the_signature',
@@ -71,7 +71,7 @@ function validateAndLogInAppPurchase() {
             .catch(e => alert('validateAndLogInAppPurchase error: ' + e));
     } else if (isPlatform('ios')) {
         AppsFlyer.validateAndLogInAppPurchaseIos({
-            additionalParameters: {aa: 'cc'},
+            additionalParameters: { aa: 'cc' },
             currency: 'usd',
             price: '20',
             inAppPurchase: 'productIdentifier',
@@ -87,26 +87,44 @@ function setSharingFilterForAllPartners() {
 }
 
 function setSharingFilter() {
-    AppsFlyer.setSharingFilter({filters: ['google_int']});
+    AppsFlyer.setSharingFilter({ filters: ['google_int'] });
 }
 
 function anonymizeUser() {
-    AppsFlyer.anonymizeUser({anonymizeUser: true});
+    AppsFlyer.anonymizeUser({ anonymizeUser: true });
 }
 
 function stop() {
     AppsFlyer.stop()
         .then(res => { //return current state
-            AppsFlyer.stop({stop: !res.isStopped}) //change state
+            AppsFlyer.stop({ stop: !res.isStopped }) //change state
                 .then(r => alert('isStopped: ' + r.isStopped)); //show state after change
         });
 }
 
-function sendPushNotificationData() {
-    AppsFlyer.sendPushNotificationData({
-        pushPayload: {af: '{"pid":"media_int","is_retargeting":"true", "c":"test_campaign"}'} //replace with push payload
-    });
+function logAdRevenueExample() {
+    const myAdditionalParams = {
+        spong: 'bob',
+        doctor: 'who'
+    };
+    const data: AFAdRevenueData = {
+        monetizationNetwork: "MoneyMoneyMoney",
+        mediationNetwork: MediationNetwork.IRONSOURCE,
+        currencyIso4217Code: "USD",
+        revenue: 200.0,
+        additionalParameters: myAdditionalParams
+    };
+
+    AppsFlyer.logAdRevenue(data)
+        .then(r => alert('logAdRevenue triggered'))
+        .catch(e => alert('logAdRevenue returned error: ' + e));
 }
+
+// function sendPushNotificationData() {
+//     AppsFlyer.sendPushNotificationData({
+//         pushPayload: { af: '{"pid":"media_int","is_retargeting":"true", "c":"test_campaign"}' } //replace with push payload
+//     });
+// }
 
 const ExploreContainer: React.FC<ContainerProps> = () => {
     return (
@@ -130,6 +148,7 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
                 Filter For
                 All
                 Partners</IonButton>
+            <IonButton color="primary" expand="block" onClick={() => logAdRevenueExample()}>Log Ad Revenue</IonButton>
         </div>
     );
 };
