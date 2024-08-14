@@ -1,4 +1,4 @@
-import type {MediationNetwork} from "./appsflyer_constants";
+import type {MediationNetwork} from "./Appsflyer_constants";
 
 export interface AFInit{
     devKey: string;

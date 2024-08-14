@@ -5,6 +5,6 @@ const AppsFlyer = registerPlugin<AppsFlyerPlugin>('AppsFlyerPlugin', {
 });
 
 export * from './definitions';
-export * from './appsflyer_constants';
+export * from './Appsflyer_constants';
 export * from './appsflyer_interfaces';
 export { AppsFlyer };
