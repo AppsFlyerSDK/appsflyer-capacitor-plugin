@@ -5,7 +5,7 @@ import AppsFlyerLib
 
 @objc(AppsFlyerPlugin)
 public class AppsFlyerPlugin: CAPPlugin {
-    private let APPSFLYER_PLUGIN_VERSION = "6.15.0"
+    private let APPSFLYER_PLUGIN_VERSION = "6.15.0-rc1"
     private var conversion = true
     private var oaoa = true
     private var udl = false
