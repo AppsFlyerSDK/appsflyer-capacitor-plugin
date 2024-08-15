@@ -21,11 +21,10 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
-import {AFConstants, AppsFlyer} from "appsflyer-capacitor-plugin";
-import {AppTrackingTransparency} from "capacitor-plugin-app-tracking-transparency";
-import React, {useState} from "react";
-function initAppsFlyer() {
+import { AFConstants, AppsFlyer } from "appsflyer-capacitor-plugin";
+import { AppTrackingTransparency } from "capacitor-plugin-app-tracking-transparency";
 
+function initAppsFlyer() {
   setOAOA();
   setUDL();
   setConversions();
@@ -52,7 +51,7 @@ function setConversions() {
       if (event.data.af_status === 'Non-organic') {
         if (event.data.is_first_launch === true) {
           const deepLinkValue = event.data.deep_link_value;
-         handleLink(deepLinkValue);
+          handleLink(deepLinkValue);
         }
       }
     }
@@ -68,7 +67,7 @@ function setUDL() {
     alert('UDL_CALLBACK ~~>' + JSON.stringify(res));
     if (res.status === 'FOUND') {
       const deepLinkValue = res.deepLink.deep_link_value;
-     handleLink(deepLinkValue);
+      handleLink(deepLinkValue);
     } else if (res.status === 'ERROR') {
       console.log('udl error: ' + res.error);
     }
@@ -96,14 +95,14 @@ function runAppsFlyerAPIs() {
   //AppsFlyer.disableAdvertisingIdentifier({shouldDisable:true});
   //AppsFlyer.disableCollectASA({shouldDisable:true});
   //AppsFlyer.disableSKAdNetwork({shouldDisable:true});
-  AppsFlyer.setCurrentDeviceLanguage({language: 'en'})
-      .then(res => console.log(res.res))
-      .catch(e => console.log(e));
-  AppsFlyer.setAppInviteOneLink({onelinkID: 'your_onelink_id'}).then();
-  AppsFlyer.setCustomerUserId({cuid: 'csadadadad'});
-  AppsFlyer.setCurrencyCode({currencyCode: 'ILS'});
-  AppsFlyer.updateServerUninstallToken({token: 'fdsffddfbnjdfoiuvhof'});
-  AppsFlyer.setOneLinkCustomDomain({domains: ['promotion.greatapp.com', 'click.greatapp.com', 'deals.greatapp.com']});
+  AppsFlyer.setCurrentDeviceLanguage({ language: 'en' })
+    .then(res => console.log(res.res))
+    .catch(e => console.log(e));
+  AppsFlyer.setAppInviteOneLink({ onelinkID: 'your_onelink_id' }).then();
+  AppsFlyer.setCustomerUserId({ cuid: 'csadadadad' });
+  AppsFlyer.setCurrencyCode({ currencyCode: 'ILS' });
+  AppsFlyer.updateServerUninstallToken({ token: 'fdsffddfbnjdfoiuvhof' });
+  AppsFlyer.setOneLinkCustomDomain({ domains: ['promotion.greatapp.com', 'click.greatapp.com', 'deals.greatapp.com'] });
   AppsFlyer.appendParametersToDeepLinkingURL({
     contains: 'af',
     parameters: {
@@ -112,8 +111,8 @@ function runAppsFlyerAPIs() {
       my_param: 'xyz'
     }
   });
-  AppsFlyer.setResolveDeepLinkURLs({urls: ['af', 'appsflyer']});
-  AppsFlyer.addPushNotificationDeepLinkPath({path: ['af', 'a', 'b']});
+  AppsFlyer.setResolveDeepLinkURLs({ urls: ['af', 'appsflyer'] });
+  AppsFlyer.addPushNotificationDeepLinkPath({ path: ['af', 'a', 'b'] });
   AppsFlyer.setAdditionalData({
     additionalData: {
       capacitor: 'plugin',
@@ -126,24 +125,24 @@ function runAppsFlyerAPIs() {
   //
 }
 
-const App: React.FC = () =>
-{
+const App: React.FC = () => {
   initAppsFlyer();
   AppTrackingTransparency.requestPermission().then(res => alert('ATT status: ' + res.status));
 
   return (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/home" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
-)};
+    <IonApp>
+      <IonReactRouter>
+        <IonRouterOutlet>
+          <Route exact path="/home">
+            <Home />
+          </Route>
+          <Route exact path="/">
+            <Redirect to="/home" />
+          </Route>
+        </IonRouterOutlet>
+      </IonReactRouter>
+    </IonApp>
+  )
+};
 
 export default App;

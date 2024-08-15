@@ -385,4 +385,4 @@ You only need to add the referrer dependency, the SDK takes care of the rest:
 [Huawei Install Referrer](https://dev.appsflyer.com/hc/docs/install-android-sdk#huawei-install-referrer)<br>
 [Xiaomi GetApps store referrer](https://dev.appsflyer.com/hc/docs/install-android-sdk#xiaomi-getapps-store-referrer)<br>
 
-**Note:** Satring plugin version 6.14.3, Huawei referrer is collected in a different way than it used to be, please follow the new instructions provided [here.](https://dev.appsflyer.com/hc/docs/install-android-sdk#huawei-install-referrer)
+**Note:** Starting plugin version 6.14.3, Huawei referrer is collected in a different way than it used to be, please follow the new instructions provided [here.](https://dev.appsflyer.com/hc/docs/install-android-sdk#huawei-install-referrer)

@@ -1,3 +1,5 @@
+import type {MediationNetwork} from "./Appsflyer_constants";
+
 export interface AFInit{
     devKey: string;
     appID: string;
@@ -148,3 +150,11 @@ export const AppsFlyerConsent = {
 export interface AFConsentData {
     data: IAppsFlyerConsent
 }
+
+export interface AFAdRevenueData {
+    monetizationNetwork: string;
+    mediationNetwork: MediationNetwork;
+    currencyIso4217Code: string;
+    revenue: number;
+    additionalParameters?: StringMap;
+  }
