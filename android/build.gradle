@@ -30,7 +30,7 @@ String getPackageJsonPath() {
         }
     }
 
-    logger.lifecycle("Did nit locate package.json in any of possiblePackageJsonPaths and APPSFLYER_PACKAGE_JSON_PATH is not specified.")
+    logger.lifecycle("Did not locate package.json in any of possiblePackageJsonPaths and APPSFLYER_PACKAGE_JSON_PATH is not specified.")
     return null
 }
 
