@@ -34,9 +34,7 @@ jobs:
         git config --global user.name $COMMIT_AUTHOR
         git config --global user.email $COMMIT_EMAIL
         git config --global credential.helper store
-        git credential approve <<< "url=https://github.com
-                                    username=x-access-token
-                                    password=$MY_PERSONAL_ACCESS_TOKEN"
+        git credential approve <<< $'url=https://github.com\nusername=x-access-token\npassword=$MY_PERSONAL_ACCESS_TOKEN'
 
     - name: Create New Branch
       id: createBranch
@@ -51,6 +49,8 @@ jobs:
         git checkout -b $branchName
 
     - name: Update Codebase
+      env:
+        GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       run: |
         .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ inputs.versionName }} buildNumber=${{ github.run_number }} iOSVersion=${{ inputs.iosVersion }} androidVersion=${{ inputs.AndroidVersion }}
         git commit -m "update versions using CI"
