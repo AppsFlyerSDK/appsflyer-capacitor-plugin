@@ -576,7 +576,12 @@ class AppsFlyerPlugin : Plugin() {
 
         // Convert the mediationNetwork string to the MediationNetwork enum
         val mediationNetworkValue = adRevenueDataJson.getString(AF_MEDIATION_NETWORK) ?: return call.reject("mediationNetwork is missing")
-        val mediationNetwork = MediationNetwork.entries.find { it.value == mediationNetworkValue } ?: return call.reject("Invalid mediation network")
+        val mediationNetwork: MediationNetwork
+        try {
+            mediationNetwork = MediationNetwork.valueOf(mediationNetworkValue.uppercase())
+        } catch (e: IllegalArgumentException) {
+            return call.reject("Invalid mediation network")
+        }
 
         // Create the AFAdRevenueData object
         val adRevenueData = AFAdRevenueData(
