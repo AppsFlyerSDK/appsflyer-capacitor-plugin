@@ -167,33 +167,33 @@ public class AppsFlyerPlugin: CAPPlugin {
     // Helper function to map mediation network string to the AppsFlyer enum
     private func MediationNetworkType(rawValue: String) -> MediationNetworkType? {
         switch rawValue {
-        case "googleadmob":
+        case "google_admob":
             return .googleAdMob
         case "fyber":
             return .fyber
         case "ironsource":
             return .ironSource
-        case "applovinmax":
+        case "applovin_max":
             return .applovinMax
         case "appodeal":
             return .appodeal
-        case "Admost":
+        case "admost":
             return .admost
-        case "Topon":
+        case "topon":
             return .topon
-        case "Tradplus":
+        case "tradplus":
             return .tradplus
-        case "Yandex":
+        case "yandex":
             return .yandex
         case "chartboost":
             return .chartBoost
-        case "Unity":
+        case "unity":
             return .unity
-        case "toponpte":
+        case "topon_pte":
             return .toponPte
-        case "customMediation":
+        case "custom_mediation":
             return .custom
-        case "directMonetizationNetwork":
+        case "direct_monetization_network":
             return .directMonetization
         default:
             return nil
