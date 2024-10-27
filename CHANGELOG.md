@@ -1,3 +1,15 @@
+## 6.15.2
+ Release date: *2024-10-27*
+
+- Capacitor Plugin 6.15.1 build error
+- Capacitor Plugin >> Android >> package.json recursive crawl modification
+
+## 6.15.2
+ Release date: *2024-10-27*
+
+- Capacitor Plugin 6.15.1 build error
+- Capacitor Plugin >> Android >> package.json recursive crawl modification
+
 ## 6.15.1
  Release date: *2024-08-28*
 
