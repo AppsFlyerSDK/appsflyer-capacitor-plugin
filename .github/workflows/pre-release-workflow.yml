@@ -11,17 +11,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Login to Github
+        with:
+          token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Setup Git Authentication
         env:
           COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
           COMMIT_EMAIL: ${{ secrets.CI_COMMIT_EMAIL }}
+          MY_PERSONAL_ACCESS_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
         run: |
           git config --global user.name $COMMIT_AUTHOR
           git config --global user.email $COMMIT_EMAIL
+          git config --global credential.helper 'cache --timeout=300'
+          git config --global --add "credential.https://github.com.username" "x-access-token"
+          echo "https://x-access-token:$MY_PERSONAL_ACCESS_TOKEN@github.com" > ~/.git-credentials
+
       - uses: mdecoleman/pr-branch-name@2.0.0
         id: vars
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       - name: Update package.json file
         run: |
           plugin_version=$(echo "${{ steps.vars.outputs.branch }}" | grep -Eo '[0-9]+.[0-9]+.[0-9]+')
@@ -58,13 +67,13 @@ jobs:
       - uses: mdecoleman/pr-branch-name@2.0.0
         id: vars
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
       - name: Export branch name
         run: |
           echo "RELEASE_BRANCH_NAME=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
       - name: approve pull request
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: | # approve the pull request of the current branch
           gh pr review "$PR_NUMBER" --approve
