@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.source = { :git => package['repository']['url'], :tag => s.version.to_s }
   s.source_files = 'ios/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}'
   s.static_framework = true
-  s.ios.deployment_target  = '13.0'
+  s.ios.deployment_target = '14.0'
   s.dependency 'Capacitor'
   s.swift_version = '5.1'
 
