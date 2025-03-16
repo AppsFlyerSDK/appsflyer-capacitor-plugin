@@ -266,6 +266,7 @@ export interface AppsFlyerPlugin {
     * Use to set user consent data manualy.
     * if your app doesn't use a CMP compatible with TCF v2.2, use the following method to manualy provide the consent data directly to the SDK.
     * @param  data: AppsFlyerConsent object.
+    * @deprecated deprecated since 6.16.2. Use TODO instead
     */
     setConsentData(data : AFConsentData): Promise<void>
 

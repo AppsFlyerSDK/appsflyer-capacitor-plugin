@@ -34,6 +34,7 @@ class AppsFlyerPlugin : Plugin() {
     private var conversion: Boolean? = null
     private var oaoa: Boolean? = null
     private var udl: Boolean? = null
+    private var hasSDKStarted: Boolean = false
 
 
     override fun handleOnNewIntent(intent: Intent?) {
@@ -273,20 +274,30 @@ class AppsFlyerPlugin : Plugin() {
         AppsFlyerLib.getInstance().apply {
             if (shouldStop != null) {
                 stop(shouldStop, context)
+                hasSDKStarted = false
             }
             val obj = JSObject().apply {
                 put(AF_IS_STOP, isStopped)
             }
             call.resolve(obj)
-
         }
     }
 
     @PluginMethod
     fun startSDK(call: PluginCall) {
+        // If SDK has already started in this session, return an immediate success response
+        if (hasSDKStarted) {
+            val result = JSObject().apply {
+                put("res", "AppsFlyer SDK already started")
+            }
+            call.resolve(result)
+            return
+        }
+
         AppsFlyerLib.getInstance()
             .start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
                 override fun onSuccess() {
+                    hasSDKStarted = true
                     val result = JSObject().apply {
                         put("res", "success")
                     }
@@ -304,6 +315,26 @@ class AppsFlyerPlugin : Plugin() {
         call.unavailable()
     }
 
+    @PluginMethod
+    fun isSDKStarted(call: PluginCall) {
+        val result = JSObject().apply {
+            put("isStarted", hasSDKStarted)
+        }
+        call.resolve(result)
+    }
+
+    @PluginMethod
+    fun isSDKStopped(call: PluginCall) {
+        val result = JSObject().apply {
+            put("isSDKStopped", AppsFlyerLib.getInstance().isStopped)
+        }
+        call.resolve(result)
+    }
+
+    override fun handleOnPause() {
+        super.handleOnPause()
+        hasSDKStarted = false
+    }
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun disableAdvertisingIdentifier(call: PluginCall) {
@@ -542,6 +573,7 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
+    @Deprecated("Please use the new API")
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun setConsentData(call: PluginCall) {
         val consentData = call.getObject("data") ?: return call.reject("Missing consent data")
