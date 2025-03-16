@@ -1030,7 +1030,7 @@ isSDKStarted(): Promise<{ isStarted: boolean }>;
 
 Use this method to check whether the AppsFlyer SDK has already been started in the current session.
 
-**Returns:** Promise<{ isStarted: boolean }></br>
+**Returns:** <code>Promise<{ isStarted: boolean }></code></br>
 	•	true - if the SDK has been started. </br>
 	•	false - if the SDK has not been started.
 
@@ -1048,7 +1048,7 @@ isSDKStopped(): Promise<{ isStopped: boolean }>;
 
 Use this method to check whether the AppsFlyer SDK is currently stopped.
 
-**Returns:** Promise<{ isStopped: boolean }></br>
+**Returns:** <code>Promise<{ isStopped: boolean }></code></br>
 	•	true - if the SDK is stopped. </br>
 	•	false -  if the SDK is running.
 
