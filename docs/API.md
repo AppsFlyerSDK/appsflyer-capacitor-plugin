@@ -199,8 +199,8 @@ If the SDK has already been started in the same session, the method will resolve
 
 **Returns:** <code>Promise<<a href="#aFRes">AFRes</a>></code>  
 
-**Possible Responses:**
-	•	"success" - when the SDK starts successfully.
+**Possible Responses:**</br>
+	•	"success" - when the SDK starts successfully.</br>
 	•	"AppsFlyer SDK already started" - when the SDK was already started in this session.
 
 **Usage Example:**
@@ -1030,8 +1030,8 @@ isSDKStarted(): Promise<{ isStarted: boolean }>;
 
 Use this method to check whether the AppsFlyer SDK has already been started in the current session.
 
-**Returns:** Promise<{ isStarted: boolean }>
-	•	true - if the SDK has been started.
+**Returns:** Promise<{ isStarted: boolean }></br>
+	•	true - if the SDK has been started. </br>
 	•	false - if the SDK has not been started.
 
 **Usage Example:**
@@ -1048,8 +1048,8 @@ isSDKStopped(): Promise<{ isStopped: boolean }>;
 
 Use this method to check whether the AppsFlyer SDK is currently stopped.
 
-**Returns:** Promise<{ isStopped: boolean }>
-	•	true - if the SDK is stopped.
+**Returns:** Promise<{ isStopped: boolean }></br>
+	•	true - if the SDK is stopped. </br>
 	•	false -  if the SDK is running.
 
 **Usage Example:**
