@@ -39,7 +39,8 @@ A CMP compatible with TCF v2.2 collects DMA consent data and stores it in NSUser
 }
 ```
 
-## Manually collect consent data
+## Manually collect consent data 
+### setConsentData is now **deprecated**. use <a href="#setConsentDataV2">setConsentDataV2</a>
 If your app does not use a CMP compatible with TCF v2.2, use the SDK API detailed below to provide the consent data directly to the SDK, distinguishing between cases when GDPR applies or not.
 
 ### When GDPR applies to the user
@@ -102,4 +103,57 @@ If GDPR doesn’t apply to the user perform the following:
   .......
 ```
 
+## setConsentDataV2 (Recommended API for Manual Consent Collection) - since 6.16.2
+🚀 **Why Use setConsentDataV2?**
+The setConsentDataV2 API is the new and improved way to manually provide user consent data to the AppsFlyer SDK.
 
+It replaces the now deprecated setConsentData method, offering several improvements:
+✅ **Simpler and More Intuitive:** Accepts a single object (AFConsentOptions), making it easier to manage.
+✅ **Includes an Additional Consent Parameter:** Now supports hasConsentForAdStorage to give users more granular control over their data.
+✅ **Enhanced Clarity**: Allows explicit null values, indicating when users have not provided consent instead of forcing defaults.
+✅ **Future-Proof:** Designed to be aligned with evolving privacy regulations and best practices.
+
+If your app previously used setConsentData, it is highly recommended to migrate to setConsentDataV2 for a more flexible and robust solution.
+
+📌 **API Reference**
+```typescript
+setConsentDataV2(options: AFConsentOptions): Promise<void>;
+``` 
+
+**Parameters**
+| Parameter | Type | Description |
+| -------- | -------- | -------- |
+| isUserSubjectToGDPR            | boolean or null     | Indicates if the user is subject to GDPR regulations.     |
+| hasConsentForDataUsage         | boolean or null     | Determines if the user consents to data usage.     |
+| hasConsentForAdsPersonalizatio | boolean or null     | Determines if the user consents to personalized ads.     |
+| hasConsentForAdStorage         | boolean or null     | **(New!)** Determines if the user consents to storing ad-related data.|
+
+- If a parameter is `null` or `undefined`, it means the user has **not explicitly provided consent** for that option.
+- These values should be collected from the user via an appropriate **UI or consent prompt** before calling this method.
+
+📌 **Example Usage**
+```typescript
+const consentOptions = {
+            isUserSubjectToGDPR: true,
+            hasConsentForDataUsage: true,
+            hasConsentForAdsPersonalization: false,
+            hasConsentForAdStorage: null // User has not explicitly provided consent
+        };
+
+AppsFlyer.setConsentDataV2(consentOptions);
+
+AppsFlyer.initSDK({
+    appID: '1234567890',
+    devKey: 'your_dev_key', 
+    isDebug: true,
+    registerOnDeepLink: true,
+    minTimeBetweenSessions: 6,
+    registerConversionListener: true,
+    registerOnAppOpenAttribution: false,
+    useReceiptValidationSandbox: true,
+    useUninstallSandbox: true,
+  });
+``` 
+📌 **Notes**
+• You still must call this method **before initializing the AppsFlyer SDK**.
+• Ensure you collect consent **legally and transparently** from the user before passing these values.
