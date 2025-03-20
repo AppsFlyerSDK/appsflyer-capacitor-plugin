@@ -40,7 +40,7 @@ A CMP compatible with TCF v2.2 collects DMA consent data and stores it in NSUser
 ```
 
 ## Manually collect consent data 
-### setConsentData is now **deprecated**. use <a href="#setConsentDataV2">setConsentDataV2</a>
+### setConsentData is now **deprecated**. use <a href="#setconsentdatav2-recommended-api-for-manual-consent-collection---since-6162">setConsentDataV2</a>
 If your app does not use a CMP compatible with TCF v2.2, use the SDK API detailed below to provide the consent data directly to the SDK, distinguishing between cases when GDPR applies or not.
 
 ### When GDPR applies to the user
@@ -104,14 +104,14 @@ If GDPR doesn’t apply to the user perform the following:
 ```
 
 ## setConsentDataV2 (Recommended API for Manual Consent Collection) - since 6.16.2
-🚀 **Why Use setConsentDataV2?**
+🚀 **Why Use setConsentDataV2?**</br>
 The setConsentDataV2 API is the new and improved way to manually provide user consent data to the AppsFlyer SDK.
 
-It replaces the now deprecated setConsentData method, offering several improvements:
-✅ **Simpler and More Intuitive:** Accepts a single object (AFConsentOptions), making it easier to manage.
-✅ **Includes an Additional Consent Parameter:** Now supports hasConsentForAdStorage to give users more granular control over their data.
-✅ **Enhanced Clarity**: Allows explicit null values, indicating when users have not provided consent instead of forcing defaults.
-✅ **Future-Proof:** Designed to be aligned with evolving privacy regulations and best practices.
+It replaces the now deprecated setConsentData method, offering several improvements:</br>
+✅ **Simpler and More Intuitive:** Accepts a single object (AFConsentOptions), making it easier to manage.</br>
+✅ **Includes an Additional Consent Parameter:** Now supports hasConsentForAdStorage to give users more granular control over their data.</br>
+✅ **Enhanced Clarity**: Allows explicit null values, indicating when users have not provided consent instead of forcing defaults.</br>
+✅ **Future-Proof:** Designed to be aligned with evolving privacy regulations and best practices.</br>
 
 If your app previously used setConsentData, it is highly recommended to migrate to setConsentDataV2 for a more flexible and robust solution.
 
@@ -154,6 +154,6 @@ AppsFlyer.initSDK({
     useUninstallSandbox: true,
   });
 ``` 
-📌 **Notes**
-• You still must call this method **before initializing the AppsFlyer SDK**.
+📌 **Notes**</br>
+• You still must call this method **before initializing the AppsFlyer SDK**.</br>
 • Ensure you collect consent **legally and transparently** from the user before passing these values.
