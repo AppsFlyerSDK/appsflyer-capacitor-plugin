@@ -422,27 +422,18 @@ public class AppsFlyerPlugin: CAPPlugin {
     }
 
     @objc func setConsentDataV2(_ call: CAPPluginCall) {
-        NSLog("📢 Logging setConsentDataV2 call2")
-
-        // Helper: Convert Bool? to NSNumber?
+        // inner helper: convert Bool? to NSNumber?
         func toNSNumber(_ value: Bool?) -> NSNumber? {
             guard let value = value else { return nil }
             return NSNumber(value: value)
         }
 
-        // Extract and convert values
         let isUserSubjectToGDPR = toNSNumber(call.getBool(AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR))
         let hasConsentForDataUsage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE))
         let hasConsentForAdsPersonalization = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION))
         let hasConsentForAdStorage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_STORAGE))
 
-        // Log extracted values
-        NSLog("🔍 isUserSubjectToGDPR: %@", String(describing: isUserSubjectToGDPR))
-        NSLog("🔍 hasConsentForDataUsage: %@", String(describing: hasConsentForDataUsage))
-        NSLog("🔍 hasConsentForAdsPersonalization: %@", String(describing: hasConsentForAdsPersonalization))
-        NSLog("🔍 hasConsentForAdStorage: %@", String(describing: hasConsentForAdStorage))
-
-        // Build consent object and pass to AppsFlyer SDK
+        // Build consent options object and pass to AppsFlyer SDK
         let consentOptions = AppsFlyerConsent(
             isUserSubjectToGDPR: isUserSubjectToGDPR,
             hasConsentForDataUsage: hasConsentForDataUsage,
@@ -451,8 +442,6 @@ public class AppsFlyerPlugin: CAPPlugin {
         )
 
         AppsFlyerLib.shared().setConsentData(consentOptions)
-
-        NSLog("✅ setConsentDataV2 successfully executed")
         call.resolve()
     }
     
