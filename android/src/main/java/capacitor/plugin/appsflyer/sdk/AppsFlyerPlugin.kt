@@ -597,14 +597,12 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun setConsentDataV2(call: PluginCall) {
-        val options = call.getObject("options")
-
         AppsFlyerLib.getInstance().setConsentData(
             AppsFlyerConsent(
-                isUserSubjectToGDPR = options.getBool(AF_IS_SUBJECTED_TO_GDPR),
-                hasConsentForDataUsage = options.getBool(AF_CONSENT_FOR_DATA_USAGE),
-                hasConsentForAdsPersonalization = options.getBool(AF_CONSENT_FOR_ADS_PERSONALIZATION),
-                hasConsentForAdStorage = options.getBool(AF_CONSENT_FOR_ADS_STORAGE)
+                isUserSubjectToGDPR = call.getBoolean(AF_IS_SUBJECTED_TO_GDPR),
+                hasConsentForDataUsage = call.getBoolean(AF_CONSENT_FOR_DATA_USAGE),
+                hasConsentForAdsPersonalization = call.getBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION),
+                hasConsentForAdStorage = call.getBoolean(AF_CONSENT_FOR_ADS_STORAGE)
             )
         )
     }
