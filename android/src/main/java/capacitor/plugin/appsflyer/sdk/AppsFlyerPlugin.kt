@@ -35,8 +35,8 @@ class AppsFlyerPlugin : Plugin() {
     private var conversion: Boolean? = null
     private var oaoa: Boolean? = null
     private var udl: Boolean? = null
-    private var hasSDKStarted: Boolean = false
-    private var isStarting: Boolean = false
+    @Volatile private var hasSDKStarted: Boolean = false
+    @Volatile private var isStarting: Boolean = false
 
 
     override fun handleOnNewIntent(intent: Intent?) {
@@ -286,39 +286,41 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod
     fun startSDK(call: PluginCall) {
-        when {
-            hasSDKStarted -> {
+        synchronized(this) {
+            if (hasSDKStarted) {
                 val result = JSObject().apply {
                     put("res", "AppsFlyer SDK already started")
                 }
                 call.resolve(result)
+                return
             }
-            isStarting -> {
-                call.reject("SDK start already in progress. Please wait for the callback.")
-            }
-            else -> {
-                isStarting = true
-                AppsFlyerLib.getInstance().start(
-                    activity ?: context.applicationContext,
-                    null,
-                    object : AppsFlyerRequestListener {
-                        override fun onSuccess() {
-                            hasSDKStarted = true
-                            isStarting = false
-                            val result = JSObject().apply {
-                                put("res", "success")
-                            }
-                            call.resolve(result)
-                        }
 
-                        override fun onError(errCode: Int, msg: String) {
-                            isStarting = false
-                            call.reject("Error Code: $errCode, Message: $msg")
-                        }
-                    }
-                )
+            if (isStarting) {
+                call.reject("SDK start already in progress. Please wait for the callback.")
+                return
             }
+            isStarting = true
         }
+
+        AppsFlyerLib.getInstance().start(
+            activity ?: context.applicationContext,
+            null,
+            object : AppsFlyerRequestListener {
+                override fun onSuccess() {
+                    hasSDKStarted = true
+                    isStarting = false
+                    val result = JSObject().apply {
+                        put("res", "success")
+                    }
+                    call.resolve(result)
+                }
+
+                override fun onError(errCode: Int, msg: String) {
+                    isStarting = false
+                    call.reject("Error Code: $errCode, Message: $msg")
+                }
+            }
+        )
     }
 
     @PluginMethod
