@@ -58,11 +58,11 @@ The list of available methods for this plugin is described below.
 * [`setSharingFilterForAllPartners`](#setsharingfilterforallpartners)  - Deprecated
 * [`startSDK`](#startSDK)  - Since 6.13.0
 * [`enableTCFDataCollection`](#enableTCFDataCollection)  - Since 6.13.0
-* [`setConsentData`](#setConsentData)  - Deprecated
 * [`logAdRevenue`](#logAdRevenue)  - Since 6.15.0
+* [`setConsentData`](#setConsentData)  - **Deprecated**
+* [`setConsentDataV2`](#setConsentDataV2)  - Since 6.16.2
 * [`isSDKStarted`](#isSDKStarted)  - Since 6.16.2
 * [`isSDKStopped`](#isSDKStopped)  - Since 6.16.2
-* [`setConsentDataV2`](#setConsentDataV2)  - Since 6.16.2
 
  
   
