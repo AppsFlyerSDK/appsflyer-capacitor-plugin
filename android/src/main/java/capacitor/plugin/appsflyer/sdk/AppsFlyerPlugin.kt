@@ -36,6 +36,7 @@ class AppsFlyerPlugin : Plugin() {
     private var oaoa: Boolean? = null
     private var udl: Boolean? = null
     private var hasSDKStarted: Boolean = false
+    private var isStarting: Boolean = false
 
 
     override fun handleOnNewIntent(intent: Intent?) {
@@ -275,7 +276,6 @@ class AppsFlyerPlugin : Plugin() {
         AppsFlyerLib.getInstance().apply {
             if (shouldStop != null) {
                 stop(shouldStop, context)
-                hasSDKStarted = false
             }
             val obj = JSObject().apply {
                 put(AF_IS_STOP, isStopped)
@@ -286,29 +286,39 @@ class AppsFlyerPlugin : Plugin() {
 
     @PluginMethod
     fun startSDK(call: PluginCall) {
-        // If SDK has already started in this session, return an immediate success response
-        if (hasSDKStarted) {
-            val result = JSObject().apply {
-                put("res", "AppsFlyer SDK already started")
+        when {
+            hasSDKStarted -> {
+                val result = JSObject().apply {
+                    put("res", "AppsFlyer SDK already started")
+                }
+                call.resolve(result)
             }
-            call.resolve(result)
-            return
-        }
+            isStarting -> {
+                call.reject("SDK start already in progress. Please wait for the callback.")
+            }
+            else -> {
+                isStarting = true
+                AppsFlyerLib.getInstance().start(
+                    activity ?: context.applicationContext,
+                    null,
+                    object : AppsFlyerRequestListener {
+                        override fun onSuccess() {
+                            hasSDKStarted = true
+                            isStarting = false
+                            val result = JSObject().apply {
+                                put("res", "success")
+                            }
+                            call.resolve(result)
+                        }
 
-        AppsFlyerLib.getInstance()
-            .start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
-                override fun onSuccess() {
-                    hasSDKStarted = true
-                    val result = JSObject().apply {
-                        put("res", "success")
+                        override fun onError(errCode: Int, msg: String) {
+                            isStarting = false
+                            call.reject("Error Code: $errCode, Message: $msg")
+                        }
                     }
-                    call.resolve(result)
-                }
-
-                override fun onError(errCode: Int, msg: String) {
-                    call.reject("Error Code: $errCode, Message: $msg")
-                }
-            })
+                )
+            }
+        }
     }
 
     @PluginMethod
@@ -330,11 +340,6 @@ class AppsFlyerPlugin : Plugin() {
             put("isSDKStopped", AppsFlyerLib.getInstance().isStopped)
         }
         call.resolve(result)
-    }
-
-    override fun handleOnPause() {
-        super.handleOnPause()
-        hasSDKStarted = false
     }
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
@@ -582,7 +587,8 @@ class AppsFlyerPlugin : Plugin() {
 
         val isUserSubjectToGDPR = consentData.optBoolean(AF_IS_SUBJECTED_TO_GDPR)
         val hasConsentForDataUsage = consentData.optBoolean(AF_CONSENT_FOR_DATA_USAGE)
-        val hasConsentForAdsPersonalization = consentData.optBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION)
+        val hasConsentForAdsPersonalization =
+            consentData.optBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION)
 
         val consentObject = if (isUserSubjectToGDPR) {
             AppsFlyerConsent.forGDPRUser(hasConsentForDataUsage, hasConsentForAdsPersonalization)
