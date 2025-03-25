@@ -284,22 +284,23 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
+    @Synchronized
     @PluginMethod
     fun startSDK(call: PluginCall) {
-        synchronized(this) {
-            if (hasSDKStarted) {
-                val result = JSObject().apply {
+        when {
+            hasSDKStarted -> {
+                call.resolve(JSObject().apply {
                     put("res", "AppsFlyer SDK already started")
-                }
-                call.resolve(result)
+                })
                 return
             }
-
-            if (isStarting) {
+            isStarting -> {
                 call.reject("SDK start already in progress. Please wait for the callback.")
                 return
             }
-            isStarting = true
+            else -> {
+                isStarting = true
+            }
         }
 
         AppsFlyerLib.getInstance().start(
@@ -309,10 +310,9 @@ class AppsFlyerPlugin : Plugin() {
                 override fun onSuccess() {
                     hasSDKStarted = true
                     isStarting = false
-                    val result = JSObject().apply {
+                    call.resolve(JSObject().apply {
                         put("res", "success")
-                    }
-                    call.resolve(result)
+                    })
                 }
 
                 override fun onError(errCode: Int, msg: String) {
