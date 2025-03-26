@@ -1,6 +1,7 @@
 import { registerPlugin } from '@capacitor/core';
 
 import type { AppsFlyerPlugin } from './definitions';
+
 const AppsFlyer = registerPlugin<AppsFlyerPlugin>('AppsFlyerPlugin', {
 });
 
