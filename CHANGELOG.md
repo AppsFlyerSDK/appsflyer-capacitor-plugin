@@ -3,6 +3,11 @@
 
 - Capacitor >> Update Plugin to v6.16.2
 
+## 6.16.2
+ Release date: *2025-03-26*
+
+- Capacitor >> Update Plugin to v6.16.2
+
 ## 6.15.2
  Release date: *2024-10-27*
 
