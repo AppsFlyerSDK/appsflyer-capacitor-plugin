@@ -42,6 +42,7 @@ CAP_PLUGIN(AppsFlyerPlugin, "AppsFlyerPlugin",
            CAP_PLUGIN_METHOD(setConsentData, CAPPluginReturnNone);
            CAP_PLUGIN_METHOD(startSDK, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(logAdRevenue, CAPPluginReturnNone);
+           CAP_PLUGIN_METHOD(setConsentDataV2, CAPPluginReturnNone);
 
 
            

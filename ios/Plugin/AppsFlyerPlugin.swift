@@ -5,15 +5,27 @@ import AppsFlyerLib
 
 @objc(AppsFlyerPlugin)
 public class AppsFlyerPlugin: CAPPlugin {
-    private let APPSFLYER_PLUGIN_VERSION = "6.15.2"
+    private let APPSFLYER_PLUGIN_VERSION = "6.16.2-rc1"
     private var conversion = true
     private var oaoa = true
     private var udl = false
     
     override public func load() {
         
-        NotificationCenter.default.addObserver(self, selector: #selector(self.handleUrlOpened(notification:)), name: Notification.Name.capacitorOpenURL, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(self.handleUniversalLink(notification:)), name: Notification.Name.capacitorOpenUniversalLink, object: nil)
+        NotificationCenter.default
+            .addObserver(
+                self,
+                selector: #selector(self.handleUrlOpened(notification:)),
+                name: Notification.Name.capacitorOpenURL,
+                object: nil
+            )
+        NotificationCenter.default
+            .addObserver(
+                self,
+                selector: #selector(self.handleUniversalLink(notification:)),
+                name: Notification.Name.capacitorOpenUniversalLink,
+                object: nil
+            )
         
     }
     
@@ -21,7 +33,12 @@ public class AppsFlyerPlugin: CAPPlugin {
     @objc func initSDK(_ call: CAPPluginCall){
         let appsflyer = AppsFlyerLib.shared()
         
-        appsflyer.setPluginInfo(plugin: .capacitor, version: APPSFLYER_PLUGIN_VERSION, additionalParams: nil)
+        appsflyer
+            .setPluginInfo(
+                plugin: .capacitor,
+                version: APPSFLYER_PLUGIN_VERSION,
+                additionalParams: nil
+            )
         guard  let devKey = call.getString(AppsFlyerConstants.AF_DEV_KEY) else{
             call.reject("devkey is missing")
             return
@@ -34,10 +51,17 @@ public class AppsFlyerPlugin: CAPPlugin {
         
         let debug = call.getBool(AppsFlyerConstants.AF_DEBUG, false)
         let sandbox = call.getBool(AppsFlyerConstants.AF_SANDBOX, false)
-        let receiptSandbox = call.getBool(AppsFlyerConstants.AF_RECEIPT_SANDBOX, false)
-        let manualStart = call.getBool(AppsFlyerConstants.AF_MANUAL_START, false)
+        let receiptSandbox = call.getBool(
+            AppsFlyerConstants.AF_RECEIPT_SANDBOX,
+            false
+        )
+        let manualStart = call.getBool(
+            AppsFlyerConstants.AF_MANUAL_START,
+            false
+        )
         
-        conversion = call.getBool(AppsFlyerConstants.AF_CONVERSION_LISTENER, true)
+        conversion = call
+            .getBool(AppsFlyerConstants.AF_CONVERSION_LISTENER, true)
         oaoa = call.getBool(AppsFlyerConstants.AF_OAOA, true)
         udl = call.getBool(AppsFlyerConstants.AF_UDL, false)
         
@@ -67,20 +91,32 @@ public class AppsFlyerPlugin: CAPPlugin {
         
 #if !AFSDK_NO_IDFA
         if attInterval != nil {
-            appsflyer.waitForATTUserAuthorization(timeoutInterval: Double(attInterval!))
+            appsflyer
+                .waitForATTUserAuthorization(
+                    timeoutInterval: Double(attInterval!)
+                )
         }
 #endif
         
         if !manualStart {
             startSDK(call)
         } else {
-            call.resolve(["res": "SDK initiated successfully. SDK has NOT started yet"])
+            call
+                .resolve(
+                    ["res": "SDK initiated successfully. SDK has NOT started yet"]
+                )
         }
     }
     
     @objc func startSDK(_ call: CAPPluginCall) {
         
-        NotificationCenter.default.addObserver(self, selector: #selector(sendLaunch), name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default
+            .addObserver(
+                self,
+                selector: #selector(sendLaunch),
+                name: UIApplication.didBecomeActiveNotification,
+                object: nil
+            )
         
         AppsFlyerLib.shared().start { dictionary, error in
             if let error = error {
@@ -98,14 +134,19 @@ public class AppsFlyerPlugin: CAPPlugin {
         }
         let eventValue = call.getObject(AppsFlyerConstants.AF_EVENT_VALUE)
         
-        AppsFlyerLib.shared().logEvent(name: eventName, values: eventValue) {  (response: [String : Any]?, error: Error?) in
-            if let response = response {
-                call.resolve(["res":response])
+        AppsFlyerLib
+            .shared()
+            .logEvent(name: eventName, values: eventValue) {  (
+                response: [String : Any]?,
+                error: Error?
+            ) in
+                if let response = response {
+                    call.resolve(["res":response])
+                }
+                if let error = error {
+                    call.reject(error.localizedDescription, nil, error)
+                }
             }
-            if let error = error {
-                call.reject(error.localizedDescription, nil, error)
-            }
-        }
     }
     
     @objc func setCustomerUserId(_ call: CAPPluginCall) {
@@ -120,7 +161,10 @@ public class AppsFlyerPlugin: CAPPlugin {
     @objc func logAdRevenue(_ call: CAPPluginCall) {
         let adRevenueData = call.jsObjectRepresentation
         if adRevenueData.isEmpty {
-            call.reject("adRevenueData is missing, the data mandatory to use this API.")
+            call
+                .reject(
+                    "adRevenueData is missing, the data mandatory to use this API."
+                )
             return
         }
         
@@ -159,7 +203,12 @@ public class AppsFlyerPlugin: CAPPlugin {
         )
         
         // Log the ad revenue to the AppsFlyer SDK
-        AppsFlyerLib.shared().logAdRevenue(myAdRevenueData, additionalParameters: additionalParams)
+        AppsFlyerLib
+            .shared()
+            .logAdRevenue(
+                myAdRevenueData,
+                additionalParameters: additionalParams
+            )
         
         call.resolve()
     }
@@ -257,7 +306,12 @@ public class AppsFlyerPlugin: CAPPlugin {
         for (k,v) in parameters{
             params[k] = (v as! String)
         }
-        AppsFlyerLib.shared().appendParametersToDeeplinkURL(contains: contains, parameters:params )
+        AppsFlyerLib
+            .shared()
+            .appendParametersToDeeplinkURL(
+                contains: contains,
+                parameters:params
+            )
         
     }
     
@@ -337,7 +391,9 @@ public class AppsFlyerPlugin: CAPPlugin {
             call.reject("Missing boolean value shouldEnableTCFDataCollection")
             return
         }
-        AppsFlyerLib.shared().enableTCFDataCollection(shouldEnableTCFDataCollection)
+        AppsFlyerLib
+            .shared()
+            .enableTCFDataCollection(shouldEnableTCFDataCollection)
     }
     
     @objc func setConsentData(_ call: CAPPluginCall) {
@@ -352,13 +408,40 @@ public class AppsFlyerPlugin: CAPPlugin {
         
         let consentObject: AppsFlyerConsent
         if isUserSubjectToGDPR {
-            consentObject = AppsFlyerConsent(forGDPRUserWithHasConsentForDataUsage: hasConsentForDataUsage, hasConsentForAdsPersonalization: hasConsentForAdsPersonalization)
+            consentObject = AppsFlyerConsent(
+                forGDPRUserWithHasConsentForDataUsage: hasConsentForDataUsage,
+                hasConsentForAdsPersonalization: hasConsentForAdsPersonalization
+            )
         } else {
             consentObject = AppsFlyerConsent(nonGDPRUser: ())
         }
         
         AppsFlyerLib.shared().setConsentData(consentObject)
         
+        call.resolve()
+    }
+
+    @objc func setConsentDataV2(_ call: CAPPluginCall) {
+        // inner helper: convert Bool? to NSNumber?
+        func toNSNumber(_ value: Bool?) -> NSNumber? {
+            guard let value = value else { return nil }
+            return NSNumber(value: value)
+        }
+
+        let isUserSubjectToGDPR = toNSNumber(call.getBool(AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR))
+        let hasConsentForDataUsage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE))
+        let hasConsentForAdsPersonalization = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION))
+        let hasConsentForAdStorage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_STORAGE))
+
+        // Build consent options object and pass to AppsFlyer SDK
+        let consentOptions = AppsFlyerConsent(
+            isUserSubjectToGDPR: isUserSubjectToGDPR,
+            hasConsentForDataUsage: hasConsentForDataUsage,
+            hasConsentForAdsPersonalization: hasConsentForAdsPersonalization,
+            hasConsentForAdStorage: hasConsentForAdStorage
+        )
+
+        AppsFlyerLib.shared().setConsentData(consentOptions)
         call.resolve()
     }
     
@@ -376,7 +459,10 @@ public class AppsFlyerPlugin: CAPPlugin {
         if stop != nil {
             AppsFlyerLib.shared().isStopped = stop!
         }
-        call.resolve([AppsFlyerConstants.AF_IS_STOP : AppsFlyerLib.shared().isStopped ])
+        call
+            .resolve(
+                [AppsFlyerConstants.AF_IS_STOP : AppsFlyerLib.shared().isStopped ]
+            )
     }
     
     @objc func disableSKAdNetwork(_ call: CAPPluginCall){
@@ -418,40 +504,55 @@ public class AppsFlyerPlugin: CAPPlugin {
     }
     
     @objc func generateInviteLink(_ call: CAPPluginCall){
-        AppsFlyerShareInviteHelper.generateInviteUrl(linkGenerator:
-                                                        {(_ generator: AppsFlyerLinkGenerator) -> AppsFlyerLinkGenerator in
-            if let channel = call.getString(AppsFlyerConstants.AF_CHANNEL){
-                generator.setChannel(channel)
-            }
-            if let brandDomain = call.getString(AppsFlyerConstants.AF_BRAND_DOMAIN){
-                generator.brandDomain = brandDomain
-            }
-            if let campaign = call.getString(AppsFlyerConstants.AF_CAMPAIGN){
-                generator.setCampaign(campaign)
-            }
-            if let referrerName = call.getString(AppsFlyerConstants.AF_REFERRER_NAME){
-                generator.setReferrerName(referrerName)
-            }
-            if let referrerImageURL = call.getString(AppsFlyerConstants.AF_REFERRER_IMAGE_URL){
-                generator.setReferrerImageURL(referrerImageURL)
-            }
-            if let referrerCustomerId = call.getString(AppsFlyerConstants.AF_REFERRER_CUSTOMER_ID){
-                generator.setReferrerCustomerId(referrerCustomerId)
-            }
-            if let baseDeeplink = call.getString(AppsFlyerConstants.AF_BASE_DEEPLINK){
-                generator.setBaseDeeplink(baseDeeplink)
-            }
-            if let addParameters = call.getObject(AppsFlyerConstants.AF_ADD_PARAMETERS){
-                generator.addParameters(addParameters)
-            }
+        AppsFlyerShareInviteHelper.generateInviteUrl(
+linkGenerator:
+    {(
+        _ generator: AppsFlyerLinkGenerator
+    ) -> AppsFlyerLinkGenerator in
+        if let channel = call.getString(AppsFlyerConstants.AF_CHANNEL){
+            generator.setChannel(channel)
+        }
+        if let brandDomain = call.getString(AppsFlyerConstants.AF_BRAND_DOMAIN){
+            generator.brandDomain = brandDomain
+        }
+        if let campaign = call.getString(AppsFlyerConstants.AF_CAMPAIGN){
+            generator.setCampaign(campaign)
+        }
+        if let referrerName = call.getString(
+            AppsFlyerConstants.AF_REFERRER_NAME
+        ){
+            generator.setReferrerName(referrerName)
+        }
+        if let referrerImageURL = call.getString(
+            AppsFlyerConstants.AF_REFERRER_IMAGE_URL
+        ){
+            generator.setReferrerImageURL(referrerImageURL)
+        }
+        if let referrerCustomerId = call.getString(
+            AppsFlyerConstants.AF_REFERRER_CUSTOMER_ID
+        ){
+            generator.setReferrerCustomerId(referrerCustomerId)
+        }
+        if let baseDeeplink = call.getString(
+            AppsFlyerConstants.AF_BASE_DEEPLINK
+        ){
+            generator.setBaseDeeplink(baseDeeplink)
+        }
+        if let addParameters = call.getObject(
+            AppsFlyerConstants.AF_ADD_PARAMETERS
+        ){
+            generator.addParameters(addParameters)
+        }
             
-            return generator },completionHandler: {url in
-                if url != nil{
-                    call.resolve([AppsFlyerConstants.AF_LINK_READY: url!.absoluteString])
-                }else{
-                    call.reject("Failed to generate a link")
-                }
-            }
+        return generator
+    },
+completionHandler: {url in
+    if url != nil{
+        call.resolve([AppsFlyerConstants.AF_LINK_READY: url!.absoluteString])
+    }else{
+        call.reject("Failed to generate a link")
+    }
+}
         )
         
     }
@@ -462,7 +563,9 @@ public class AppsFlyerPlugin: CAPPlugin {
     @objc func validateAndLogInAppPurchaseIos(_ call: CAPPluginCall){
         let currency = call.getString(AppsFlyerConstants.AF_CURRENCY)
         let price = call.getString(AppsFlyerConstants.AF_PRICE)
-        let _inAppPurchase = call.getString(AppsFlyerConstants.AF_IN_APP_PURCHASE)
+        let _inAppPurchase = call.getString(
+            AppsFlyerConstants.AF_IN_APP_PURCHASE
+        )
         let transactionId = call.getString(AppsFlyerConstants.AF_TRANSACTION_ID)
         let additionalParameters = call.getObject(AppsFlyerConstants.AF_ADDITIONAL_PARAMETERS) ?? [:]
         
@@ -484,7 +587,6 @@ public class AppsFlyerPlugin: CAPPlugin {
                         return
                     }
                     call.reject((error)?.localizedDescription ?? "error" , emptyInApp.jsonStringRepresentation)
-                    
                 })
         }else{
             call.reject("Missing some fields")
@@ -548,7 +650,12 @@ public class AppsFlyerPlugin: CAPPlugin {
             call.reject("cannot extract the parameters value")
             return
         }
-        AppsFlyerCrossPromotionHelper.logCrossPromoteImpression(appID, campaign: campaign, parameters: parameters)
+        AppsFlyerCrossPromotionHelper
+            .logCrossPromoteImpression(
+                appID,
+                campaign: campaign,
+                parameters: parameters
+            )
         call.resolve(["res": "ok"])
         
     }
@@ -559,10 +666,14 @@ public class AppsFlyerPlugin: CAPPlugin {
             return
         }
         if let enc = call.getBool(AppsFlyerConstants.AF_ENCODE) , enc == true{
-            AppsFlyerLib.shared().setUserEmails(emails, with: EmailCryptTypeSHA256)
+            AppsFlyerLib
+                .shared()
+                .setUserEmails(emails, with: EmailCryptTypeSHA256)
             
         }else{
-            AppsFlyerLib.shared().setUserEmails(emails, with: EmailCryptTypeNone)
+            AppsFlyerLib
+                .shared()
+                .setUserEmails(emails, with: EmailCryptTypeNone)
             
         }
         call.resolve(["res": "ok"])
@@ -579,7 +690,9 @@ public class AppsFlyerPlugin: CAPPlugin {
             return
         }
         
-        AppsFlyerLib.shared().logLocation(longitude: longitude, latitude: latitude)
+        AppsFlyerLib
+            .shared()
+            .logLocation(longitude: longitude, latitude: latitude)
         call.resolve(["res": "ok"])
         
     }
@@ -629,7 +742,8 @@ public class AppsFlyerPlugin: CAPPlugin {
 extension AppsFlyerPlugin{
     private func reportBridgeReady(){
         AppsFlyerAttribution.shared.bridgReady = true
-        NotificationCenter.default.post(name: Notification.Name.appsflyerBridge, object: nil)
+        NotificationCenter.default
+            .post(name: Notification.Name.appsflyerBridge, object: nil)
     }
     
     @objc  private func sendLaunch(){
@@ -650,7 +764,11 @@ extension AppsFlyerPlugin{
             return
         }
         afLogger(msg: "handleUrlOpened with \((url as! URL).absoluteString)")
-        AppsFlyerAttribution.shared.handleOpenUrl(open: url as! URL, options: options as! [UIApplication.OpenURLOptionsKey: Any])
+        AppsFlyerAttribution.shared
+            .handleOpenUrl(
+                open: url as! URL,
+                options: options as! [UIApplication.OpenURLOptionsKey: Any]
+            )
         
     }
     
@@ -664,7 +782,9 @@ extension AppsFlyerPlugin{
             return
         }
         user.webpageURL = (url as! URL)
-        afLogger(msg: "handleUniversalLink with \(user.webpageURL?.absoluteString ?? "null")")
+        afLogger(
+            msg: "handleUniversalLink with \(user.webpageURL?.absoluteString ?? "null")"
+        )
         AppsFlyerAttribution.shared.continueUserActivity(userActivity: user)
         
     }
@@ -673,22 +793,34 @@ extension AppsFlyerPlugin{
 
 extension AppsFlyerPlugin : AppsFlyerLibDelegate {
     public func onConversionDataSuccess(_ conversionInfo: [AnyHashable : Any]) {
-        let json : [String: Any] = ["callbackName":"onConversionDataSuccess", "data":conversionInfo]
+        let json : [String: Any] = [
+            "callbackName":"onConversionDataSuccess",
+            "data":conversionInfo
+        ]
         self.notifyListeners(AppsFlyerConstants.CONVERSION_CALLBACK, data: json)
         
     }
     
     public func onConversionDataFail(_ error: Error) {
-        let json : [String: Any] = ["callbackName":"onConversionDataFail", "status":error.localizedDescription]
+        let json : [String: Any] = [
+            "callbackName":"onConversionDataFail",
+            "status":error.localizedDescription
+        ]
         self.notifyListeners(AppsFlyerConstants.CONVERSION_CALLBACK, data: json)
     }
     public func onAppOpenAttribution(_ attributionData: [AnyHashable : Any]) {
-        let json : [String: Any] = ["callbackName":"onAppOpenAttribution", "data":attributionData]
+        let json : [String: Any] = [
+            "callbackName":"onAppOpenAttribution",
+            "data":attributionData
+        ]
         self.notifyListeners(AppsFlyerConstants.OAOA_CALLBACK, data: json)
     }
     
     public func onAppOpenAttributionFailure(_ error: Error) {
-        let json : [String: Any] = ["callbackName":"onAppOpenAttributionFailure", "status":error.localizedDescription]
+        let json : [String: Any] = [
+            "callbackName":"onAppOpenAttributionFailure",
+            "status":error.localizedDescription
+        ]
         self.notifyListeners(AppsFlyerConstants.OAOA_CALLBACK, data: json)
         
     }

@@ -58,7 +58,8 @@
     "openIos": "npx cap open ios",
     "openAndroid": "npx cap open android",
     "runIos": "npx cap run ios",
-    "runAndroid": "npx cap run android"
+    "runAndroid": "npx cap run android",
+    "rebuild": "npm run build && npx cap sync"
   },
   "eslintConfig": {
     "extends": [

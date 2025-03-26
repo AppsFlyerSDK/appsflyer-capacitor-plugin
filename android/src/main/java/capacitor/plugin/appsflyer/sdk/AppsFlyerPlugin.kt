@@ -2,6 +2,7 @@ package capacitor.plugin.appsflyer.sdk
 
 import android.Manifest
 import android.content.Intent
+import android.util.Log
 
 import com.appsflyer.*
 import com.appsflyer.attribution.AppsFlyerRequestListener
@@ -34,6 +35,8 @@ class AppsFlyerPlugin : Plugin() {
     private var conversion: Boolean? = null
     private var oaoa: Boolean? = null
     private var udl: Boolean? = null
+    @Volatile private var hasSDKStarted: Boolean = false
+    @Volatile private var isStarting: Boolean = false
 
 
     override fun handleOnNewIntent(intent: Intent?) {
@@ -278,25 +281,46 @@ class AppsFlyerPlugin : Plugin() {
                 put(AF_IS_STOP, isStopped)
             }
             call.resolve(obj)
-
         }
     }
 
+    @Synchronized
     @PluginMethod
     fun startSDK(call: PluginCall) {
-        AppsFlyerLib.getInstance()
-            .start(activity ?: context.applicationContext, null, object : AppsFlyerRequestListener {
+        when {
+            hasSDKStarted -> {
+                call.resolve(JSObject().apply {
+                    put("res", "AppsFlyer SDK already started")
+                })
+                return
+            }
+            isStarting -> {
+                call.reject("SDK start already in progress. Please wait for the callback.")
+                return
+            }
+            else -> {
+                isStarting = true
+            }
+        }
+
+        AppsFlyerLib.getInstance().start(
+            activity ?: context.applicationContext,
+            null,
+            object : AppsFlyerRequestListener {
                 override fun onSuccess() {
-                    val result = JSObject().apply {
+                    hasSDKStarted = true
+                    isStarting = false
+                    call.resolve(JSObject().apply {
                         put("res", "success")
-                    }
-                    call.resolve(result)
+                    })
                 }
 
                 override fun onError(errCode: Int, msg: String) {
+                    isStarting = false
                     call.reject("Error Code: $errCode, Message: $msg")
                 }
-            })
+            }
+        )
     }
 
     @PluginMethod
@@ -304,6 +328,21 @@ class AppsFlyerPlugin : Plugin() {
         call.unavailable()
     }
 
+    @PluginMethod
+    fun isSDKStarted(call: PluginCall) {
+        val result = JSObject().apply {
+            put("isStarted", hasSDKStarted)
+        }
+        call.resolve(result)
+    }
+
+    @PluginMethod
+    fun isSDKStopped(call: PluginCall) {
+        val result = JSObject().apply {
+            put("isSDKStopped", AppsFlyerLib.getInstance().isStopped)
+        }
+        call.resolve(result)
+    }
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun disableAdvertisingIdentifier(call: PluginCall) {
@@ -371,7 +410,8 @@ class AppsFlyerPlugin : Plugin() {
             AFHelpers.jsonToStringMap(call.getObject(AF_ADDITIONAL_PARAMETERS))
         if (currency != null && publicKey != null && signature != null && purchaseData != null) {
             AppsFlyerLib.getInstance().apply {
-                registerValidatorListener(context,
+                registerValidatorListener(
+                    context,
                     object : AppsFlyerInAppPurchaseValidatorListener {
                         override fun onValidateInApp() {
                             val ret = JSObject()
@@ -542,13 +582,15 @@ class AppsFlyerPlugin : Plugin() {
         }
     }
 
+    @Deprecated("Please use setConsentDataV2 instead, which includes improved handling for GDPR and data privacy.")
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun setConsentData(call: PluginCall) {
         val consentData = call.getObject("data") ?: return call.reject("Missing consent data")
 
         val isUserSubjectToGDPR = consentData.optBoolean(AF_IS_SUBJECTED_TO_GDPR)
         val hasConsentForDataUsage = consentData.optBoolean(AF_CONSENT_FOR_DATA_USAGE)
-        val hasConsentForAdsPersonalization = consentData.optBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION)
+        val hasConsentForAdsPersonalization =
+            consentData.optBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION)
 
         val consentObject = if (isUserSubjectToGDPR) {
             AppsFlyerConsent.forGDPRUser(hasConsentForDataUsage, hasConsentForAdsPersonalization)
@@ -562,20 +604,37 @@ class AppsFlyerPlugin : Plugin() {
     }
 
     @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    fun setConsentDataV2(call: PluginCall) {
+        AppsFlyerLib.getInstance().setConsentData(
+            AppsFlyerConsent(
+                isUserSubjectToGDPR = call.getBoolean(AF_IS_SUBJECTED_TO_GDPR),
+                hasConsentForDataUsage = call.getBoolean(AF_CONSENT_FOR_DATA_USAGE),
+                hasConsentForAdsPersonalization = call.getBoolean(AF_CONSENT_FOR_ADS_PERSONALIZATION),
+                hasConsentForAdStorage = call.getBoolean(AF_CONSENT_FOR_ADS_STORAGE)
+            )
+        )
+    }
+
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
     fun logAdRevenue(call: PluginCall) {
-        val adRevenueDataJson = call.data ?: return call.reject("adRevenueData is missing, the data mandatory to use this API.")
+        val adRevenueDataJson = call.data
+            ?: return call.reject("adRevenueData is missing, the data mandatory to use this API.")
 
         // Parse the fields from the adRevenueDataJson object
-        val monetizationNetwork = adRevenueDataJson.getString(AF_MONETIZATION_NETWORK) ?: return call.reject("monetizationNetwork is missing")
-        val currencyIso4217Code = adRevenueDataJson.getString(AF_CURRENCY_ISO4217_CODE) ?: return call.reject("currencyIso4217Code is missing")
+        val monetizationNetwork = adRevenueDataJson.getString(AF_MONETIZATION_NETWORK)
+            ?: return call.reject("monetizationNetwork is missing")
+        val currencyIso4217Code = adRevenueDataJson.getString(AF_CURRENCY_ISO4217_CODE)
+            ?: return call.reject("currencyIso4217Code is missing")
         val revenue = adRevenueDataJson.getDouble(AF_REVENUE)
         if (revenue.isNaN()) {
             return call.reject("revenue is missing or not a number")
         }
-        val additionalParams = AFHelpers.jsonToMap(adRevenueDataJson.getJSObject(AF_ADDITIONAL_PARAMETERS)) // can be nullable
+        val additionalParams =
+            AFHelpers.jsonToMap(adRevenueDataJson.getJSObject(AF_ADDITIONAL_PARAMETERS)) // can be nullable
 
         // Convert the mediationNetwork string to the MediationNetwork enum
-        val mediationNetworkValue = adRevenueDataJson.getString(AF_MEDIATION_NETWORK) ?: return call.reject("mediationNetwork is missing")
+        val mediationNetworkValue = adRevenueDataJson.getString(AF_MEDIATION_NETWORK)
+            ?: return call.reject("mediationNetwork is missing")
         val mediationNetwork: MediationNetwork
         try {
             mediationNetwork = MediationNetwork.valueOf(mediationNetworkValue.uppercase())
