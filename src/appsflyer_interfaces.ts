@@ -158,3 +158,10 @@ export interface AFAdRevenueData {
     revenue: number;
     additionalParameters?: StringMap;
   }
+
+export interface AFConsentOptions {
+    isUserSubjectToGDPR?: boolean | null;
+    hasConsentForDataUsage?: boolean | null;
+    hasConsentForAdsPersonalization?: boolean | null;
+    hasConsentForAdStorage?: boolean | null;
+}

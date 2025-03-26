@@ -109,7 +109,7 @@ function logAdRevenueExample() {
     };
     const data: AFAdRevenueData = {
         monetizationNetwork: "MoneyMoneyMoney",
-        mediationNetwork: MediationNetwork.IRONSOURCE,
+        mediationNetwork: MediationNetwork.APPLOVIN_MAX,
         currencyIso4217Code: "USD",
         revenue: 200.0,
         additionalParameters: myAdditionalParams
