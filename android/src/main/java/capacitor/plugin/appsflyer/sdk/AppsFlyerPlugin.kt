@@ -655,6 +655,12 @@ class AppsFlyerPlugin : Plugin() {
         call.resolve()
     }
 
+    @PluginMethod(returnType = PluginMethod.RETURN_NONE)
+    fun disableAppSetId(call: PluginCall) {
+        AppsFlyerLib.getInstance().disableAppSetId()
+        call.resolve()
+    }
+
     private fun getDeepLinkListener(): DeepLinkListener {
         return DeepLinkListener {
             if (udl == true) {

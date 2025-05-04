@@ -63,6 +63,7 @@ The list of available methods for this plugin is described below.
 * [`setConsentDataV2`](#setConsentDataV2)  - Since 6.16.2
 * [`isSDKStarted`](#isSDKStarted)  - Since 6.16.2
 * [`isSDKStopped`](#isSDKStopped)  - Since 6.16.2
+* [`disableAppSetId`](#disableappsetid)  - Since 6.17.0
 
  
   
@@ -253,7 +254,7 @@ See also Log Event guide [here](/Guides.md#logevent).
 setCustomerUserId(cuid: AFCuid) => Promise<void>  
 ```  
   
-Setting your own customer ID enables you to cross-reference your own unique ID with AppsFlyer’s unique ID and other devices’ IDs.  
+Setting your own customer ID enables you to cross-reference your own unique ID with AppsFlyer's unique ID and other devices' IDs.  
 This ID is available in raw-data reports and in the Postback APIs for cross-referencing with your internal IDs.  
   
 | Param      | Type                                      |  
@@ -1091,6 +1092,25 @@ if your app doesn't use a CMP compatible with TCF v2.2, use the following method
 ``` 
 
 *Please take a look how to properly setConsentData Manualy in [Set Consent For DMA Compliance](/docs/DMA.md#)*
+
+--------------------  
+
+### disableAppSetId
+```typescript  
+disableAppSetId(): Promise<void>
+```  
+
+Disables AppSet ID collection. If called before SDK init, App Set ID will not be collected.
+If called after init, App Set ID will be collected but not sent in request payloads.
+Android only.
+
+**Returns:** <code>Promise<void></code>  
+
+```typescript  
+    AppsFlyer.disableAppSetId()
+      .then(res => console.log(res.res))
+      .catch(e => console.log(e));
+```  
 
 --------------------  
 

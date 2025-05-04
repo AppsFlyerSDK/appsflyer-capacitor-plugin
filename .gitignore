@@ -14,7 +14,8 @@ xcuserdata
 # macOS files
 .DS_Store
 
-
+# Eclipse files
+.project
 
 # Based on Android gitignore template: https://github.com/github/gitignore/blob/HEAD/Android.gitignore
 
