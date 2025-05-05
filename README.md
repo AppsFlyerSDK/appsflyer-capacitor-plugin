@@ -12,10 +12,15 @@
 > *When submitting an issue please specify your AppsFlyer sign-up (account) email , your app ID , production steps, logs, code snippets and any additional relevant information.*
 
 
-### <a id="plugin-build-for"> This plugin is built for
+### <a id="plugin-build-for"> This plugin is built for:
 
-- Android AppsFlyer SDK **6.16.2**
-- iOS AppsFlyer SDK **6.16.2**
+<img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18">  Android AppsFlyer SDK **6.17.0**</br>
+<img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **6.17.0**</br>
+<img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18">  Capacitor 7</br>
+
+## <a id="breaking-changes-6-17-0"> 	❗❗ Breaking changes when updating to v6.17.0 ❗❗
+Starting from v6.17.0, this plugin works only with Capacitor 7. </br>
+If you are still interested in using Capacitor 6, please follow the instructions [here](/docs/Installation.md#cap6) to install the latest version that supports Capacitor 6.
 
 ## <a id="breaking-changes-6-15-0"> 	❗❗ Breaking changes when updating to v6.15.0 ❗❗
 Starting from v6.15.0, this plugin works only with Capacitor 6. </br>

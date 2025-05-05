@@ -1,3 +1,14 @@
+## 6.17.0
+ Release date: *2025-05-05*
+
+- Capacitor >> Update AppsFlyer Capacitor Plugin to 6.17.0 and Capacitor to v7
+
+## 6.17.0
+- Upgraded AppsFlyer Android SDK to v6.17.0
+- Upgraded AppsFlyer iOS SDK to v6.17.0
+- Added new Android API `disableAppSetId()` to prevent collection of the Android AppSet ID
+- Updated to support Capacitor v7
+
 ## 6.16.2
  Release date: *2025-03-26*
 
