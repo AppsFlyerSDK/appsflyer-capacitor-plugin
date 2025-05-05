@@ -80,7 +80,7 @@ export interface AppsFlyerPlugin {
     logEvent(data: AFEvent): Promise<AFRes>
 
     /**
-     * Setting your own customer ID enables you to cross-reference your own unique ID with AppsFlyer’s unique ID and other devices’ IDs.
+     * Setting your own customer ID enables you to cross-reference your own unique ID with AppsFlyer's unique ID and other devices' IDs.
      * This ID is available in raw-data reports and in the Postback APIs for cross-referencing with your internal IDs.
      */
     setCustomerUserId(cuid: AFCuid): Promise<void>
@@ -285,4 +285,11 @@ export interface AppsFlyerPlugin {
      * @param options: AFConsentOptions that consists with all the possible options for consent collection, boolean params.
      */
     setConsentDataV2(options: AFConsentOptions): Promise<void>
+
+    /**
+     * Disables AppSet ID collection. If called before SDK init, App Set ID will not be collected.
+     * If called after init, App Set ID will be collected but not sent in request payloads.
+     * Android only.
+     */
+    disableAppSetId(): Promise<void>
 }
