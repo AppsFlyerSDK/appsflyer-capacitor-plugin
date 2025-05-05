@@ -14,8 +14,9 @@
 
 ### <a id="plugin-build-for"> This plugin is built for
 
-- Android AppsFlyer SDK **6.17.0**
-- iOS AppsFlyer SDK **6.17.0**
+- <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18"> Android AppsFlyer SDK **6.17.0**
+- <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/ios/ios.png" width="18" height="18"> iOS AppsFlyer SDK **6.17.0**
+- <img src="https://user-images.githubusercontent.com/236501/105104854-e5e42e80-5a67-11eb-8cb8-46fccb079062.png" width="18" height="18"> Capacitor 7
 
 ## <a id="breaking-changes-6-17-0"> 	❗❗ Breaking changes when updating to v6.17.0 ❗❗
 Starting from v6.17.0, this plugin works only with Capacitor 7. </br>
