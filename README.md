@@ -16,7 +16,7 @@
 
 - <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18"> Android AppsFlyer SDK **6.17.0**
 - <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/ios/ios.png" width="18" height="18"> iOS AppsFlyer SDK **6.17.0**
-- <img src="https://seeklogo.com/images/C/capacitor-logo-DF3634DD70-seeklogo.com.png" width="18" height="18"> Capacitor 7
+- <img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18"> Capacitor 7
 
 ## <a id="breaking-changes-6-17-0"> 	❗❗ Breaking changes when updating to v6.17.0 ❗❗
 Starting from v6.17.0, this plugin works only with Capacitor 7. </br>
