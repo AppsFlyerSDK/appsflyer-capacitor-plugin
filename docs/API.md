@@ -1315,7 +1315,12 @@ Android only.
 | Prop            | Type                 |  
 | --------------- | -------------------- |  
 | **`isStopped`** | <code>boolean</code> |  
+
+ #### AFIsStarted  
   
+| Prop            | Type      |  
+|-----------------|-----------|  
+| **`isStarted`** | `boolean` |    
   
 #### AFDisable  
   

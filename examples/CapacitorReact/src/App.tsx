@@ -30,8 +30,8 @@ function initAppsFlyer() {
   setConversions();
   runAppsFlyerAPIs();
   AppsFlyer.initSDK({
-    appID: 'your_ios_app_id',
-    devKey: 'replace_with_your_dev_key',
+    appID:  process.env.REACT_APP_AF_APP_ID ?? '',
+    devKey: process.env.REACT_APP_AF_DEV_KEY ?? '',
     isDebug: true,
     waitForATTUserAuthorization: 10,
     registerOnDeepLink: true,
@@ -39,7 +39,8 @@ function initAppsFlyer() {
     registerConversionListener: true,
     registerOnAppOpenAttribution: false,
     useReceiptValidationSandbox: true,
-    useUninstallSandbox: true
+    useUninstallSandbox: true,
+    manualStart: true
   });
 }
 
