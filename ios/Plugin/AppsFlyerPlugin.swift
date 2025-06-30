@@ -122,12 +122,6 @@ public class AppsFlyerPlugin: CAPPlugin {
             if let error = error {
                 call.reject(error.localizedDescription)
             } else {
-                // Debug: Print the dictionary content
-                if let dict = dictionary {
-                    print("AppsFlyer start success - Dictionary content: \(dict)")
-                } else {
-                    print("AppsFlyer start success - Dictionary is nil")
-                }
                 self?.hasSDKStarted = true
                 call.resolve(["res": "success"])
             }
