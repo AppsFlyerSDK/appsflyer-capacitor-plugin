@@ -9,6 +9,7 @@ public class AppsFlyerPlugin: CAPPlugin {
     private var conversion = true
     private var oaoa = true
     private var udl = false
+    private var hasSDKStarted: Bool = false
     
     override public func load() {
         
@@ -109,7 +110,6 @@ public class AppsFlyerPlugin: CAPPlugin {
     }
     
     @objc func startSDK(_ call: CAPPluginCall) {
-        
         NotificationCenter.default
             .addObserver(
                 self,
@@ -117,11 +117,12 @@ public class AppsFlyerPlugin: CAPPlugin {
                 name: UIApplication.didBecomeActiveNotification,
                 object: nil
             )
-        
-        AppsFlyerLib.shared().start { dictionary, error in
+
+        AppsFlyerLib.shared().start { [weak self] dictionary, error in
             if let error = error {
                 call.reject(error.localizedDescription)
             } else {
+                self?.hasSDKStarted = true
                 call.resolve(["res": "success"])
             }
         }
@@ -736,6 +737,20 @@ completionHandler: {url in
         AppsFlyerShareInviteHelper.logInvite(channel, parameters: data)
         call.resolve(["res": "ok"])
         
+    }
+
+    /**
+     * Returns whether the AppsFlyer SDK has been started in the current session.
+     */
+    @objc func isSDKStarted(_ call: CAPPluginCall) {
+        call.resolve(["isStarted": hasSDKStarted])
+    }
+
+    /**
+     * Returns whether the AppsFlyer SDK is currently stopped.
+     */
+    @objc func isSDKStopped(_ call: CAPPluginCall) {
+        call.resolve(["isStopped": AppsFlyerLib.shared().isStopped])
     }
 }
 

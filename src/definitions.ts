@@ -40,8 +40,8 @@ import type {
     AFEnableTCFDataCollection,
     AFConsentData,
     AFAdRevenueData,
-    AFConsentOptions
-
+    AFConsentOptions,
+    AFIsStarted
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -285,6 +285,16 @@ export interface AppsFlyerPlugin {
      * @param options: AFConsentOptions that consists with all the possible options for consent collection, boolean params.
      */
     setConsentDataV2(options: AFConsentOptions): Promise<void>
+
+    /**
+     * Use this method to check whether the AppsFlyer SDK has already been started in the current session.
+     */
+    isSDKStarted(): Promise<AFIsStarted>
+
+    /**
+     * Use this method to check whether the AppsFlyer SDK is currently stopped.
+     */
+    isSDKStopped(): Promise<AFIsStopped>
 
     /**
      * Disables AppSet ID collection. If called before SDK init, App Set ID will not be collected.

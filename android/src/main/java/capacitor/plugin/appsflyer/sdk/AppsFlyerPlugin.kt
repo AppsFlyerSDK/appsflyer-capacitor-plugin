@@ -339,7 +339,7 @@ class AppsFlyerPlugin : Plugin() {
     @PluginMethod
     fun isSDKStopped(call: PluginCall) {
         val result = JSObject().apply {
-            put("isSDKStopped", AppsFlyerLib.getInstance().isStopped)
+            put("isStopped", AppsFlyerLib.getInstance().isStopped)
         }
         call.resolve(result)
     }

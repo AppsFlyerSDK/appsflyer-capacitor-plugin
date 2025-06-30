@@ -165,3 +165,5 @@ export interface AFConsentOptions {
     hasConsentForAdsPersonalization?: boolean | null;
     hasConsentForAdStorage?: boolean | null;
 }
+
+export interface AFIsStarted {isStarted: boolean}

@@ -126,6 +126,34 @@ function logAdRevenueExample() {
 //     });
 // }
 
+function sendConsentTest() {
+    AppsFlyer.disableAppSetId()
+    const consentOptions = {
+        isUserSubjectToGDPR: true,
+        hasConsentForDataUsage: true,
+        hasConsentForAdsPersonalization: false,
+        hasConsentForAdStorage: null
+        };
+    
+      AppsFlyer.setConsentDataV2(consentOptions)
+      .then(r => alert('setConsentDataV2 triggered'))
+      .catch(e => alert('setConsentDataV2 returned error: ' + e));
+}
+
+function startSDK() {
+    AppsFlyer.startSDK()
+    .then(r => alert('startSDK triggered: ' + r.res))
+    .catch(e => alert('startSDK returned error: ' + e));
+}
+
+function checkSdkState() {
+    Promise.all([AppsFlyer.isSDKStarted(), AppsFlyer.isSDKStopped()])
+        .then(([startedRes, stoppedRes]) => {
+            alert(`SDK state => isStarted: ${startedRes.isStarted} | isStopped: ${stoppedRes.isStopped}`);
+        })
+        .catch(err => alert('SDK state error: ' + err));
+}
+
 const ExploreContainer: React.FC<ContainerProps> = () => {
     return (
         <div className="container">
@@ -148,7 +176,9 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
                 Filter For
                 All
                 Partners</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => logAdRevenueExample()}>Log Ad Revenue</IonButton>
+            <IonButton color="primary" expand="block" onClick={() => sendConsentTest()}>set consentOptions</IonButton>
+            <IonButton color="primary" expand="block" onClick={() => startSDK()}>StartSDK</IonButton>
+            <IonButton color="primary" expand="block" onClick={() => checkSdkState()}>Check SDK State</IonButton>
         </div>
     );
 };
