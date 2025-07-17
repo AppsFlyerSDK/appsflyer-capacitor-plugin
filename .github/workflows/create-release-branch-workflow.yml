@@ -1,0 +1,67 @@
+
+name: Create Release Branch
+on:
+  workflow_dispatch:
+    inputs:
+      versionName:
+        description: 'Name of version  (ie 5.5.0)'
+        required: true
+      iosVersion:
+        description: 'iOS SDK version number (5.5.0)'
+        required: true
+      AndroidVersion:
+        description: 'Android SDK version number (5.5.0)'
+        required: true
+      DeployToQA:
+        required: false
+        description: 'Deploy to QA (open PR and publish RC)'
+        type: boolean
+        default: false
+
+
+jobs:
+  createRelease:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+          token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          persist-credentials: true
+
+    - name: Setup Git Authentication
+      env:
+        COMMIT_AUTHOR: ${{ secrets.CI_COMMIT_AUTHOR }}
+        COMMIT_EMAIL: ${{ secrets.CI_COMMIT_EMAIL }}
+        MY_PERSONAL_ACCESS_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+      run: |
+        git config --global user.name $COMMIT_AUTHOR
+        git config --global user.email $COMMIT_EMAIL
+        git config --global credential.helper 'cache --timeout=300'
+        git config --global --add "credential.https://github.com.username" "x-access-token"
+        echo "https://x-access-token:$MY_PERSONAL_ACCESS_TOKEN@github.com" > ~/.git-credentials
+
+    - name: Create New Branch
+      id: createBranch
+      run: |
+        major=$(echo ${{ inputs.versionName }}| cut -d'.' -f 1)
+        minor=$(echo ${{ inputs.versionName }}| cut -d'.' -f 2)
+        patch=$(echo ${{ inputs.versionName }}| cut -d'.' -f 3)
+
+        branchName=$(printf "releases/%s.x.x/%s.%s.x/%s.%s.%s" $major $major $minor $major $minor $patch)
+        export branchName
+        echo "BRANCH_NAME=$branchName" >> $GITHUB_ENV
+        git checkout -b $branchName
+
+    - name: Update Codebase
+      run: |
+        .github/workflows/scripts/updatePlugin.sh pluginVersion=${{ inputs.versionName }} buildNumber=${{ github.run_number }} iOSVersion=${{ inputs.iosVersion }} androidVersion=${{ inputs.AndroidVersion }}
+        git commit -m "update versions using CI"
+        git push -u origin --all
+
+    - name: create pull request
+      if: ${{ inputs.DeployToQA }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+      run: |
+        gh pr create -B main --title "Merge ${{ env.BRANCH_NAME }} into main" --body 'Created by Github action'
+
