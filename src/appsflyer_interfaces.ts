@@ -174,6 +174,11 @@ export interface AFPurchaseDetails {
     productId: string;
 }
 
+export interface AFPurchaseDetailsV2 {
+    purchaseDetails: AFPurchaseDetails;
+    additionalParameters?: StringMap;
+}
+
 export interface AFValidationResult {
     res: string;
     validationStatus?: string;

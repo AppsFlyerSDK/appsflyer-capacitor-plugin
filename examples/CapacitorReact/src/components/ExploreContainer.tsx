@@ -1,6 +1,6 @@
 import './ExploreContainer.css';
 import { IonButton, isPlatform } from '@ionic/react';
-import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer, AFPurchaseType, AFPurchaseDetails } from "appsflyer-capacitor-plugin";
+import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer, AFPurchaseType, AFPurchaseDetails, AFPurchaseDetailsV2 } from "appsflyer-capacitor-plugin";
 import React from "react";
 
 interface ContainerProps {
@@ -94,7 +94,10 @@ function validateAndLogInAppPurchaseV2() {
         'custom_data': 'example_data'
     };
 
-    AppsFlyer.validateAndLogInAppPurchaseV2(purchaseDetails, additionalParams)
+    AppsFlyer.validateAndLogInAppPurchaseV2({
+        purchaseDetails: purchaseDetails,
+        additionalParameters: additionalParams
+    })
         .then(result => {
             alert('validateAndLogInAppPurchaseV2 success: ' + JSON.stringify(result));
         })
@@ -115,7 +118,10 @@ function validateAndLogInAppPurchaseV2Subscription() {
         'test_subscription': 'true'
     };
 
-    AppsFlyer.validateAndLogInAppPurchaseV2(purchaseDetails, additionalParams)
+    AppsFlyer.validateAndLogInAppPurchaseV2({
+        purchaseDetails: purchaseDetails,
+        additionalParameters: additionalParams
+    })
         .then(result => {
             alert('validateAndLogInAppPurchaseV2 (Subscription) success: ' + JSON.stringify(result));
         })
