@@ -41,7 +41,10 @@ import type {
     AFConsentData,
     AFAdRevenueData,
     AFConsentOptions,
-    AFIsStarted
+    AFIsStarted,
+    AFPurchaseDetails,
+    AFValidationResult,
+    StringMap
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -302,4 +305,17 @@ export interface AppsFlyerPlugin {
      * Android only.
      */
     disableAppSetId(): Promise<void>
+
+    /**
+     * API for server verification of in-app purchases V2 (Beta).
+     * An af_purchase event with the relevant values will be automatically logged if the validation is successful.
+     * 
+     * @param purchaseDetails - Purchase information object containing purchaseType, purchaseToken, and productId
+     * @param additionalParameters - Optional additional event parameters
+     * @returns Promise that resolves with validation result
+     * 
+     * ⚠️ **BETA Feature**: This API is currently in beta. While it's stable and recommended for new implementations,
+     * please test thoroughly in your environment before production use.
+     */
+    validateAndLogInAppPurchaseV2(purchaseDetails: AFPurchaseDetails, additionalParameters?: StringMap): Promise<AFValidationResult>;
 }

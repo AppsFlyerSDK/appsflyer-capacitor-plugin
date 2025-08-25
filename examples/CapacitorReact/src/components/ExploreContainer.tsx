@@ -1,6 +1,6 @@
 import './ExploreContainer.css';
 import { IonButton, isPlatform } from '@ionic/react';
-import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer } from "appsflyer-capacitor-plugin";
+import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer, AFPurchaseType, AFPurchaseDetails } from "appsflyer-capacitor-plugin";
 import React from "react";
 
 interface ContainerProps {
@@ -80,6 +80,48 @@ function validateAndLogInAppPurchase() {
             .then(r => alert('validateAndLogInAppPurchase success: ' + r.res))
             .catch(e => alert('validateAndLogInAppPurchase error: ' + JSON.stringify(e)));
     }
+}
+
+function validateAndLogInAppPurchaseV2() {
+    const purchaseDetails: AFPurchaseDetails = {
+        purchaseType: AFPurchaseType.oneTimePurchase,
+        purchaseToken: isPlatform('android') ? 'android_purchase_token_example' : 'ios_transaction_id_example',
+        productId: 'com.example.product.premium'
+    };
+
+    const additionalParams = {
+        'test_param': 'test_value',
+        'custom_data': 'example_data'
+    };
+
+    AppsFlyer.validateAndLogInAppPurchaseV2(purchaseDetails, additionalParams)
+        .then(result => {
+            alert('validateAndLogInAppPurchaseV2 success: ' + JSON.stringify(result));
+        })
+        .catch(error => {
+            alert('validateAndLogInAppPurchaseV2 error: ' + JSON.stringify(error));
+        });
+}
+
+function validateAndLogInAppPurchaseV2Subscription() {
+    const purchaseDetails: AFPurchaseDetails = {
+        purchaseType: AFPurchaseType.subscription,
+        purchaseToken: isPlatform('android') ? 'android_subscription_token_example' : 'ios_subscription_transaction_id_example',
+        productId: 'com.example.subscription.monthly'
+    };
+
+    const additionalParams = {
+        'subscription_period': 'monthly',
+        'test_subscription': 'true'
+    };
+
+    AppsFlyer.validateAndLogInAppPurchaseV2(purchaseDetails, additionalParams)
+        .then(result => {
+            alert('validateAndLogInAppPurchaseV2 (Subscription) success: ' + JSON.stringify(result));
+        })
+        .catch(error => {
+            alert('validateAndLogInAppPurchaseV2 (Subscription) error: ' + JSON.stringify(error));
+        });
 }
 
 function setSharingFilterForAllPartners() {
@@ -169,7 +211,11 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
             <IonButton color="primary" expand="block" onClick={() => generateInviteLink()}>generate Invite
                 Link</IonButton>
             <IonButton color="primary" expand="block" onClick={() => validateAndLogInAppPurchase()}>validate And Log
-                IAP</IonButton>
+                IAP (Legacy)</IonButton>
+            <IonButton color="success" expand="block" onClick={() => validateAndLogInAppPurchaseV2()}>validate And Log
+                IAP V2 (One-time Purchase) - BETA</IonButton>
+            <IonButton color="success" expand="block" onClick={() => validateAndLogInAppPurchaseV2Subscription()}>validate And Log
+                IAP V2 (Subscription) - BETA</IonButton>
             <IonButton color="primary" expand="block" onClick={() => setSharingFilter()}>set Sharing Filter</IonButton>
 
             <IonButton color="primary" expand="block" onClick={() => setSharingFilterForAllPartners()}>set Sharing

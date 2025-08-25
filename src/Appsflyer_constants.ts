@@ -9,6 +9,11 @@ export enum AFConstants  {
 }
 
 
+export enum AFPurchaseType {
+    oneTimePurchase = 'one_time_purchase',
+    subscription = 'subscription'
+}
+
 export enum MediationNetwork {
     IRONSOURCE = "ironsource",
     APPLOVIN_MAX = "applovin_max",

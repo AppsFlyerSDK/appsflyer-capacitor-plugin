@@ -5,7 +5,7 @@ import AppsFlyerLib
 
 @objc(AppsFlyerPlugin)
 public class AppsFlyerPlugin: CAPPlugin {
-    private let APPSFLYER_PLUGIN_VERSION = "6.17.0"
+    private let APPSFLYER_PLUGIN_VERSION = "6.17.3"
     private var conversion = true
     private var oaoa = true
     private var udl = false
@@ -751,6 +751,61 @@ completionHandler: {url in
      */
     @objc func isSDKStopped(_ call: CAPPluginCall) {
         call.resolve(["isStopped": AppsFlyerLib.shared().isStopped])
+    }
+    
+    @objc func validateAndLogInAppPurchaseV2(_ call: CAPPluginCall) {
+        guard let purchaseDetailsMap = call.getObject(AppsFlyerConstants.AF_PURCHASE_DETAILS) else {
+            call.reject("Purchase details are required")
+            return
+        }
+        
+        let additionalParameters = call.getObject(AppsFlyerConstants.AF_ADDITIONAL_PARAMETERS) ?? [:]
+        
+        // Validate required fields
+        guard let purchaseTypeString = purchaseDetailsMap[AppsFlyerConstants.AF_PURCHASE_TYPE] as? String else {
+            call.reject("Purchase type is required")
+            return
+        }
+        
+        guard let purchaseToken = purchaseDetailsMap[AppsFlyerConstants.AF_PURCHASE_TOKEN] as? String else {
+            call.reject("Purchase token is required")
+            return
+        }
+        
+        guard let productId = purchaseDetailsMap[AppsFlyerConstants.AF_PRODUCT_ID] as? String else {
+            call.reject("Product ID is required")
+            return
+        }
+        
+        // For iOS, we use the existing validateAndLog method with the new V2 parameters
+        // The purchaseToken serves as the transactionId for iOS
+        AppsFlyerLib.shared().validateAndLog(
+            inAppPurchase: productId,
+            price: nil, // V2 doesn't require price
+            currency: nil, // V2 doesn't require currency
+            transactionId: purchaseToken,
+            additionalParameters: additionalParameters,
+            success: { result in
+                var response: [String: Any] = [:]
+                if let resultDict = result as? [String: Any] {
+                    response = resultDict
+                } else {
+                    response["result"] = result
+                }
+                call.resolve(response)
+            },
+            failure: { error, response in
+                var errorDict: [String: Any] = [:]
+                if let error = error {
+                    errorDict["error"] = error.localizedDescription
+                    errorDict["code"] = error.code
+                }
+                if let response = response {
+                    errorDict["response"] = response
+                }
+                call.reject("Validation failed", errorDict.jsonStringRepresentation ?? "")
+            }
+        )
     }
 }
 

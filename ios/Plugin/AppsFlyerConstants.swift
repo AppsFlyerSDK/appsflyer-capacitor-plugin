@@ -78,4 +78,8 @@ class AppsFlyerConstants {
     static let AF_CURRENCY_ISO4217_CODE = "currencyIso4217Code"
     static let AF_REVENUE = "revenue"
     static let AF_MEDIATION_NETWORK = "mediationNetwork"
+    static let AF_PURCHASE_DETAILS = "purchaseDetails"
+    static let AF_PURCHASE_TYPE = "purchaseType"
+    static let AF_PURCHASE_TOKEN = "purchaseToken"
+    static let AF_PRODUCT_ID = "productId"
 }
