@@ -43,7 +43,6 @@ import type {
     AFConsentOptions,
     AFIsStarted,
     AFPurchaseDetailsV2,
-    AFValidationResult
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -315,5 +314,5 @@ export interface AppsFlyerPlugin {
      * ⚠️ **BETA Feature**: This API is currently in beta. While it's stable and recommended for new implementations,
      * please test thoroughly in your environment before production use.
      */
-    validateAndLogInAppPurchaseV2(data: AFPurchaseDetailsV2): Promise<AFValidationResult>;
+    validateAndLogInAppPurchaseV2(data: AFPurchaseDetailsV2): Promise<{ [key: string]: any }>;
 }

@@ -117,7 +117,7 @@ public class AppsFlyerPlugin: CAPPlugin {
                 name: UIApplication.didBecomeActiveNotification,
                 object: nil
             )
-
+        
         AppsFlyerLib.shared().start { [weak self] dictionary, error in
             if let error = error {
                 call.reject(error.localizedDescription)
@@ -421,19 +421,19 @@ public class AppsFlyerPlugin: CAPPlugin {
         
         call.resolve()
     }
-
+    
     @objc func setConsentDataV2(_ call: CAPPluginCall) {
         // inner helper: convert Bool? to NSNumber?
         func toNSNumber(_ value: Bool?) -> NSNumber? {
             guard let value = value else { return nil }
             return NSNumber(value: value)
         }
-
+        
         let isUserSubjectToGDPR = toNSNumber(call.getBool(AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR))
         let hasConsentForDataUsage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE))
         let hasConsentForAdsPersonalization = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION))
         let hasConsentForAdStorage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_STORAGE))
-
+        
         // Build consent options object and pass to AppsFlyer SDK
         let consentOptions = AppsFlyerConsent(
             isUserSubjectToGDPR: isUserSubjectToGDPR,
@@ -441,7 +441,7 @@ public class AppsFlyerPlugin: CAPPlugin {
             hasConsentForAdsPersonalization: hasConsentForAdsPersonalization,
             hasConsentForAdStorage: hasConsentForAdStorage
         )
-
+        
         AppsFlyerLib.shared().setConsentData(consentOptions)
         call.resolve()
     }
@@ -506,54 +506,54 @@ public class AppsFlyerPlugin: CAPPlugin {
     
     @objc func generateInviteLink(_ call: CAPPluginCall){
         AppsFlyerShareInviteHelper.generateInviteUrl(
-linkGenerator:
-    {(
-        _ generator: AppsFlyerLinkGenerator
-    ) -> AppsFlyerLinkGenerator in
-        if let channel = call.getString(AppsFlyerConstants.AF_CHANNEL){
-            generator.setChannel(channel)
-        }
-        if let brandDomain = call.getString(AppsFlyerConstants.AF_BRAND_DOMAIN){
-            generator.brandDomain = brandDomain
-        }
-        if let campaign = call.getString(AppsFlyerConstants.AF_CAMPAIGN){
-            generator.setCampaign(campaign)
-        }
-        if let referrerName = call.getString(
-            AppsFlyerConstants.AF_REFERRER_NAME
-        ){
-            generator.setReferrerName(referrerName)
-        }
-        if let referrerImageURL = call.getString(
-            AppsFlyerConstants.AF_REFERRER_IMAGE_URL
-        ){
-            generator.setReferrerImageURL(referrerImageURL)
-        }
-        if let referrerCustomerId = call.getString(
-            AppsFlyerConstants.AF_REFERRER_CUSTOMER_ID
-        ){
-            generator.setReferrerCustomerId(referrerCustomerId)
-        }
-        if let baseDeeplink = call.getString(
-            AppsFlyerConstants.AF_BASE_DEEPLINK
-        ){
-            generator.setBaseDeeplink(baseDeeplink)
-        }
-        if let addParameters = call.getObject(
-            AppsFlyerConstants.AF_ADD_PARAMETERS
-        ){
-            generator.addParameters(addParameters)
-        }
-            
-        return generator
-    },
-completionHandler: {url in
-    if url != nil{
-        call.resolve([AppsFlyerConstants.AF_LINK_READY: url!.absoluteString])
-    }else{
-        call.reject("Failed to generate a link")
-    }
-}
+            linkGenerator:
+                {(
+                    _ generator: AppsFlyerLinkGenerator
+                ) -> AppsFlyerLinkGenerator in
+                    if let channel = call.getString(AppsFlyerConstants.AF_CHANNEL){
+                        generator.setChannel(channel)
+                    }
+                    if let brandDomain = call.getString(AppsFlyerConstants.AF_BRAND_DOMAIN){
+                        generator.brandDomain = brandDomain
+                    }
+                    if let campaign = call.getString(AppsFlyerConstants.AF_CAMPAIGN){
+                        generator.setCampaign(campaign)
+                    }
+                    if let referrerName = call.getString(
+                        AppsFlyerConstants.AF_REFERRER_NAME
+                    ){
+                        generator.setReferrerName(referrerName)
+                    }
+                    if let referrerImageURL = call.getString(
+                        AppsFlyerConstants.AF_REFERRER_IMAGE_URL
+                    ){
+                        generator.setReferrerImageURL(referrerImageURL)
+                    }
+                    if let referrerCustomerId = call.getString(
+                        AppsFlyerConstants.AF_REFERRER_CUSTOMER_ID
+                    ){
+                        generator.setReferrerCustomerId(referrerCustomerId)
+                    }
+                    if let baseDeeplink = call.getString(
+                        AppsFlyerConstants.AF_BASE_DEEPLINK
+                    ){
+                        generator.setBaseDeeplink(baseDeeplink)
+                    }
+                    if let addParameters = call.getObject(
+                        AppsFlyerConstants.AF_ADD_PARAMETERS
+                    ){
+                        generator.addParameters(addParameters)
+                    }
+                    
+                    return generator
+                },
+            completionHandler: {url in
+                if url != nil{
+                    call.resolve([AppsFlyerConstants.AF_LINK_READY: url!.absoluteString])
+                }else{
+                    call.reject("Failed to generate a link")
+                }
+            }
         )
         
     }
@@ -738,14 +738,14 @@ completionHandler: {url in
         call.resolve(["res": "ok"])
         
     }
-
+    
     /**
      * Returns whether the AppsFlyer SDK has been started in the current session.
      */
     @objc func isSDKStarted(_ call: CAPPluginCall) {
         call.resolve(["isStarted": hasSDKStarted])
     }
-
+    
     /**
      * Returns whether the AppsFlyer SDK is currently stopped.
      */
@@ -759,11 +759,15 @@ completionHandler: {url in
             return
         }
         
-        let additionalParameters = call.getObject(AppsFlyerConstants.AF_ADDITIONAL_PARAMETERS) ?? [:]
+        let additionalParameters = call.getObject(AppsFlyerConstants.AF_ADDITIONAL_PARAMETERS)
         
         // Validate required fields
         guard let purchaseTypeString = purchaseDetailsMap[AppsFlyerConstants.AF_PURCHASE_TYPE] as? String else {
             call.reject("Purchase type is required")
+            return
+        }
+        guard let purchaseType = mapPurchaseType(purchaseTypeString) else {
+            call.reject("Unkown purchase type")
             return
         }
         
@@ -777,15 +781,18 @@ completionHandler: {url in
             return
         }
         
+        // Create a new instance of AFSDKPurchaseDetails with the required information
+        let purchaseDetails: AFSDKPurchaseDetails = AFSDKPurchaseDetails(
+            productId: productId,
+            transactionId: purchaseToken,
+            purchaseType: purchaseType
+        )
+        
+        
         // For iOS, we use the existing validateAndLog method with the new V2 parameters
         // The purchaseToken serves as the transactionId for iOS
-        AppsFlyerLib.shared().validateAndLog(
-            inAppPurchase: productId,
-            price: nil, // V2 doesn't require price
-            currency: nil, // V2 doesn't require currency
-            transactionId: purchaseToken,
-            additionalParameters: additionalParameters,
-            success: { result in
+        AppsFlyerLib.shared().validateAndLogInAppPurchase(purchaseDetails: purchaseDetails, purchaseAdditionalDetails: additionalParameters){result, error in
+            if result != nil {
                 var response: [String: Any] = [:]
                 if let resultDict = result as? [String: Any] {
                     response = resultDict
@@ -793,19 +800,30 @@ completionHandler: {url in
                     response["result"] = result
                 }
                 call.resolve(response)
-            },
-            failure: { error, response in
+            } else if error != nil {
                 var errorDict: [String: Any] = [:]
-                if let error = error {
-                    errorDict["error"] = error.localizedDescription
-                    errorDict["code"] = error.code
-                }
-                if let response = response {
-                    errorDict["response"] = response
+                if let nsError = error as NSError? {
+                    errorDict["error"] = nsError.localizedDescription
+                    errorDict["code"] = nsError.code
+                    errorDict["userInfo"] = nsError.userInfo
+                    errorDict["domain"] = nsError.domain // optional, often useful
                 }
                 call.reject("Validation failed", errorDict.jsonStringRepresentation ?? "")
             }
-        )
+        }
+    }
+    
+    func mapPurchaseType(_ purchaseTypeString: String) -> AFSDKPurchaseType? {
+        switch purchaseTypeString {
+        case "subscription":
+            return    .subscription
+            
+        case "one_time_purchase":
+            return    .oneTimePurchase
+            
+        default:
+            return    nil
+        }
     }
 }
 

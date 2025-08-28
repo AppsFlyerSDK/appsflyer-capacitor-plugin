@@ -178,10 +178,3 @@ export interface AFPurchaseDetailsV2 {
     purchaseDetails: AFPurchaseDetails;
     additionalParameters?: StringMap;
 }
-
-export interface AFValidationResult {
-    res: string;
-    validationStatus?: string;
-    validationData?: any;
-    error?: string;
-}
