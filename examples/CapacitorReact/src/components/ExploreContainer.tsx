@@ -94,16 +94,16 @@ function validateAndLogInAppPurchaseV2() {
         'custom_data': 'example_data'
     };
 
-    AppsFlyer.validateAndLogInAppPurchaseV2({
-        purchaseDetails: purchaseDetails,
-        additionalParameters: additionalParams
-    })
-        .then(result => {
-            alert('validateAndLogInAppPurchaseV2 success: ' + JSON.stringify(result));
-        })
-        .catch(error => {
-            alert('validateAndLogInAppPurchaseV2 error: ' + JSON.stringify(error));
-        });
+    // AppsFlyer.validateAndLogInAppPurchaseV2({
+    //     purchaseDetails: purchaseDetails,
+    //     additionalParameters: additionalParams
+    // })
+    //     .then(result => {
+    //         alert('validateAndLogInAppPurchaseV2 success: ' + JSON.stringify(result));
+    //     })
+    //     .catch(error => {
+    //         alert('validateAndLogInAppPurchaseV2 error: ' + JSON.stringify(error));
+    //     });
 }
 
 function validateAndLogInAppPurchaseV2Subscription() {
@@ -118,16 +118,18 @@ function validateAndLogInAppPurchaseV2Subscription() {
         'test_subscription': 'true'
     };
 
-    AppsFlyer.validateAndLogInAppPurchaseV2({
-        purchaseDetails: purchaseDetails,
-        additionalParameters: additionalParams
-    })
-        .then(result => {
-            alert('validateAndLogInAppPurchaseV2 (Subscription) success: ' + JSON.stringify(result));
-        })
-        .catch(error => {
-            alert('validateAndLogInAppPurchaseV2 (Subscription) error: ' + JSON.stringify(error));
-        });
+    // AppsFlyer.validateAndLogInAppPurchaseV2({
+    //     purchaseDetails: purchaseDetails,
+    //     additionalParameters: additionalParams
+    // })
+    //     .then(result => {
+    
+    //         alert('validateAndLogInAppPurchaseV2 (Subscription) success: ' + JSON.stringify(result));
+    //     })
+    //     .catch(error => 
+    //         {
+    //         alert('validateAndLogInAppPurchaseV2 (Subscription) error: ' + JSON.stringify(error));
+    //     });
 }
 
 function setSharingFilterForAllPartners() {

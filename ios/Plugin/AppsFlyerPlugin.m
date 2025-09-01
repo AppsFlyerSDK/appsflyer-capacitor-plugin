@@ -26,6 +26,7 @@ CAP_PLUGIN(AppsFlyerPlugin, "AppsFlyerPlugin",
            CAP_PLUGIN_METHOD(setHost, CAPPluginReturnNone);
            CAP_PLUGIN_METHOD(generateInviteLink, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(validateAndLogInAppPurchaseAndroid, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(disableAppSetId, CAPPluginReturnNone);
            CAP_PLUGIN_METHOD(validateAndLogInAppPurchaseIos, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(getSdkVersion, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(enableFacebookDeferredApplinks, CAPPluginReturnPromise);

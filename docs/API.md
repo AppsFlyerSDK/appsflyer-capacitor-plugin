@@ -42,7 +42,7 @@ The list of available methods for this plugin is described below.
 * [`generateInviteLink`](#generateinvitelink)  
 * [`validateAndLogInAppPurchaseAndroid`](#validateandloginapppurchaseandroid)  
 * [`validateAndLogInAppPurchaseIos`](#validateandloginapppurchaseios)  
-* [`validateAndLogInAppPurchaseV2`](#validateandloginapppurchasev2) - **Beta** - Since 6.17.3
+<!-- * [`validateAndLogInAppPurchaseV2`](#validateandloginapppurchasev2) - **Beta** - Since 6.17.3 -->
 * [`getSdkVersion`](#getsdkversion)  
 * [`enableFacebookDeferredApplinks`](#enablefacebookdeferredapplinks)  
 * [`sendPushNotificationData`](#sendpushnotificationdata)  
@@ -725,7 +725,7 @@ validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void
 ```
 --------------------  
 
-
+<!-- 
 ### validateAndLogInAppPurchaseV2 (Recommended - BETA)
 
 > ⚠️ **BETA Feature**: This API is currently in beta. While it's stable and recommended for new implementations, please test thoroughly in your environment before production use.
@@ -771,7 +771,7 @@ const additionalParams = {
 };
 
 AppsFlyer.validateAndLogInAppPurchaseV2(purchaseDetails, additionalParams)
-  .then(result => {
+  .then(result => {s
     console.log('Validation successful:', result);
   })
   .catch(error => {
@@ -786,7 +786,7 @@ AppsFlyer.validateAndLogInAppPurchaseV2(purchaseDetails, additionalParams)
 - Consistent data structure across platforms
 - Better debugging capabilities
 
---------------------  
+--------------------   -->
   
   
 ### getSdkVersion

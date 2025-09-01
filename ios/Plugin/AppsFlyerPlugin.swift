@@ -753,6 +753,10 @@ public class AppsFlyerPlugin: CAPPlugin {
         call.resolve(["isStopped": AppsFlyerLib.shared().isStopped])
     }
     
+    @objc func disableAppSetId(_ call: CAPPluginCall){
+        call.unavailable()
+    }
+    
     @objc func validateAndLogInAppPurchaseV2(_ call: CAPPluginCall) {
         guard let purchaseDetailsMap = call.getObject(AppsFlyerConstants.AF_PURCHASE_DETAILS) else {
             call.reject("Purchase details are required")
