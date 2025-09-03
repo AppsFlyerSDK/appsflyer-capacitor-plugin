@@ -1,8 +1,7 @@
 ## 6.17.3
- Release date: *TBD*
+ Release date: *2025-09-04*
 
-- Updated to AppsFlyer SDK v6.17.3 for both Android and iOS
-- Added validateAndLogInAppPurchaseV2 API (Beta) for improved cross-platform purchase validation
+- Updated to AppsFlyer SDK v6.17.3 for Android and and v6.17.5 for iOS
 - Unified AFPurchaseDetails data structure for type-safe purchase validation
 - Enhanced error handling and consistent API across Android and iOS
 - Maintains backward compatibility with existing purchase validation methods
