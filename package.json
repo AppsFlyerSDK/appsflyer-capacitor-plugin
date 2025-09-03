@@ -1,7 +1,7 @@
 {
   "name": "appsflyer-capacitor-plugin",
-  "version": "6.17.3",
-  "iosSdkVersion": "6.17.3",
+  "version": "6.17.5",
+  "iosSdkVersion": "6.17.5",
   "androidSdkVersion": "6.17.3",
   "buildNumber": "25",
   "description": "AppsFlyer SDK plugin for Capacitor",
