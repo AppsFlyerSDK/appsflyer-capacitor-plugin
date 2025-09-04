@@ -1,6 +1,6 @@
 import './ExploreContainer.css';
 import { IonButton, isPlatform } from '@ionic/react';
-import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer, AFPurchaseType, AFPurchaseDetails, AFPurchaseDetailsV2 } from "appsflyer-capacitor-plugin";
+import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer, AFPurchaseType, AFPurchaseDetails } from "appsflyer-capacitor-plugin";
 import React from "react";
 
 interface ContainerProps {
@@ -83,17 +83,18 @@ function validateAndLogInAppPurchase() {
 }
 
 function validateAndLogInAppPurchaseV2() {
-    const purchaseDetails: AFPurchaseDetails = {
-        purchaseType: AFPurchaseType.oneTimePurchase,
-        purchaseToken: isPlatform('android') ? 'android_purchase_token_example' : 'ios_transaction_id_example',
-        productId: 'com.example.product.premium'
-    };
+    alert('Not implemented yet');
+    // const purchaseDetails: AFPurchaseDetails = {
+    //     purchaseType: AFPurchaseType.oneTimePurchase,
+    //     purchaseToken: isPlatform('android') ? 'android_purchase_token_example' : 'ios_transaction_id_example',
+    //     productId: 'com.example.product.premium'
+    // };
 
-    const additionalParams = {
-        'test_param': 'test_value',
-        'custom_data': 'example_data'
-    };
-
+    // const additionalParams = {
+    //     'test_param': 'test_value',
+    //     'custom_data': 'example_data'
+    // };
+// 
     // AppsFlyer.validateAndLogInAppPurchaseV2({
     //     purchaseDetails: purchaseDetails,
     //     additionalParameters: additionalParams
@@ -107,17 +108,18 @@ function validateAndLogInAppPurchaseV2() {
 }
 
 function validateAndLogInAppPurchaseV2Subscription() {
-    const purchaseDetails: AFPurchaseDetails = {
-        purchaseType: AFPurchaseType.subscription,
-        purchaseToken: isPlatform('android') ? 'android_subscription_token_example' : 'ios_subscription_transaction_id_example',
-        productId: 'com.example.subscription.monthly'
-    };
+    alert('Not implemented yet');
+    // const purchaseDetails: AFPurchaseDetails = {
+    //     purchaseType: AFPurchaseType.subscription,
+    //     purchaseToken: isPlatform('android') ? 'android_subscription_token_example' : 'ios_subscription_transaction_id_example',
+    //     productId: 'com.example.subscription.monthly'
+    // };
 
-    const additionalParams = {
-        'subscription_period': 'monthly',
-        'test_subscription': 'true'
-    };
-
+    // const additionalParams = {
+    //     'subscription_period': 'monthly',
+    //     'test_subscription': 'true'
+    // };
+// 
     // AppsFlyer.validateAndLogInAppPurchaseV2({
     //     purchaseDetails: purchaseDetails,
     //     additionalParameters: additionalParams
@@ -152,23 +154,23 @@ function stop() {
         });
 }
 
-function logAdRevenueExample() {
-    const myAdditionalParams = {
-        spong: 'bob',
-        doctor: 'who'
-    };
-    const data: AFAdRevenueData = {
-        monetizationNetwork: "MoneyMoneyMoney",
-        mediationNetwork: MediationNetwork.APPLOVIN_MAX,
-        currencyIso4217Code: "USD",
-        revenue: 200.0,
-        additionalParameters: myAdditionalParams
-    };
+// function logAdRevenueExample() {
+//     const myAdditionalParams = {
+//         spong: 'bob',
+//         doctor: 'who'
+//     };
+//     const data: AFAdRevenueData = {
+//         monetizationNetwork: "MoneyMoneyMoney",
+//         mediationNetwork: MediationNetwork.APPLOVIN_MAX,
+//         currencyIso4217Code: "USD",
+//         revenue: 200.0,
+//         additionalParameters: myAdditionalParams
+//     };
 
-    AppsFlyer.logAdRevenue(data)
-        .then(r => alert('logAdRevenue triggered'))
-        .catch(e => alert('logAdRevenue returned error: ' + e));
-}
+//     AppsFlyer.logAdRevenue(data)
+//         .then(r => alert('logAdRevenue triggered'))
+//         .catch(e => alert('logAdRevenue returned error: ' + e));
+// }
 
 // function sendPushNotificationData() {
 //     AppsFlyer.sendPushNotificationData({
