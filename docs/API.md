@@ -42,6 +42,7 @@ The list of available methods for this plugin is described below.
 * [`generateInviteLink`](#generateinvitelink)  
 * [`validateAndLogInAppPurchaseAndroid`](#validateandloginapppurchaseandroid)  
 * [`validateAndLogInAppPurchaseIos`](#validateandloginapppurchaseios)  
+<!-- * [`validateAndLogInAppPurchaseV2`](#validateandloginapppurchasev2) - **Beta** - Since 6.17.3 -->
 * [`getSdkVersion`](#getsdkversion)  
 * [`enableFacebookDeferredApplinks`](#enablefacebookdeferredapplinks)  
 * [`sendPushNotificationData`](#sendpushnotificationdata)  
@@ -723,6 +724,69 @@ validateAndLogInAppPurchaseIos(purchaseData: AFIosInAppPurchase) => Promise<void
         .catch(e => alert('validateAndLogInAppPurchase error: ' + JSON.stringify(e)));
 ```
 --------------------  
+
+<!-- 
+### validateAndLogInAppPurchaseV2 (Recommended - BETA)
+
+> ⚠️ **BETA Feature**: This API is currently in beta. While it's stable and recommended for new implementations, please test thoroughly in your environment before production use.
+
+```typescript
+validateAndLogInAppPurchaseV2(purchaseDetails: AFPurchaseDetails, additionalParameters?: Record<string, string>) => Promise<Record<string, any>>
+```
+
+API for server verification of in-app purchases V2 (Beta). An af_purchase event with the relevant values will be automatically logged if the validation is successful.
+
+**Parameters:**
+- `purchaseDetails` (AFPurchaseDetails): Purchase information object
+- `additionalParameters` (optional): Additional event parameters
+
+**AFPurchaseDetails Properties:**
+- `purchaseType`: AFPurchaseType - Type of purchase (oneTimePurchase or subscription)
+- `purchaseToken`: string - Platform-specific purchase token/transaction ID
+- `productId`: string - Product identifier
+
+**AFPurchaseType Values:**
+- `oneTimePurchase`: One-time purchase
+- `subscription`: Subscription purchase
+
+| Param                      | Type                                                     |
+| -------------------------- | -------------------------------------------------------- |
+| **`purchaseDetails`**      | <code><a href="#afpurchasedetails">AFPurchaseDetails</a></code> |
+| **`additionalParameters`** | <code>Record&lt;string, string&gt;</code> |
+
+**Returns:** <code>Promise&lt;Record&lt;string, any&gt;&gt;</code>
+
+**Example:**
+```typescript
+import { AFPurchaseType } from 'appsflyer-capacitor-plugin';
+
+const purchaseDetails: AFPurchaseDetails = {
+  purchaseType: AFPurchaseType.oneTimePurchase,
+  purchaseToken: "purchase_token_here",
+  productId: "com.example.product"
+};
+
+const additionalParams = {
+  "custom_param": "value"
+};
+
+AppsFlyer.validateAndLogInAppPurchaseV2(purchaseDetails, additionalParams)
+  .then(result => {s
+    console.log('Validation successful:', result);
+  })
+  .catch(error => {
+    console.error('Validation failed:', error);
+  });
+```
+
+**Key Benefits:**
+- Unified cross-platform API
+- Type-safe purchase validation
+- Enhanced error handling
+- Consistent data structure across platforms
+- Better debugging capabilities
+
+--------------------   -->
   
   
 ### getSdkVersion
@@ -1382,8 +1446,17 @@ Android only.
 | **`inAppPurchase`** | <code>string</code> |  
 | **`price`** | <code>string</code> |  
 | **`transactionId`** | <code>string</code> |  
-  
-  
+
+
+#### AFPurchaseDetails  
+
+| Prop                | Type                |  
+| ------------------- | ------------------- |  
+| **`purchaseType`** | <code><a href="#afpurchasetype">AFPurchaseType</a></code> |  
+| **`purchaseToken`** | <code>string</code> |  
+| **`productId`** | <code>string</code> |  
+
+
 #### AFFbDAL  
   
 | Prop                    | Type                 |  
@@ -1476,5 +1549,12 @@ Android only.
 | **`TOPON_PTE`** | <code>'toponpte'</code>                               | 
 | **`CUSTOM_MEDIATION`** | <code>'customMediation'</code>                 | 
 | **`DIRECT_MONETIZATION_NETWORK`** | <code>'directMonetizationNetwork'</code>            | 
+
+#### AFPurchaseType  
+
+| Members                       | Value                                  |  
+| ----------------------------- | -------------------------------------- |  
+| **`oneTimePurchase`** | <code>'one_time_purchase'</code> |  
+| **`subscription`** | <code>'subscription'</code>    |  
   
 </docgen-api>

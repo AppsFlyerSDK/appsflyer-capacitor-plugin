@@ -41,7 +41,7 @@ import type {
     AFConsentData,
     AFAdRevenueData,
     AFConsentOptions,
-    AFIsStarted
+    AFIsStarted,
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -302,4 +302,17 @@ export interface AppsFlyerPlugin {
      * Android only.
      */
     disableAppSetId(): Promise<void>
+
+    // TODO: Uncomment this once the API is stable
+    // /**
+    //  * API for server verification of in-app purchases V2 (Beta).
+    //  * An af_purchase event with the relevant values will be automatically logged if the validation is successful.
+    //  * 
+    //  * @param data - Object containing purchaseDetails and optional additionalParameters
+    //  * @returns Promise that resolves with validation result
+    //  * 
+    //  * ⚠️ **BETA Feature**: This API is currently in beta. While it's stable and recommended for new implementations,
+    //  * please test thoroughly in your environment before production use.
+    //  */
+    // validateAndLogInAppPurchaseV2(data: AFPurchaseDetailsV2): Promise<{ [key: string]: any }>;
 }

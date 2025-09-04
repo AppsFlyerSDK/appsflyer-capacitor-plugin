@@ -1,4 +1,4 @@
-import type {MediationNetwork} from "./Appsflyer_constants";
+import type {MediationNetwork, AFPurchaseType} from "./Appsflyer_constants";
 
 export interface AFInit{
     devKey: string;
@@ -167,3 +167,14 @@ export interface AFConsentOptions {
 }
 
 export interface AFIsStarted {isStarted: boolean}
+
+export interface AFPurchaseDetails {
+    purchaseType: AFPurchaseType;
+    purchaseToken: string;
+    productId: string;
+}
+
+export interface AFPurchaseDetailsV2 {
+    purchaseDetails: AFPurchaseDetails;
+    additionalParameters?: StringMap;
+}
