@@ -1,6 +1,6 @@
 import './ExploreContainer.css';
 import { IonButton, isPlatform } from '@ionic/react';
-import { MediationNetwork, AFAdRevenueData, AFEvent, AppsFlyer, AFPurchaseType, AFPurchaseDetails } from "appsflyer-capacitor-plugin";
+import { AFEvent, AppsFlyer } from "appsflyer-capacitor-plugin";
 import React from "react";
 
 interface ContainerProps {
