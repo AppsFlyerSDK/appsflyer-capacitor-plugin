@@ -1,5 +1,5 @@
-## 6.17.3
- Release date: *2025-09-04*
+## 6.17.5
+ Release date: *2025-09-08*
 
 - Updated to AppsFlyer SDK v6.17.3 for Android and and v6.17.5 for iOS
 - Unified AFPurchaseDetails data structure for type-safe purchase validation
