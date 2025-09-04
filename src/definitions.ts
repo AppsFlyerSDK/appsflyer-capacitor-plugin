@@ -40,8 +40,8 @@ import type {
     AFEnableTCFDataCollection,
     AFConsentData,
     AFAdRevenueData,
-    AFConsentOptions
-
+    AFConsentOptions,
+    AFIsStarted,
 } from "./appsflyer_interfaces";
 
 export interface AppsFlyerPlugin {
@@ -287,9 +287,32 @@ export interface AppsFlyerPlugin {
     setConsentDataV2(options: AFConsentOptions): Promise<void>
 
     /**
+     * Use this method to check whether the AppsFlyer SDK has already been started in the current session.
+     */
+    isSDKStarted(): Promise<AFIsStarted>
+
+    /**
+     * Use this method to check whether the AppsFlyer SDK is currently stopped.
+     */
+    isSDKStopped(): Promise<AFIsStopped>
+
+    /**
      * Disables AppSet ID collection. If called before SDK init, App Set ID will not be collected.
      * If called after init, App Set ID will be collected but not sent in request payloads.
      * Android only.
      */
     disableAppSetId(): Promise<void>
+
+    // TODO: Uncomment this once the API is stable
+    // /**
+    //  * API for server verification of in-app purchases V2 (Beta).
+    //  * An af_purchase event with the relevant values will be automatically logged if the validation is successful.
+    //  * 
+    //  * @param data - Object containing purchaseDetails and optional additionalParameters
+    //  * @returns Promise that resolves with validation result
+    //  * 
+    //  * ⚠️ **BETA Feature**: This API is currently in beta. While it's stable and recommended for new implementations,
+    //  * please test thoroughly in your environment before production use.
+    //  */
+    // validateAndLogInAppPurchaseV2(data: AFPurchaseDetailsV2): Promise<{ [key: string]: any }>;
 }

@@ -69,4 +69,8 @@ const val AF_MONETIZATION_NETWORK = "monetizationNetwork"
 const val AF_CURRENCY_ISO4217_CODE = "currencyIso4217Code"
 const val AF_REVENUE = "revenue"
 const val AF_MEDIATION_NETWORK = "mediationNetwork"
+const val AF_PURCHASE_DETAILS = "purchaseDetails"
+const val AF_PURCHASE_TYPE = "purchaseType"
+const val AF_PURCHASE_TOKEN = "purchaseToken"
+const val AF_PRODUCT_ID = "productId"
 
