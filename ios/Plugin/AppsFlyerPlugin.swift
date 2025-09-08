@@ -5,10 +5,11 @@ import AppsFlyerLib
 
 @objc(AppsFlyerPlugin)
 public class AppsFlyerPlugin: CAPPlugin {
-    private let APPSFLYER_PLUGIN_VERSION = "6.17.0"
+    private let APPSFLYER_PLUGIN_VERSION = "6.17.5"
     private var conversion = true
     private var oaoa = true
     private var udl = false
+    private var hasSDKStarted: Bool = false
     
     override public func load() {
         
@@ -109,7 +110,6 @@ public class AppsFlyerPlugin: CAPPlugin {
     }
     
     @objc func startSDK(_ call: CAPPluginCall) {
-        
         NotificationCenter.default
             .addObserver(
                 self,
@@ -118,10 +118,11 @@ public class AppsFlyerPlugin: CAPPlugin {
                 object: nil
             )
         
-        AppsFlyerLib.shared().start { dictionary, error in
+        AppsFlyerLib.shared().start { [weak self] dictionary, error in
             if let error = error {
                 call.reject(error.localizedDescription)
             } else {
+                self?.hasSDKStarted = true
                 call.resolve(["res": "success"])
             }
         }
@@ -420,19 +421,19 @@ public class AppsFlyerPlugin: CAPPlugin {
         
         call.resolve()
     }
-
+    
     @objc func setConsentDataV2(_ call: CAPPluginCall) {
         // inner helper: convert Bool? to NSNumber?
         func toNSNumber(_ value: Bool?) -> NSNumber? {
             guard let value = value else { return nil }
             return NSNumber(value: value)
         }
-
+        
         let isUserSubjectToGDPR = toNSNumber(call.getBool(AppsFlyerConstants.AF_IS_SUBJECTED_TO_DGPR))
         let hasConsentForDataUsage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_DATA_USAGE))
         let hasConsentForAdsPersonalization = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_PERSONALIZATION))
         let hasConsentForAdStorage = toNSNumber(call.getBool(AppsFlyerConstants.AF_CONSENT_FOR_ADS_STORAGE))
-
+        
         // Build consent options object and pass to AppsFlyer SDK
         let consentOptions = AppsFlyerConsent(
             isUserSubjectToGDPR: isUserSubjectToGDPR,
@@ -440,7 +441,7 @@ public class AppsFlyerPlugin: CAPPlugin {
             hasConsentForAdsPersonalization: hasConsentForAdsPersonalization,
             hasConsentForAdStorage: hasConsentForAdStorage
         )
-
+        
         AppsFlyerLib.shared().setConsentData(consentOptions)
         call.resolve()
     }
@@ -505,54 +506,54 @@ public class AppsFlyerPlugin: CAPPlugin {
     
     @objc func generateInviteLink(_ call: CAPPluginCall){
         AppsFlyerShareInviteHelper.generateInviteUrl(
-linkGenerator:
-    {(
-        _ generator: AppsFlyerLinkGenerator
-    ) -> AppsFlyerLinkGenerator in
-        if let channel = call.getString(AppsFlyerConstants.AF_CHANNEL){
-            generator.setChannel(channel)
-        }
-        if let brandDomain = call.getString(AppsFlyerConstants.AF_BRAND_DOMAIN){
-            generator.brandDomain = brandDomain
-        }
-        if let campaign = call.getString(AppsFlyerConstants.AF_CAMPAIGN){
-            generator.setCampaign(campaign)
-        }
-        if let referrerName = call.getString(
-            AppsFlyerConstants.AF_REFERRER_NAME
-        ){
-            generator.setReferrerName(referrerName)
-        }
-        if let referrerImageURL = call.getString(
-            AppsFlyerConstants.AF_REFERRER_IMAGE_URL
-        ){
-            generator.setReferrerImageURL(referrerImageURL)
-        }
-        if let referrerCustomerId = call.getString(
-            AppsFlyerConstants.AF_REFERRER_CUSTOMER_ID
-        ){
-            generator.setReferrerCustomerId(referrerCustomerId)
-        }
-        if let baseDeeplink = call.getString(
-            AppsFlyerConstants.AF_BASE_DEEPLINK
-        ){
-            generator.setBaseDeeplink(baseDeeplink)
-        }
-        if let addParameters = call.getObject(
-            AppsFlyerConstants.AF_ADD_PARAMETERS
-        ){
-            generator.addParameters(addParameters)
-        }
-            
-        return generator
-    },
-completionHandler: {url in
-    if url != nil{
-        call.resolve([AppsFlyerConstants.AF_LINK_READY: url!.absoluteString])
-    }else{
-        call.reject("Failed to generate a link")
-    }
-}
+            linkGenerator:
+                {(
+                    _ generator: AppsFlyerLinkGenerator
+                ) -> AppsFlyerLinkGenerator in
+                    if let channel = call.getString(AppsFlyerConstants.AF_CHANNEL){
+                        generator.setChannel(channel)
+                    }
+                    if let brandDomain = call.getString(AppsFlyerConstants.AF_BRAND_DOMAIN){
+                        generator.brandDomain = brandDomain
+                    }
+                    if let campaign = call.getString(AppsFlyerConstants.AF_CAMPAIGN){
+                        generator.setCampaign(campaign)
+                    }
+                    if let referrerName = call.getString(
+                        AppsFlyerConstants.AF_REFERRER_NAME
+                    ){
+                        generator.setReferrerName(referrerName)
+                    }
+                    if let referrerImageURL = call.getString(
+                        AppsFlyerConstants.AF_REFERRER_IMAGE_URL
+                    ){
+                        generator.setReferrerImageURL(referrerImageURL)
+                    }
+                    if let referrerCustomerId = call.getString(
+                        AppsFlyerConstants.AF_REFERRER_CUSTOMER_ID
+                    ){
+                        generator.setReferrerCustomerId(referrerCustomerId)
+                    }
+                    if let baseDeeplink = call.getString(
+                        AppsFlyerConstants.AF_BASE_DEEPLINK
+                    ){
+                        generator.setBaseDeeplink(baseDeeplink)
+                    }
+                    if let addParameters = call.getObject(
+                        AppsFlyerConstants.AF_ADD_PARAMETERS
+                    ){
+                        generator.addParameters(addParameters)
+                    }
+                    
+                    return generator
+                },
+            completionHandler: {url in
+                if url != nil{
+                    call.resolve([AppsFlyerConstants.AF_LINK_READY: url!.absoluteString])
+                }else{
+                    call.reject("Failed to generate a link")
+                }
+            }
         )
         
     }
@@ -736,6 +737,97 @@ completionHandler: {url in
         AppsFlyerShareInviteHelper.logInvite(channel, parameters: data)
         call.resolve(["res": "ok"])
         
+    }
+    
+    /**
+     * Returns whether the AppsFlyer SDK has been started in the current session.
+     */
+    @objc func isSDKStarted(_ call: CAPPluginCall) {
+        call.resolve(["isStarted": hasSDKStarted])
+    }
+    
+    /**
+     * Returns whether the AppsFlyer SDK is currently stopped.
+     */
+    @objc func isSDKStopped(_ call: CAPPluginCall) {
+        call.resolve(["isStopped": AppsFlyerLib.shared().isStopped])
+    }
+    
+    @objc func disableAppSetId(_ call: CAPPluginCall){
+        call.unavailable()
+    }
+    
+    @objc func validateAndLogInAppPurchaseV2(_ call: CAPPluginCall) {
+        guard let purchaseDetailsMap = call.getObject(AppsFlyerConstants.AF_PURCHASE_DETAILS) else {
+            call.reject("Purchase details are required")
+            return
+        }
+        
+        let additionalParameters = call.getObject(AppsFlyerConstants.AF_ADDITIONAL_PARAMETERS)
+        
+        // Validate required fields
+        guard let purchaseTypeString = purchaseDetailsMap[AppsFlyerConstants.AF_PURCHASE_TYPE] as? String else {
+            call.reject("Purchase type is required")
+            return
+        }
+        guard let purchaseType = mapPurchaseType(purchaseTypeString) else {
+            call.reject("Unkown purchase type")
+            return
+        }
+        
+        guard let purchaseToken = purchaseDetailsMap[AppsFlyerConstants.AF_PURCHASE_TOKEN] as? String else {
+            call.reject("Purchase token is required")
+            return
+        }
+        
+        guard let productId = purchaseDetailsMap[AppsFlyerConstants.AF_PRODUCT_ID] as? String else {
+            call.reject("Product ID is required")
+            return
+        }
+        
+        // Create a new instance of AFSDKPurchaseDetails with the required information
+        let purchaseDetails: AFSDKPurchaseDetails = AFSDKPurchaseDetails(
+            productId: productId,
+            transactionId: purchaseToken,
+            purchaseType: purchaseType
+        )
+        
+        
+        // For iOS, we use the existing validateAndLog method with the new V2 parameters
+        // The purchaseToken serves as the transactionId for iOS
+        AppsFlyerLib.shared().validateAndLogInAppPurchase(purchaseDetails: purchaseDetails, purchaseAdditionalDetails: additionalParameters){result, error in
+            if result != nil {
+                var response: [String: Any] = [:]
+                if let resultDict = result as? [String: Any] {
+                    response = resultDict
+                } else {
+                    response["result"] = result
+                }
+                call.resolve(response)
+            } else if error != nil {
+                var errorDict: [String: Any] = [:]
+                if let nsError = error as NSError? {
+                    errorDict["error"] = nsError.localizedDescription
+                    errorDict["code"] = nsError.code
+                    errorDict["userInfo"] = nsError.userInfo
+                    errorDict["domain"] = nsError.domain // optional, often useful
+                }
+                call.reject("Validation failed", errorDict.jsonStringRepresentation ?? "")
+            }
+        }
+    }
+    
+    func mapPurchaseType(_ purchaseTypeString: String) -> AFSDKPurchaseType? {
+        switch purchaseTypeString {
+        case "subscription":
+            return    .subscription
+            
+        case "one_time_purchase":
+            return    .oneTimePurchase
+            
+        default:
+            return    nil
+        }
     }
 }
 

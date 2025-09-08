@@ -64,3 +64,12 @@ captures
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 package-lock.json
+
+# Cursor editor state
+.cursor/
+
+# Local environment variables (do NOT commit)
+.env
+.env.*
+examples/CapacitorReact/.env
+examples/CapacitorReact/.env.*  

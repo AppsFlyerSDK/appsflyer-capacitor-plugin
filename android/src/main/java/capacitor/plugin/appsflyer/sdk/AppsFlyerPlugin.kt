@@ -339,7 +339,7 @@ class AppsFlyerPlugin : Plugin() {
     @PluginMethod
     fun isSDKStopped(call: PluginCall) {
         val result = JSObject().apply {
-            put("isSDKStopped", AppsFlyerLib.getInstance().isStopped)
+            put("isStopped", AppsFlyerLib.getInstance().isStopped)
         }
         call.resolve(result)
     }
@@ -437,10 +437,89 @@ class AppsFlyerPlugin : Plugin() {
         } else {
             call.reject("Missing some fields")
         }
+    }
 
-        @PluginMethod
-        fun validateAndLogInAppPurchaseIos(call: PluginCall) {
-            call.unavailable()
+    @PluginMethod
+    fun validateAndLogInAppPurchaseIos(call: PluginCall) {
+        call.unavailable()
+    }
+
+    @PluginMethod
+    fun validateAndLogInAppPurchaseV2(call: PluginCall) {
+        try {
+            val purchaseDetailsMap = call.getObject(AF_PURCHASE_DETAILS)
+                ?: return call.reject("Purchase details are required")
+            val additionalParameters = call.getObject(AF_ADDITIONAL_PARAMETERS)
+
+            // Extract purchase details
+            val purchaseTypeString = purchaseDetailsMap.getString(AF_PURCHASE_TYPE)
+                ?: return call.reject("Purchase type is required")
+            val purchaseToken = purchaseDetailsMap.getString(AF_PURCHASE_TOKEN)
+                ?: return call.reject("Purchase token is required")
+            val productId = purchaseDetailsMap.getString(AF_PRODUCT_ID)
+                ?: return call.reject("Product ID is required")
+
+            // Map purchase type
+            val purchaseType = mapPurchaseType(purchaseTypeString)
+                ?: return call.reject("Invalid purchase type: $purchaseTypeString")
+
+            // Create AFPurchaseDetails object
+            val purchaseDetails = AFPurchaseDetails(
+                purchaseType,
+                purchaseToken,
+                productId
+            )
+
+            // Convert additional parameters
+            val additionalParamsMap = additionalParameters?.let {
+                AFHelpers.jsonToStringMap(it)
+            }
+
+            // Call AppsFlyer SDK
+            AppsFlyerLib.getInstance().validateAndLogInAppPurchase(
+                purchaseDetails,
+                additionalParamsMap,
+                object : AppsFlyerInAppPurchaseValidationCallback {
+                    override fun onInAppPurchaseValidationFinished(validationResult: Map<String, Any?>) {
+                        try {
+                            val jsonResult = JSObject()
+                            for ((key, value) in validationResult) {
+                                jsonResult.put(key, value)
+                            }
+                            call.resolve(jsonResult)
+                        } catch (e: Exception) {
+                            call.reject("Error parsing validation result: ${e.message}")
+                        }
+                    }
+
+                    override fun onInAppPurchaseValidationError(validationError: Map<String, Any>) {
+                        try {
+                            var errorMessage = "Validation failed"
+                            if (validationError.containsKey("error")) {
+                                errorMessage = validationError["error"].toString()
+                            }
+
+                            val jsonError = JSObject()
+                            for ((key, value) in validationError) {
+                                jsonError.put(key, value)
+                            }
+                            call.reject(errorMessage, jsonError.toString())
+                        } catch (e: Exception) {
+                            call.reject("Error parsing validation error: ${e.message}")
+                        }
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            call.reject("Error in validateAndLogInAppPurchaseV2: ${e.message}")
+        }
+    }
+
+    private fun mapPurchaseType(purchaseTypeString: String): AFPurchaseType? {
+        return when (purchaseTypeString) {
+            "subscription" -> AFPurchaseType.SUBSCRIPTION
+            "one_time_purchase" -> AFPurchaseType.ONE_TIME_PURCHASE
+            else -> null
         }
     }
 
