@@ -849,22 +849,20 @@ extension AppsFlyerPlugin{
         guard let object = notification.object as? [String: Any?] else {
             return
         }
-        guard let url =  object["url"] else {
+        guard let urlAny = object["url"], let url = urlAny as? URL else {
             afLogger(msg: "handleUrlOpened url is nil")
             return
         }
-        guard let options =  object["options"] else {
+        guard let optionsAny = object["options"], let options = optionsAny as? [UIApplication.OpenURLOptionsKey: Any] else {
             afLogger(msg: "handleUrlOpened options is nil")
-            
             return
         }
-        afLogger(msg: "handleUrlOpened with \((url as! URL).absoluteString)")
+        afLogger(msg: "handleUrlOpened with \(url.absoluteString)")
         AppsFlyerAttribution.shared
             .handleOpenUrl(
-                open: url as! URL,
-                options: options as! [UIApplication.OpenURLOptionsKey: Any]
+                open: url,
+                options: options
             )
-        
     }
     
     @objc func handleUniversalLink(notification: NSNotification) {
@@ -872,16 +870,15 @@ extension AppsFlyerPlugin{
             return
         }
         let user = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
-        guard let url = object["url"] else {
-            afLogger(msg: "handleUrlOpened options is url")
+        guard let urlAny = object["url"], let url = urlAny as? URL else {
+            afLogger(msg: "handleUniversalLink url is nil")
             return
         }
-        user.webpageURL = (url as! URL)
+        user.webpageURL = url
         afLogger(
             msg: "handleUniversalLink with \(user.webpageURL?.absoluteString ?? "null")"
         )
         AppsFlyerAttribution.shared.continueUserActivity(userActivity: user)
-        
     }
     
 }
