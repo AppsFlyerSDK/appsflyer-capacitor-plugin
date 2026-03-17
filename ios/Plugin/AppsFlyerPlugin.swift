@@ -849,13 +849,12 @@ extension AppsFlyerPlugin{
         guard let object = notification.object as? [String: Any?] else {
             return
         }
-        // Ensure the "url" key exists
-        guard object.keys.contains("url") else {
+        // Unwrap the "url" value (outer optional = missing key, inner optional = nil value)
+        guard let rawUrl = object["url"] else {
             afLogger(msg: "handleUrlOpened url is missing from notification object")
             return
         }
-        // Unwrap the inner optional for "url"
-        guard let nonNilRawUrl = object["url"]! else {
+        guard let nonNilRawUrl = rawUrl else {
             afLogger(msg: "handleUrlOpened url is nil in notification object")
             return
         }
@@ -863,13 +862,12 @@ extension AppsFlyerPlugin{
             afLogger(msg: "handleUrlOpened url has invalid type: \(type(of: nonNilRawUrl))")
             return
         }
-        // Ensure the "options" key exists
-        guard object.keys.contains("options") else {
+        // Unwrap the "options" value (outer optional = missing key, inner optional = nil value)
+        guard let rawOptions = object["options"] else {
             afLogger(msg: "handleUrlOpened options are missing from notification object")
             return
         }
-        // Unwrap the inner optional for "options"
-        guard let nonNilRawOptions = object["options"]! else {
+        guard let nonNilRawOptions = rawOptions else {
             afLogger(msg: "handleUrlOpened options are nil in notification object")
             return
         }
@@ -890,13 +888,12 @@ extension AppsFlyerPlugin{
             return
         }
         let user = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
-        // Ensure the "url" key exists
-        guard object.keys.contains("url") else {
+        // Unwrap the "url" value (outer optional = missing key, inner optional = nil value)
+        guard let rawUrl = object["url"] else {
             afLogger(msg: "handleUniversalLink url is missing from notification object")
             return
         }
-        // Unwrap the inner optional for "url"
-        guard let nonNilRawUrl = object["url"]! else {
+        guard let nonNilRawUrl = rawUrl else {
             afLogger(msg: "handleUniversalLink url is nil in notification object")
             return
         }
