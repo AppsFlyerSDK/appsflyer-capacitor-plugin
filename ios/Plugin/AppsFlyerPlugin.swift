@@ -849,12 +849,20 @@ extension AppsFlyerPlugin{
         guard let object = notification.object as? [String: Any?] else {
             return
         }
-        guard let urlAny = object["url"], let url = urlAny as? URL else {
-            afLogger(msg: "handleUrlOpened url is nil")
+        guard let rawUrl = object["url"] else {
+            afLogger(msg: "handleUrlOpened url is missing from notification object")
             return
         }
-        guard let optionsAny = object["options"], let options = optionsAny as? [UIApplication.OpenURLOptionsKey: Any] else {
-            afLogger(msg: "handleUrlOpened options is nil")
+        guard let url = rawUrl as? URL else {
+            afLogger(msg: "handleUrlOpened url has invalid type: \(type(of: rawUrl))")
+            return
+        }
+        guard let rawOptions = object["options"] else {
+            afLogger(msg: "handleUrlOpened options are missing from notification object")
+            return
+        }
+        guard let options = rawOptions as? [UIApplication.OpenURLOptionsKey: Any] else {
+            afLogger(msg: "handleUrlOpened options have invalid type: \(type(of: rawOptions))")
             return
         }
         afLogger(msg: "handleUrlOpened with \(url.absoluteString)")
@@ -870,8 +878,12 @@ extension AppsFlyerPlugin{
             return
         }
         let user = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
-        guard let urlAny = object["url"], let url = urlAny as? URL else {
-            afLogger(msg: "handleUniversalLink url is nil")
+        guard let rawUrl = object["url"] else {
+            afLogger(msg: "handleUniversalLink url is missing from notification object")
+            return
+        }
+        guard let url = rawUrl as? URL else {
+            afLogger(msg: "handleUniversalLink url has invalid type: \(type(of: rawUrl))")
             return
         }
         user.webpageURL = url
