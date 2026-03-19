@@ -65,9 +65,6 @@ captures
 .externalNativeBuild
 package-lock.json
 
-# Cursor editor state
-.cursor/
-
 # Local environment variables (do NOT commit)
 .env
 .env.*
