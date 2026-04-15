@@ -11,6 +11,10 @@ Podfile.lock
 Build
 xcuserdata
 
+# Swift Package Manager
+.build/
+Package.resolved
+
 # macOS files
 .DS_Store
 
