@@ -10,8 +10,8 @@ The plugin available via npm. To install the plugin, please run the following co
 
 ## <a id="cap8"> Capacitor 8 - Latest Version
 The latest version that supports Capacitor 8 uses the following SDK versions:
-- Android AppsFlyer SDK **6.18.0**
-- iOS AppsFlyer SDK **6.18.0**
+- Android AppsFlyer SDK **6.17.6**
+- iOS AppsFlyer SDK **6.17.9**
 
 To install the latest version, please run the following commands in your project root directory.
 
