@@ -15,7 +15,11 @@ To do so, please follow [this article](https://support.appsflyer.com/hc/en-us/ar
 
 <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18">  Android AppsFlyer SDK **6.17.6**</br>
 <img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **6.17.9**</br>
-<img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18">  Capacitor 7</br>
+<img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18">  Capacitor 8</br>
+
+## <a id="breaking-changes-6-17-91"> 	❗❗ Breaking changes when updating to v6.17.91 ❗❗
+Starting from v6.17.91, this plugin works only with Capacitor 8. </br>
+If you are still interested in using Capacitor 7, please follow the instructions [here](/docs/Installation.md#cap7) to install the latest version that supports Capacitor 7.
 
 ## <a id="breaking-changes-6-17-0"> 	❗❗ Breaking changes when updating to v6.17.0 ❗❗
 Starting from v6.17.0, this plugin works only with Capacitor 7. </br>
