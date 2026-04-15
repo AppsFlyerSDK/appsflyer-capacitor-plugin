@@ -62,17 +62,13 @@ jobs:
         run: |
           cd examples/CapacitorReact
           npm install ../../
-          npx cap add ios
+          npx cap add ios --packagemanager SPM
           npm run build
           npx cap sync ios
-      - name: Install CocoaPods dependencies
-        run: |
-          cd examples/CapacitorReact/ios/App
-          pod install --repo-update
       - name: Build iOS app
         run: |
           cd examples/CapacitorReact/ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App \
+          xcodebuild -scheme App \
             -destination 'generic/platform=iOS' \
-            -allowProvisioningUpdates \
+            -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO build
