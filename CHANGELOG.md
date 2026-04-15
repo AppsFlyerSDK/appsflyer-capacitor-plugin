@@ -1,3 +1,8 @@
+## 6.17.91
+ Release date: *2026-04-15*
+
+No release notes available for Capacitor SDK v6.17.91
+
 ## 6.17.9
  Release date: *2026-03-25*
 

@@ -1,0 +1,155 @@
+---
+description: Core conventions for developing and maintaining the AppsFlyer Capacitor Plugin. Covers architecture, API surface, native implementations, versioning, branching, and release workflows.
+alwaysApply: true
+---
+
+# AppsFlyer Capacitor plugin development
+
+## Architecture overview
+
+This is a **Capacitor native plugin** wrapping the AppsFlyer SDK for iOS (Swift) and Android (Kotlin). There is no web implementation; all methods target native platforms.
+
+### File layout
+
+| Layer | Path | Language |
+|-------|------|----------|
+| TypeScript API | `src/definitions.ts` | TS |
+| TypeScript interfaces | `src/appsflyer_interfaces.ts` | TS |
+| TypeScript constants/enums | `src/Appsflyer_constants.ts` | TS |
+| Plugin entry | `src/index.ts` | TS |
+| iOS implementation | `ios/Plugin/AppsFlyerPlugin.swift` | Swift |
+| iOS registration | `ios/Plugin/AppsFlyerPlugin.m` | Obj-C |
+| iOS constants | `ios/Plugin/AppsFlyerConstants.swift` | Swift |
+| iOS deep link handler | `ios/Plugin/AppsFlyerAttribution.swift` | Swift |
+| iOS helpers | `ios/Plugin/Extensions.swift` | Swift |
+| Android implementation | `android/src/main/java/capacitor/plugin/appsflyer/sdk/AppsFlyerPlugin.kt` | Kotlin |
+| Android constants | `android/src/main/java/capacitor/plugin/appsflyer/sdk/AppsFlyerConstants.kt` | Kotlin |
+| Android helpers | `android/src/main/java/capacitor/plugin/appsflyer/sdk/AFHelpers.kt` | Kotlin |
+| Example app | `examples/CapacitorReact/` | Ionic React |
+
+## Adding a new API method
+
+Every new plugin method must be added across **all four layers** in this order:
+
+1. **TypeScript interface** (`src/appsflyer_interfaces.ts`): define parameter/response types using `AF`-prefixed interface names (e.g., `AFMyFeature`).
+2. **TypeScript definitions** (`src/definitions.ts`): add the method signature to the `AppsFlyerPlugin` interface with a JSDoc comment.
+3. **iOS implementation**:
+   - Add method to `AppsFlyerPlugin.swift` as `@objc func methodName(_ call: CAPPluginCall)`.
+   - Register it in `AppsFlyerPlugin.m` with `CAP_PLUGIN_METHOD(methodName, CAPPluginReturnPromise)` (or `CAPPluginReturnNone`).
+   - Add any new parameter keys to `AppsFlyerConstants.swift` as `static let AF_*`.
+4. **Android implementation**:
+   - Add method to `AppsFlyerPlugin.kt` annotated with `@PluginMethod`.
+   - Add any new parameter keys to `AppsFlyerConstants.kt` as `const val AF_*`.
+5. **Example app**: add a working call in `examples/CapacitorReact/src/components/ExploreContainer.tsx` so the method is testable.
+6. **Documentation**: update `docs/API.md` and any relevant doc under `docs/`.
+
+### Platform-only methods
+
+- If a method is iOS-only, the Android implementation should call `call.unavailable()`.
+- If a method is Android-only, the iOS implementation should call `call.unavailable("Android only method - has no effect on iOS apps")`.
+
+## Coding conventions
+
+### TypeScript
+
+- All parameter interfaces use the `AF` prefix: `AFInit`, `AFEvent`, `AFCuid`, etc.
+- Single-field wrappers are fine (e.g., `AFCuid { cuid: string }`); they keep the bridge explicit.
+- Enums live in `Appsflyer_constants.ts` (e.g., `AFConstants`, `AFPurchaseType`, `MediationNetwork`).
+- The plugin is registered as `'AppsFlyerPlugin'` in `src/index.ts` via `registerPlugin`.
+- Linting: `@ionic/eslint-config/recommended` + `@ionic/prettier-config`. Run `npm run lint` to check, `npm run fmt` to fix.
+
+### Swift (iOS)
+
+- Constants are `static let` in the `AppsFlyerConstants` class, prefixed `AF_`.
+- Methods follow the Capacitor pattern: `@objc func methodName(_ call: CAPPluginCall)`.
+- Extract parameters with `call.getString()`, `call.getBool()`, `call.getObject()`, etc.
+- Reject missing required parameters early with `call.reject("descriptive message")`.
+- Resolve with `call.resolve(["key": value])`.
+- Use extensions on `AppsFlyerPlugin` to group related logic (delegates, helpers, deep link handling).
+- Logging: `NSLog("AppsFlyer [Debug][Capacitor]: \(msg)")`.
+- SwiftLint: `@ionic/swiftlint-config`. Run `npm run swiftlint -- lint`.
+
+### Kotlin (Android)
+
+- Constants are top-level `const val` in `AppsFlyerConstants.kt`, prefixed `AF_`.
+- Methods are annotated with `@PluginMethod` (defaults to `RETURN_PROMISE`) or `@PluginMethod(returnType = PluginMethod.RETURN_NONE)`.
+- Use `call.getString()`, `call.getBoolean()`, `call.getObject()`, etc. to extract parameters.
+- Reject with `call.reject("message")`, resolve with `call.resolve(JSObject().apply { put("key", value) })`.
+- Use `AFHelpers` for JSON/Map conversions (`jsonToMap`, `jsonToStringMap`, `mapToJson`, `jsonToBundle`).
+- Logging: `Log.d(TAG, message)` where `TAG = "AppsFlyer_Cap"`.
+
+### Constant key alignment
+
+Parameter keys **must match** across all three constant files. For example, if the JS interface uses `eventName`, the iOS constant must be `AF_EVENT_NAME = "eventName"` and the Android constant must be `const val AF_EVENT_NAME = "eventName"`. Mismatches break the bridge silently.
+
+## Deprecation pattern
+
+When deprecating an API:
+
+1. **TypeScript**: add `@deprecated` JSDoc tag with a replacement note.
+2. **iOS**: add `@available(*, deprecated, message: "Use newMethod instead")` and keep the old implementation functional or call `call.unavailable()`.
+3. **Android**: add `@Deprecated("Use newMethod instead")` annotation and keep the old implementation functional or call `call.unavailable()`.
+4. **Docs**: mark as deprecated in `docs/API.md` and `docs/InAppEvents.md` with a pointer to the replacement.
+
+## Event listeners
+
+The plugin uses three callback channels, defined identically in TS, iOS, and Android:
+
+- `conversion_callback` (GCD/conversion data)
+- `oaoa_callback` (app open attribution)
+- `udl_callback` (Unified Deep Linking)
+
+Native side emits via `notifyListeners(CALLBACK_NAME, data)`. JS side subscribes via `AppsFlyer.addListener(AFConstants.CALLBACK_NAME, handler)`.
+
+## Deep link handling (iOS)
+
+`AppsFlyerAttribution` is a singleton that queues deep links arriving before the Capacitor bridge is ready. It listens for `Notification.Name.appsflyerBridge` (posted by `reportBridgeReady()` in `initSDK`). Don't bypass this mechanism; deep links that arrive before SDK init will be lost otherwise.
+
+## Versioning
+
+Version numbers are tracked in **multiple places** and must stay in sync:
+
+- `package.json`: `version`, `iosSdkVersion`, `androidSdkVersion`, `buildNumber`
+- `ios/Plugin/AppsFlyerPlugin.swift`: `APPSFLYER_PLUGIN_VERSION`
+- `android/build.gradle`: `af_sdk_version`
+
+The plugin version number is set to the **latest** of the two native SDK versions. For example, if Android SDK is 6.17.5 and iOS SDK is 6.17.7, the Capacitor plugin version will be 6.17.7.
+
+CI scripts in `.github/workflows/scripts/` handle updates automatically during release branch creation. Don't manually edit version numbers across files; use the `updatePlugin.sh` orchestrator.
+
+## Branching and workflow
+
+- **`main`**: production branch. Merges into `main` trigger the release workflow.
+- **`develop`**: integration branch for ongoing work.
+- **Feature branches**: `dev/DELIVERY-<ticket>/description` (from `develop`).
+- **Release branches**: `releases/<major>.x.x/<major>.<minor>.x/<major>.<minor>.<patch>` (created by CI via `create-release-branch-workflow.yml`).
+
+When creating a branch locally, follow: `DELIVERY-<ticket-number>-<description>`.
+
+## Build and verify
+
+| Command | What it does |
+|---------|-------------|
+| `npm run build` | Clean + TSC + Rollup (produces `dist/`) |
+| `npm run verify` | Builds iOS, Android, and web in sequence |
+| `npm run verify:ios` | `pod install` + `xcodebuild` |
+| `npm run verify:android` | `./gradlew clean build test` |
+| `npm run lint` | ESLint + Prettier check + SwiftLint |
+| `npm run fmt` | Auto-fix lint issues |
+| `npm run docgen` | Regenerate API docs in README |
+
+Always run `npm run build` and `npm run lint` before pushing.
+
+## Release process
+
+1. CI creates a release branch via `create-release-branch-workflow.yml` (manual dispatch with version inputs).
+2. A PR is opened from the release branch into `main`.
+3. On merge to `main`, `release-Production-workflow.yml` runs: builds sample apps, creates a GitHub release tag, publishes to npm with provenance, and sends a Slack notification.
+4. Update `CHANGELOG.md` with the release date and summary of changes.
+
+## Example app
+
+The example app at `examples/CapacitorReact/` is an Ionic React + Capacitor project. It uses env vars `REACT_APP_AF_DEV_KEY` and `REACT_APP_AF_APP_ID` from `.env`. 
+
+- `npm run installLocal` installs the plugin from the repo root (`../../`) and syncs Capacitor.
+- Always keep the example app working with the latest plugin API; new methods should have a callable button or demonstration.
