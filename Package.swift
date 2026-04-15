@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "AppsFlyer",
+    name: "AppsflyerCapacitorPlugin",
     platforms: [.iOS(.v15)],
     products: [
         .library(
-            name: "AppsFlyer",
+            name: "AppsflyerCapacitorPlugin",
             targets: ["AppsFlyerPlugin"])
     ],
     dependencies: [
