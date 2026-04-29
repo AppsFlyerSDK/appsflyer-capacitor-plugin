@@ -950,8 +950,8 @@ extension AppsFlyerPlugin : DeepLinkDelegate{
     
 }
 
-extension AppsFlyerPlugin{
-    private func afLogger(msg : String){
-        NSLog ("AppsFlyer [Debug][Capacitor]: \(msg)");
+extension AppsFlyerPlugin {
+    private func afLogger(msg: String) {
+        CAPLog.print("⚡️ ", self.pluginId, "-", msg)
     }
 }
