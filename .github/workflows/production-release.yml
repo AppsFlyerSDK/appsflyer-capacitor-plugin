@@ -1,0 +1,253 @@
+name: Production Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: 'Release branch to publish from (releases/...)'
+        required: true
+        type: string
+
+concurrency:
+  group: production-release-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm + GitHub release
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       startsWith(github.event.pull_request.head.ref, 'releases/'))
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # OIDC trusted publishing on npm
+      contents: write   # Create GH release
+    outputs:
+      ref: ${{ steps.ref.outputs.ref }}
+      plugin_version: ${{ steps.ver.outputs.plugin_version }}
+      android_sdk_version: ${{ steps.ver.outputs.android_sdk_version }}
+      ios_sdk_version: ${{ steps.ver.outputs.ios_sdk_version }}
+      tag: ${{ steps.ver.outputs.tag }}
+    steps:
+      - name: Resolve target ref
+        id: ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ inputs.release_branch }}" >> "$GITHUB_OUTPUT"
+          else
+            # Merged PR — use the merge commit on main; the version is whatever
+            # the PR merged (already -rcN-stripped by promote-release.yml).
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+          token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Ensure latest npm (required for OIDC trusted publishing)
+        run: npm install -g npm@latest
+
+      - name: Read versions from package.json
+        id: ver
+        run: |
+          PLUGIN_VERSION=$(jq -r '.version' package.json)
+          ANDROID_SDK_VERSION=$(jq -r '.androidSdkVersion' package.json)
+          IOS_SDK_VERSION=$(jq -r '.iosSdkVersion' package.json)
+          BUILD_NUMBER=$(jq -r '.buildNumber' package.json)
+          if ! [[ "$PLUGIN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::package.json version $PLUGIN_VERSION still has -rcN. Promote step missed?"
+            exit 1
+          fi
+          echo "plugin_version=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
+          echo "android_sdk_version=$ANDROID_SDK_VERSION" >> "$GITHUB_OUTPUT"
+          echo "ios_sdk_version=$IOS_SDK_VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "tag=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install plugin dependencies
+        run: npm ci
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Publish to npm (OIDC trusted publishing + provenance)
+        run: npm publish --provenance --access public
+
+      - name: Wait for npm registry visibility
+        env:
+          VERSION: ${{ steps.ver.outputs.plugin_version }}
+        run: |
+          set -eo pipefail
+          deadline=$(( $(date +%s) + 600 ))
+          while true; do
+            if curl -fsSL "https://registry.npmjs.org/appsflyer-capacitor-plugin/$VERSION" | jq -e '.version == "'"$VERSION"'"' > /dev/null; then
+              echo "Visible: appsflyer-capacitor-plugin@$VERSION"
+              break
+            fi
+            now=$(date +%s)
+            if [ "$now" -ge "$deadline" ]; then
+              echo "::error::Timed out waiting for $VERSION on registry"
+              exit 1
+            fi
+            sleep 20
+          done
+
+      - name: Create GitHub release
+        uses: actions/github-script@v7
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        with:
+          github-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          script: |
+            const tag = process.env.TAG;
+            try {
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tag,
+                target_commitish: '${{ steps.ref.outputs.ref }}',
+                name: tag,
+                draft: false,
+                prerelease: false,
+                generate_release_notes: false,
+              });
+            } catch (err) {
+              core.setFailed(`Failed to create release: ${err.message}`);
+            }
+
+  notify-team:
+    name: Notify Slack
+    needs: publish
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine status and failed stage
+        id: status
+        env:
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          set -euo pipefail
+          if [[ "$PUBLISH_RESULT" == "success" ]]; then
+            echo "success=true"  >> "$GITHUB_OUTPUT"
+            echo "failed_stage=" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=false" >> "$GITHUB_OUTPUT"
+            echo "failed_stage=publish" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Enrichment runs on the success path only. The failure Slack does not
+      # reference any of the outputs below, so a checkout/Jira blip cannot
+      # silence the failure notification.
+      - name: Checkout merged ref
+        if: steps.status.outputs.success == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.publish.outputs.ref }}
+
+      - name: Extract changelog snippet
+        id: changelog
+        if: steps.status.outputs.success == 'true'
+        env:
+          PLUGIN_VERSION: ${{ needs.publish.outputs.plugin_version }}
+        run: |
+          set -eo pipefail
+          if [ -f "CHANGELOG.md" ]; then
+            CHANGES=$(awk "/^## ${PLUGIN_VERSION}/,/^## [0-9]/" CHANGELOG.md | grep '^- ' | sed 's/^- /• /' | head -8)
+            if [ -z "$CHANGES" ]; then
+              CHANGES="• Check CHANGELOG.md for details"
+            fi
+          else
+            CHANGES="• No CHANGELOG.md present"
+          fi
+          {
+            echo "body<<EOF"
+            echo "$CHANGES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Fetch Jira tickets
+        id: jira-tickets
+        if: steps.status.outputs.success == 'true'
+        continue-on-error: true
+        env:
+          JIRA_EMAIL: ${{ secrets.CI_JIRA_EMAIL }}
+          JIRA_TOKEN: ${{ secrets.CI_JIRA_TOKEN }}
+          JIRA_DOMAIN: ${{ secrets.CI_JIRA_DOMAIN }}
+          PLUGIN_VERSION: ${{ needs.publish.outputs.plugin_version }}
+        run: |
+          set +e
+          JIRA_FIX_VERSION="Capacitor SDK v${PLUGIN_VERSION}"
+          echo "Looking for Jira tickets with fixVersion: $JIRA_FIX_VERSION"
+
+          if [[ -z "$JIRA_EMAIL" || -z "$JIRA_TOKEN" ]]; then
+            echo "Jira credentials not configured; skipping ticket fetch"
+            echo "tickets=No assigned fix version found" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          DOMAIN="${JIRA_DOMAIN:-appsflyer.atlassian.net}"
+
+          JQL_QUERY="fixVersion=\"${JIRA_FIX_VERSION}\""
+          ENCODED_JQL=$(echo "$JQL_QUERY" | jq -sRr @uri)
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -u "${JIRA_EMAIL}:${JIRA_TOKEN}" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            "https://${DOMAIN}/rest/api/3/search/jql?jql=${ENCODED_JQL}&fields=key,summary&maxResults=20")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "Jira HTTP $HTTP_CODE"
+
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo "Jira API request failed; first 500 bytes of body:"
+            echo "$BODY" | head -c 500
+            echo "tickets=No assigned fix version found" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          TICKETS=$(echo "$BODY" | jq -r '.issues[]? | "• https://'"${DOMAIN}"'/browse/\(.key) - \(.fields.summary)"' 2>/dev/null | head -10)
+          if [ -z "$TICKETS" ]; then
+            echo "tickets=No assigned fix version found" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "tickets<<EOF"
+              echo "$TICKETS"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send Slack notification (Success)
+        if: steps.status.outputs.success == 'true'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "<!here>\n:capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:\n\n*Capacitor SDK ${{ needs.publish.outputs.plugin_version }}* is published to Production.\n\n:white_check_mark: rc-smoke/npm passed before promotion (verified by promote-release.yml).\n\n*Installation:*\n:npm: `npm install appsflyer-capacitor-plugin@latest`\nor pinned:\n:npm: `npm install appsflyer-capacitor-plugin@${{ needs.publish.outputs.plugin_version }}`\n\n*Sources:*\n:github: Tree: https://github.com/${{ github.repository }}/tree/main\n:github: Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.publish.outputs.tag }}\n:github: Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n:npm: https://www.npmjs.com/package/appsflyer-capacitor-plugin/v/${{ needs.publish.outputs.plugin_version }}\n\n*Changes and fixes:*\n${{ steps.changelog.outputs.body }}\n\n*Linked tickets and issues:*\n${{ steps.jira-tickets.outputs.tickets }}\n\n*Native SDK's:*\n:android: ${{ needs.publish.outputs.android_sdk_version }}\n:apple_company: ${{ needs.publish.outputs.ios_sdk_version }}\n\n:capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+
+      - name: Send Slack notification (Failure)
+        if: steps.status.outputs.success == 'false'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "<!here>\n:warning: *Capacitor production release failed at `${{ steps.status.outputs.failed_stage }}`*\n\nVersion: ${{ needs.publish.outputs.plugin_version || 'unknown' }}\nRun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n*Stage results:*\n• publish: ${{ needs.publish.result }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}

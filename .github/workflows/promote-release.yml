@@ -1,0 +1,124 @@
+name: Promote Release
+
+on:
+  pull_request:
+    types: [labeled]
+
+concurrency:
+  group: promote-release-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Strip -rcN and ready PR for merge
+    if: ${{ github.event.label.name == 'pass QA ready for deploy' && startsWith(github.event.pull_request.head.ref, 'releases/') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Setup Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Verify rc-smoke/npm is success on PR head SHA
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eo pipefail
+          echo "Checking rc-smoke/npm on $HEAD_SHA"
+          STATUS=$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}/check-runs" \
+            --jq '[.check_runs[] | select(.name=="rc-smoke/npm")] | sort_by(.completed_at) | last | .conclusion')
+          echo "rc-smoke/npm conclusion = $STATUS"
+          if [ "$STATUS" != "success" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --body "Promote blocked: \`rc-smoke/npm\` is \`$STATUS\` on the head commit. Re-run smoke or push another RC."
+            exit 1
+          fi
+
+      - name: Read current RC version
+        id: ver
+        run: |
+          CURRENT=$(jq -r '.version' package.json)
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          if ! [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-rc[0-9]+$ ]]; then
+            if [[ "$CURRENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Version $CURRENT is already promoted (no -rcN suffix). Nothing to strip."
+              echo "promoted=$CURRENT" >> "$GITHUB_OUTPUT"
+              echo "needs_commit=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::Unexpected version format: $CURRENT"
+            exit 1
+          fi
+          PROMOTED="${BASH_REMATCH[1]}"
+          echo "promoted=$PROMOTED" >> "$GITHUB_OUTPUT"
+          echo "needs_commit=true" >> "$GITHUB_OUTPUT"
+          echo "Stripping -rcN: $CURRENT -> $PROMOTED"
+
+      - name: Strip -rcN via updatePluginVersion.sh
+        if: ${{ steps.ver.outputs.needs_commit == 'true' }}
+        run: |
+          chmod +x .github/workflows/scripts/updatePluginVersion.sh
+          .github/workflows/scripts/updatePluginVersion.sh ${{ steps.ver.outputs.promoted }}
+
+      - name: Commit and push promotion
+        if: ${{ steps.ver.outputs.needs_commit == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No diff after strip — package.json may already be clean."
+          else
+            git commit -m "chore: promote ${{ steps.ver.outputs.current }} -> ${{ steps.ver.outputs.promoted }}"
+            git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BRANCH"
+          fi
+
+      - name: Update PR title and body
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --title "Release ${{ steps.ver.outputs.promoted }}" \
+            --body "$(cat <<EOF
+          Promoted from RC \`${{ steps.ver.outputs.current }}\` to production version \`${{ steps.ver.outputs.promoted }}\`.
+
+          - rc-smoke/npm verified green on the head commit.
+          - \`-rcN\` suffix stripped from \`package.json\`, \`AppsFlyerPlugin.swift\`.
+          - Ready to merge into \`main\`.
+          EOF
+          )"
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "Smoke verified. Promotion commit pushed. Merging this PR triggers production publish."
+
+  notify-failure:
+    name: Notify Slack (promote failure)
+    # Only fires when promote fails. The PR comment + body update inside
+    # promote already cover the success path, so a "ready" Slack would be
+    # redundant. Production release itself posts the success Slack on publish.
+    needs: promote
+    runs-on: ubuntu-latest
+    if: always() && needs.promote.result == 'failure'
+    steps:
+      - name: Send Slack failure notification
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "<!here>\n:warning: *Capacitor promote-release blocked*\n\nPR: ${{ github.event.pull_request.html_url }}\nBranch: ${{ github.event.pull_request.head.ref }}\n\nThe promote workflow could not prepare the release branch for production. Common causes:\n• `rc-smoke/npm` is missing or red on the PR head SHA — bump to `rcN+1` and rerun rc-release.\n• The version-strip push was rejected (branch protection or stale ref).\n\nRun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+        continue-on-error: true
