@@ -4,7 +4,59 @@ import AppsFlyerLib
 
 
 @objc(AppsFlyerPlugin)
-public class AppsFlyerPlugin: CAPPlugin {
+public class AppsFlyerPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "AppsFlyerPlugin"
+    public let jsName = "AppsFlyerPlugin"
+    // CAPBridgedPlugin registers the plugin without a separate .m file.
+    // SwiftPM doesn't support mixed Swift + Objective-C source in a single
+    // target, so the legacy `AppsFlyerPlugin.m` (which used the CAP_PLUGIN
+    // / CAP_PLUGIN_METHOD macros) was blocking SPM consumers entirely.
+    // Keep this array in sync with @objc func methods exposed below.
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "initSDK", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "logEvent", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setCustomerUserId", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setCurrencyCode", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "updateServerUninstallToken", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setAppInviteOneLink", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setOneLinkCustomDomain", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "appendParametersToDeepLinkingURL", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setResolveDeepLinkURLs", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "addPushNotificationDeepLinkPath", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setSharingFilter", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setSharingFilterForAllPartners", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setAdditionalData", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "getAppsFlyerUID", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "anonymizeUser", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "disableSKAdNetwork", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "disableAdvertisingIdentifier", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "disableCollectASA", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setHost", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "generateInviteLink", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "validateAndLogInAppPurchaseAndroid", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "disableAppSetId", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "validateAndLogInAppPurchaseIos", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getSdkVersion", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "enableFacebookDeferredApplinks", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "sendPushNotificationData", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setCurrentDeviceLanguage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "logCrossPromoteImpression", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setUserEmails", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "logLocation", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setPhoneNumber", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setPartnerData", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "logInvite", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setSharingFilterForPartners", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "enableTCFDataCollection", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setConsentData", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "startSDK", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "logAdRevenue", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "setConsentDataV2", returnType: CAPPluginReturnNone),
+        CAPPluginMethod(name: "isSDKStarted", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isSDKStopped", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "validateAndLogInAppPurchaseV2", returnType: CAPPluginReturnPromise),
+    ]
     private let APPSFLYER_PLUGIN_VERSION = "6.17.91"
     private var conversion = true
     private var oaoa = true
