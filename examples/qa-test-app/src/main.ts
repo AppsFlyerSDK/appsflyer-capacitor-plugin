@@ -26,9 +26,35 @@ function payloadToString(value: unknown): string {
   }
 }
 
+// Native SDK calls that depend on an HTTP round-trip (logEvent in particular)
+// only resolve when AppsFlyerRequestListener fires. On slow/no-KVM CI
+// emulators the SDK's task queue can stall behind a hung internal request and
+// the promise never settles, which would lock the entire auto-run behind a
+// single call and trip the runner's 240s ceiling. Cap each awaited call so
+// the auto-run always reaches the "Auto run complete" marker; a per-call
+// timeout still emits an [AF_QA][<method>] error: ... line that satisfies
+// the test plan's `result:` / `error:` log_contains shape.
+const DEFAULT_OP_TIMEOUT_MS = 30000;
+
+function withTimeout<T>(op: () => Promise<T>, timeoutMs = DEFAULT_OP_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs);
+    op().then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 async function logResult<T>(method: string, op: () => Promise<T>): Promise<T | undefined> {
   try {
-    const result = await op();
+    const result = await withTimeout(op);
     logQa(`[AF_QA][${method}] result: ${payloadToString(result)}`);
     return result;
   } catch (err) {
@@ -139,25 +165,29 @@ async function fireStandardEvents(): Promise<void> {
     }),
   );
 
-  const purchaseRes = await AppsFlyer.logEvent({
-    eventName: 'af_purchase',
-    eventValue: {
-      af_revenue: 9.99,
-      af_currency: 'USD',
-      af_content_id: 'qa_sku_001',
-      af_content_type: 'product',
-      af_quantity: 1,
-    },
-  }).catch((e) => ({ error: (e as Error).message }));
+  const purchaseRes = await withTimeout(() =>
+    AppsFlyer.logEvent({
+      eventName: 'af_purchase',
+      eventValue: {
+        af_revenue: 9.99,
+        af_currency: 'USD',
+        af_content_id: 'qa_sku_001',
+        af_content_type: 'product',
+        af_quantity: 1,
+      },
+    }),
+  ).catch((e) => ({ error: (e as Error).message }));
   logQa(`[AF_QA][logEvent: af_purchase sent] result: ${payloadToString(purchaseRes)}`);
 
-  const contentRes = await AppsFlyer.logEvent({
-    eventName: 'af_content_view',
-    eventValue: {
-      af_content_id: 'qa_content_001',
-      af_content_type: 'page',
-    },
-  }).catch((e) => ({ error: (e as Error).message }));
+  const contentRes = await withTimeout(() =>
+    AppsFlyer.logEvent({
+      eventName: 'af_content_view',
+      eventValue: {
+        af_content_id: 'qa_content_001',
+        af_content_type: 'page',
+      },
+    }),
+  ).catch((e) => ({ error: (e as Error).message }));
   logQa(`[AF_QA][logEvent: af_content_view sent] result: ${payloadToString(contentRes)}`);
 }
 
@@ -206,7 +236,9 @@ async function stopToggleCycle(): Promise<void> {
   });
 
   // Event fired while SDK is stopped should NOT produce HTTP traffic
-  await AppsFlyer.logEvent({ eventName: 'af_qa_suppressed', eventValue: { phase: 'stop_true' } }).catch(() => undefined);
+  await withTimeout(() =>
+    AppsFlyer.logEvent({ eventName: 'af_qa_suppressed', eventValue: { phase: 'stop_true' } }),
+  ).catch(() => undefined);
   logQa(`[AF_QA][logEvent: af_qa_suppressed sent during stop(true)]`);
 
   // Resume
@@ -216,7 +248,9 @@ async function stopToggleCycle(): Promise<void> {
     return res;
   });
 
-  await AppsFlyer.logEvent({ eventName: 'af_qa_resumed', eventValue: { phase: 'stop_false' } }).catch(() => undefined);
+  await withTimeout(() =>
+    AppsFlyer.logEvent({ eventName: 'af_qa_resumed', eventValue: { phase: 'stop_false' } }),
+  ).catch(() => undefined);
   logQa(`[AF_QA][logEvent: af_qa_resumed sent after stop(false)]`);
 }
 
@@ -248,7 +282,7 @@ async function autoRun(): Promise<void> {
   await preStartApis();
   logQa('[AF_QA][AUTO_APIS] --- Pre-start auto APIs complete ---');
 
-  const startRes = await AppsFlyer.startSDK().catch((e) => ({ error: (e as Error).message }));
+  const startRes = await withTimeout(() => AppsFlyer.startSDK()).catch((e) => ({ error: (e as Error).message }));
   if (startRes && (startRes as any).error) {
     logQa(`[AF_QA][startSDK] error: ${(startRes as any).error}`);
     setStatus('SDK failed to start');
