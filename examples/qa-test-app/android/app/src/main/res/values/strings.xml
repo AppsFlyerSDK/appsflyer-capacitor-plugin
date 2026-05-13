@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AppsFlyer QA</string>
+    <string name="title_activity_main">AppsFlyer QA</string>
+    <string name="package_name">com.appsflyer.qa.capacitor</string>
+    <string name="custom_url_scheme">com.appsflyer.qa.capacitor</string>
+</resources>
