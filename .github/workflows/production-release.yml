@@ -77,7 +77,7 @@ jobs:
           echo "tag=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install plugin dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build plugin
         run: npm run build

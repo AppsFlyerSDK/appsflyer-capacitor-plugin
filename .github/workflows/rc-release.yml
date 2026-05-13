@@ -230,7 +230,7 @@ jobs:
       - name: Ensure latest npm (required for OIDC trusted publishing)
         run: npm install -g npm@latest
       - name: Install plugin dependencies
-        run: npm ci
+        run: npm install
       - name: Build plugin
         run: npm run build
       - id: publish

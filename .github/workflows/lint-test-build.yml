@@ -47,7 +47,7 @@ jobs:
         with:
           node-version: 22.x
       - name: Install plugin dependencies
-        run: npm ci
+        run: npm install
       - name: Lint (eslint + prettier)
         run: |
           npm run eslint
@@ -71,7 +71,7 @@ jobs:
         with:
           node-version: 22.x
       - name: Install plugin dependencies
-        run: npm ci
+        run: npm install
       - name: Build plugin
         run: npm run build
       - name: Stage QA test app .env
@@ -110,7 +110,7 @@ jobs:
         with:
           node-version: 22.x
       - name: Install plugin dependencies
-        run: npm ci
+        run: npm install
       - name: Build plugin
         run: npm run build
       - name: Stage QA test app .env
