@@ -43,6 +43,12 @@ class AppsFlyerPlugin : Plugin() {
         super.handleOnNewIntent(intent)
         if (intent != null) {
             activity.intent = intent
+            // Forward the intent to the SDK before its own onResume auto-handler
+            // runs and stamps the URI with af_consumed=true. Without this, warm-app
+            // VIEW intents get silently consumed and the registered DeepLinkListener
+            // (subscribeForDeepLink, see initSDK) never fires for the JS side.
+            // Mirrors the Flutter plugin's fix in commit c635855.
+            AppsFlyerLib.getInstance().performOnDeepLinking(intent, activity.application)
         }
     }
 
