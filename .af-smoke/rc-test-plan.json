@@ -11,13 +11,13 @@
 
   "config": {
     "android": {
-      "package_name": "com.appsflyer.qa.capacitor",
+      "package_name": "com.appsflyer.engagement",
       "activity": ".MainActivity",
       "apk_path": "examples/qa-test-app-rc-smoke/android/app/build/outputs/apk/debug/app-debug.apk",
       "build_cmd": "cd examples/qa-test-app-rc-smoke && npm install && npm run build && npx cap sync android && cd android && ./gradlew assembleDebug"
     },
     "ios": {
-      "bundle_id": "com.appsflyer.qa.capacitor",
+      "bundle_id": "com.appsflyer.engagement",
       "app_path": "examples/qa-test-app-rc-smoke/ios/App/build/Build/Products/Debug-iphonesimulator/App.app",
       "build_cmd": "cd examples/qa-test-app-rc-smoke && npm install && npm run build && npx cap sync ios && cd ios/App && xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO build"
     }

@@ -28,7 +28,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.appsflyer.qa.capacitor</string>
+			<string>com.appsflyer.engagement</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>afqa-capacitor</string>

@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.appsflyer.qa.capacitor"
+    namespace = "com.appsflyer.engagement"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.appsflyer.qa.capacitor"
+        applicationId "com.appsflyer.engagement"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

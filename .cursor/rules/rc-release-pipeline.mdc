@@ -40,7 +40,7 @@ The release pipeline is governed by contracts in [`appsflyer-mobile-plugin-tooli
 
 The QA test app at `examples/qa-test-app/` is contract-conformant. When changing it:
 
-- Keep bundle id `com.appsflyer.qa.capacitor` and URL scheme `afqa-capacitor://`.
+- Keep bundle id `com.appsflyer.engagement` (shared with the Flutter QA app — the test dev key is registered for this id) and URL scheme `afqa-capacitor://`.
 - Every SDK API call, callback, and error must log with `[AF_QA][<method>]` prefix.
 - `initSDK` must use `manualStart: true`.
 - Auto-run flow on `DOMContentLoaded` is mandatory; no UI button kicks the SDK.
