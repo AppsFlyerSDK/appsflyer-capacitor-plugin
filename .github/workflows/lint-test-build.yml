@@ -74,9 +74,6 @@ jobs:
         run: npm install
       - name: Build plugin
         run: npm run build
-      - name: Stage QA test app .env
-        working-directory: examples/qa-test-app
-        run: cp .env.example .env
       - name: Install QA test app dependencies
         working-directory: examples/qa-test-app
         run: npm install
@@ -113,9 +110,6 @@ jobs:
         run: npm install
       - name: Build plugin
         run: npm run build
-      - name: Stage QA test app .env
-        working-directory: examples/qa-test-app
-        run: cp .env.example .env
       - name: Install QA test app dependencies
         working-directory: examples/qa-test-app
         run: npm install
