@@ -95,6 +95,15 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_6
+          # GitHub-hosted ubuntu-latest public-repo runners have 4 vCPU / 16GB
+          # RAM. Default emulator allocation is 2 cores / 2GB, which leaves the
+          # warm-app activity-lifecycle path racing against the SDK's
+          # ActivityLifecycleCallbacks observer on a slow x86_64 / no-window
+          # emulator. Bumping cores + memory gives the Android lifecycle
+          # transitions enough headroom to fire onResume before our trigger
+          # (and matches the resource profile of real devices).
+          cores: 4
+          ram-size: 4096M
           emulator-options: -dns-server 8.8.8.8,1.1.1.1 -no-window -no-snapshot -no-boot-anim -gpu swiftshader_indirect -accel on
           disable-animations: true
           # reactivecircus/android-emulator-runner@v2 executes each line of
