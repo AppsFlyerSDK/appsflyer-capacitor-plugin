@@ -41,13 +41,24 @@ class AppsFlyerPlugin : Plugin() {
 
     override fun handleOnNewIntent(intent: Intent?) {
         super.handleOnNewIntent(intent)
-        if (intent != null) {
-            activity.intent = intent
-            // Forward the intent to the SDK before its own onResume auto-handler
-            // runs and stamps the URI with af_consumed=true. Without this, warm-app
-            // VIEW intents get silently consumed and the registered DeepLinkListener
-            // (subscribeForDeepLink, see initSDK) never fires for the JS side.
-            // Mirrors the Flutter plugin's fix in commit c635855.
+        if (intent == null) return
+        activity.intent = intent
+
+        // Forward the intent to the SDK only when it actually carries a deep link
+        // (VIEW action + non-null data). The Android lifecycle delivers
+        // onNewIntent before onResume, so this call claims the URI ahead of the
+        // SDK's ActivityLifecycleCallbacks.onActivityResumed observer; the SDK
+        // then marks af_consumed=true and its own onResume handler skips
+        // re-firing, giving exactly one DeepLinkListener delivery.
+        //
+        // Guard rationale: onNewIntent also fires for non-deep-link cases
+        // (notification taps, recents-tray returns, etc.). Without the guard we
+        // would spam performOnDeepLinking with URI-less intents and risk
+        // spurious Status.NOT_FOUND callbacks on the JS side.
+        //
+        // Mirrors the Flutter plugin's fix in commit c635855, with the
+        // additional Capacitor-specific guard.
+        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
             AppsFlyerLib.getInstance().performOnDeepLinking(intent, activity.application)
         }
     }
