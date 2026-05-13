@@ -22,14 +22,6 @@ on:
       - '**.md'
       - 'docs/**'
       - 'assets/**'
-  push:
-    branches:
-      - develop
-      - 'releases/**'
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - 'assets/**'
 
 concurrency:
   group: ltb-${{ github.workflow }}-${{ github.ref }}
