@@ -1,0 +1,146 @@
+name: Lint, Test & Build
+
+on:
+  workflow_call:
+    inputs:
+      skip_unit:
+        description: 'Skip lint + unit checks'
+        required: false
+        type: boolean
+        default: false
+      skip_builds:
+        description: 'Skip Android + iOS build jobs'
+        required: false
+        type: boolean
+        default: false
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'releases/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'assets/**'
+  push:
+    branches:
+      - develop
+      - 'releases/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'assets/**'
+
+concurrency:
+  group: ltb-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint & build plugin
+    if: ${{ inputs.skip_unit != true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - name: Install plugin dependencies
+        run: npm ci
+      - name: Lint (eslint + prettier)
+        run: |
+          npm run eslint
+          npm run prettier -- --check
+      - name: Build plugin (TS + rollup)
+        run: npm run build
+
+  build-android:
+    name: Build QA test app (Android)
+    if: ${{ inputs.skip_builds != true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - name: Install plugin dependencies
+        run: npm ci
+      - name: Build plugin
+        run: npm run build
+      - name: Stage QA test app .env
+        working-directory: examples/qa-test-app
+        run: cp .env.example .env
+      - name: Install QA test app dependencies
+        working-directory: examples/qa-test-app
+        run: npm install
+      - name: Build web bundle
+        working-directory: examples/qa-test-app
+        run: npm run build
+      - name: Capacitor sync (android)
+        working-directory: examples/qa-test-app
+        run: npx cap sync android
+      - name: Assemble debug APK
+        working-directory: examples/qa-test-app/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-test-app-debug-apk
+          path: examples/qa-test-app/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  build-ios:
+    name: Build QA test app (iOS)
+    if: ${{ inputs.skip_builds != true }}
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - name: Install plugin dependencies
+        run: npm ci
+      - name: Build plugin
+        run: npm run build
+      - name: Stage QA test app .env
+        working-directory: examples/qa-test-app
+        run: cp .env.example .env
+      - name: Install QA test app dependencies
+        working-directory: examples/qa-test-app
+        run: npm install
+      - name: Build web bundle
+        working-directory: examples/qa-test-app
+        run: npm run build
+      - name: Capacitor sync (ios)
+        working-directory: examples/qa-test-app
+        run: npx cap sync ios
+      - name: Build iOS simulator app
+        working-directory: examples/qa-test-app/ios/App
+        run: |
+          xcodebuild \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      - name: Upload .app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-test-app-debug-ios
+          path: examples/qa-test-app/ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          if-no-files-found: error
+          retention-days: 7

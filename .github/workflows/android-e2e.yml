@@ -1,0 +1,116 @@
+name: Android E2E
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref to checkout'
+        required: false
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to checkout'
+        required: false
+        type: string
+        default: ''
+  schedule:
+    - cron: '15 4 * * 0'
+
+concurrency:
+  group: android-e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-e2e:
+    name: Android E2E (qa-test-app, plugin source)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Enable KVM (required by android-emulator-runner)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | \
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install plugin dependencies
+        run: npm ci
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Write QA test app .env from secret
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        working-directory: examples/qa-test-app
+        run: |
+          if [ -z "$ENV_FILE" ]; then
+            echo "ENV_FILE secret is not set; aborting"
+            exit 1
+          fi
+          printf '%s\n' "$ENV_FILE" > .env
+          echo "Wrote $(wc -l < .env) lines to .env (values redacted)"
+
+      - name: Install QA test app dependencies
+        working-directory: examples/qa-test-app
+        run: npm install
+
+      - name: Build web bundle
+        working-directory: examples/qa-test-app
+        run: npm run build
+
+      - name: Capacitor sync (android)
+        working-directory: examples/qa-test-app
+        run: npx cap sync android
+
+      - name: Pin AppsFlyer-host DNS resolution (precheck)
+        run: |
+          # Make sure the GitHub runner can reach AppsFlyer endpoints before
+          # we boot the emulator. The emulator inherits DNS via -dns-server.
+          for host in oyoxfj.conversions.appsflyersdk.com t.appsflyer.com conversions.appsflyer.com; do
+            echo "--- nslookup $host ---"
+            nslookup "$host" 8.8.8.8 || true
+          done
+
+      - name: Run E2E scenarios on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          emulator-options: -dns-server 8.8.8.8,1.1.1.1 -no-window -no-snapshot -no-boot-anim -gpu swiftshader_indirect -accel on
+          disable-animations: true
+          script: |
+            chmod +x ./scripts/af-scenario-runner.sh
+            ./scripts/af-scenario-runner.sh \
+              --platform android \
+              --plan .af-e2e/test-plan.json \
+              --build \
+              --verbose
+
+      - name: Upload E2E reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-e2e-reports
+          path: |
+            .af-e2e/reports/
+          if-no-files-found: warn
+          retention-days: 14
