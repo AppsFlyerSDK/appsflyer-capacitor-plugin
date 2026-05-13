@@ -22,7 +22,15 @@ let package = Package(
                 .product(name: "AppsFlyerLib-Static", package: "AppsFlyerFramework-Static")
             ],
             path: "ios/Plugin",
-            exclude: ["Info.plist", "AppsFlyerPlugin.m", "AppsFlyerPlugin.h"]),
+            // AppsFlyerPlugin.m carries the CAP_PLUGIN + CAP_PLUGIN_METHOD
+            // macros that register all 49 plugin methods with Capacitor's
+            // bridge. SPM consumers (Capacitor 8's default) MUST compile it,
+            // otherwise the bridge can't resolve "AppsFlyerPlugin" at runtime
+            // and every JS call fails with "plugin is not implemented on ios".
+            // AppsFlyerPlugin.h is a stub framework header (FOUNDATION_EXPORT
+            // glue from the original Xcode framework target) that nothing in
+            // the SwiftPM target depends on, so we keep it excluded.
+            exclude: ["Info.plist", "AppsFlyerPlugin.h"]),
         .testTarget(
             name: "AppsFlyerPluginTests",
             dependencies: ["AppsFlyerPlugin"],

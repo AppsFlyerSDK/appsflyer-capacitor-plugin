@@ -176,13 +176,12 @@ jobs:
           profile: pixel_6
           emulator-options: -dns-server 8.8.8.8,1.1.1.1 -no-window -no-snapshot -no-boot-anim -gpu swiftshader_indirect -accel on
           disable-animations: true
+          # reactivecircus/android-emulator-runner@v2 runs each `script:` line
+          # through a separate `sh -c`, so keep the runner invocation on one
+          # line to avoid backslash-continuation breakage.
           script: |
             chmod +x ./scripts/af-scenario-runner.sh
-            ./scripts/af-scenario-runner.sh \
-              --platform android \
-              --plan .af-smoke/rc-test-plan.json \
-              --build \
-              --verbose
+            ./scripts/af-scenario-runner.sh --platform android --plan .af-smoke/rc-test-plan.json --build --verbose
 
       - name: Upload smoke reports (Android)
         if: always()

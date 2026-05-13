@@ -97,13 +97,13 @@ jobs:
           profile: pixel_6
           emulator-options: -dns-server 8.8.8.8,1.1.1.1 -no-window -no-snapshot -no-boot-anim -gpu swiftshader_indirect -accel on
           disable-animations: true
+          # reactivecircus/android-emulator-runner@v2 executes each line of
+          # `script:` through a separate `sh -c`, so backslash continuations
+          # break (the literal "\" is passed as an arg to the next line).
+          # Keep the runner invocation on a single line.
           script: |
             chmod +x ./scripts/af-scenario-runner.sh
-            ./scripts/af-scenario-runner.sh \
-              --platform android \
-              --plan .af-e2e/test-plan.json \
-              --build \
-              --verbose
+            ./scripts/af-scenario-runner.sh --platform android --plan .af-e2e/test-plan.json --build --verbose
 
       - name: Upload E2E reports
         if: always()
