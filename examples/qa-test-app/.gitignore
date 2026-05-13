@@ -1,0 +1,23 @@
+node_modules
+dist
+.env
+
+# Generated build artifacts (kept out of source control)
+ios/App/build
+ios/App/Pods
+ios/App/Podfile.lock
+ios/DerivedData
+android/.gradle
+android/app/build
+android/build
+android/captures
+android/local.properties
+android/app/release
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# OS
+.DS_Store

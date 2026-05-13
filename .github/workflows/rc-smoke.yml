@@ -1,0 +1,379 @@
+name: RC Smoke
+
+on:
+  workflow_run:
+    workflows: ['RC Release']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      rc_version:
+        description: 'Published RC version (X.Y.Z-rcN)'
+        required: true
+        type: string
+      release_branch:
+        description: 'Release branch (releases/X.x.x/X.Y.x/X.Y.Z-rcN)'
+        required: true
+        type: string
+
+concurrency:
+  group: rc-smoke-${{ github.workflow }}-${{ github.event.inputs.rc_version || github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  decide:
+    name: Decide if smoke should run
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+      rc_version: ${{ steps.gate.outputs.rc_version }}
+      release_branch: ${{ steps.gate.outputs.release_branch }}
+      head_sha: ${{ steps.gate.outputs.head_sha }}
+    steps:
+      - id: gate
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+        run: |
+          set -eo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RC="${{ inputs.rc_version }}"
+            BR="${{ inputs.release_branch }}"
+          else
+            # Triggered by the RC Release workflow. Read its outputs / inputs.
+            CONCLUSION="${{ github.event.workflow_run.conclusion }}"
+            if [ "$CONCLUSION" != "success" ]; then
+              echo "RC Release run did not succeed (conclusion=$CONCLUSION). Skipping smoke."
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            RUN_ID="${{ github.event.workflow_run.id }}"
+            INPUTS=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.referenced_workflows // []')
+            EVENT=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.event')
+            if [ "$EVENT" != "workflow_dispatch" ]; then
+              echo "Parent run was not a workflow_dispatch (event=$EVENT). Skipping smoke."
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            RC=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.display_title' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+' | head -1 || true)
+            if [ -z "$RC" ]; then
+              # Fallback: read inputs from the dispatch event
+              RC=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.referenced_workflows[]?.path' || true)
+            fi
+            BR=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.head_branch')
+          fi
+          if ! [[ "$RC" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$ ]]; then
+            echo "Could not derive RC version from parent run; got '$RC'. Skipping smoke."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! [[ "$BR" =~ ^releases/ ]]; then
+            echo "Parent branch '$BR' is not a release branch. Skipping smoke."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          HEAD_SHA=$(gh api "repos/${{ github.repository }}/git/ref/heads/${BR}" --jq '.object.sha')
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "rc_version=$RC" >> "$GITHUB_OUTPUT"
+          echo "release_branch=$BR" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "Will run smoke for RC=$RC branch=$BR sha=$HEAD_SHA"
+
+  resolve:
+    name: Resolve RC artifact on npm
+    needs: decide
+    if: ${{ needs.decide.outputs.should_run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Poll npm registry for RC visibility
+        env:
+          RC: ${{ needs.decide.outputs.rc_version }}
+        run: |
+          set -eo pipefail
+          deadline=$(( $(date +%s) + 900 ))  # 15 min
+          while true; do
+            if curl -fsSL "https://registry.npmjs.org/appsflyer-capacitor-plugin/$RC" | jq -e '.version == "'"$RC"'"' > /dev/null; then
+              echo "Found appsflyer-capacitor-plugin@$RC on registry."
+              break
+            fi
+            now=$(date +%s)
+            if [ "$now" -ge "$deadline" ]; then
+              echo "::error::Timed out waiting for $RC on registry"
+              exit 1
+            fi
+            echo "Not yet visible; retrying in 30s..."
+            sleep 30
+          done
+
+  smoke-android:
+    name: Android smoke (RC artifact)
+    needs: [decide, resolve]
+    if: ${{ needs.decide.outputs.should_run == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.decide.outputs.release_branch }}
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | \
+            sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Synthesize qa-test-app-rc-smoke
+        env:
+          RC: ${{ needs.decide.outputs.rc_version }}
+        run: |
+          chmod +x ./scripts/synthesize-rc-smoke-app.sh
+          ./scripts/synthesize-rc-smoke-app.sh "$RC"
+
+      - name: Write QA test app .env from secret
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        working-directory: examples/qa-test-app-rc-smoke
+        run: |
+          if [ -z "$ENV_FILE" ]; then
+            echo "ENV_FILE secret is not set; aborting"
+            exit 1
+          fi
+          printf '%s\n' "$ENV_FILE" > .env
+
+      - name: Install smoke app dependencies (registry RC)
+        working-directory: examples/qa-test-app-rc-smoke
+        run: npm install
+
+      - name: Build web bundle
+        working-directory: examples/qa-test-app-rc-smoke
+        run: npm run build
+
+      - name: Capacitor sync (android)
+        working-directory: examples/qa-test-app-rc-smoke
+        run: npx cap sync android
+
+      - name: Run smoke scenarios
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          emulator-options: -dns-server 8.8.8.8,1.1.1.1 -no-window -no-snapshot -no-boot-anim -gpu swiftshader_indirect -accel on
+          disable-animations: true
+          script: |
+            chmod +x ./scripts/af-scenario-runner.sh
+            ./scripts/af-scenario-runner.sh \
+              --platform android \
+              --plan .af-smoke/rc-test-plan.json \
+              --build \
+              --verbose
+
+      - name: Upload smoke reports (Android)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc-smoke-android-reports
+          path: .af-smoke/reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  smoke-ios:
+    name: iOS smoke (RC artifact)
+    needs: [decide, resolve]
+    if: ${{ needs.decide.outputs.should_run == 'true' }}
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.decide.outputs.release_branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Synthesize qa-test-app-rc-smoke
+        env:
+          RC: ${{ needs.decide.outputs.rc_version }}
+        run: |
+          chmod +x ./scripts/synthesize-rc-smoke-app.sh
+          ./scripts/synthesize-rc-smoke-app.sh "$RC"
+
+      - name: Write QA test app .env from secret
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        working-directory: examples/qa-test-app-rc-smoke
+        run: |
+          if [ -z "$ENV_FILE" ]; then
+            echo "ENV_FILE secret is not set; aborting"
+            exit 1
+          fi
+          printf '%s\n' "$ENV_FILE" > .env
+
+      - name: Install smoke app dependencies (registry RC)
+        working-directory: examples/qa-test-app-rc-smoke
+        run: npm install
+
+      - name: Build web bundle
+        working-directory: examples/qa-test-app-rc-smoke
+        run: npm run build
+
+      - name: Capacitor sync (ios)
+        working-directory: examples/qa-test-app-rc-smoke
+        run: npx cap sync ios
+
+      - name: Pick a non-iOS-17.0 simulator
+        id: pick-sim
+        run: |
+          set -eo pipefail
+          UDID=$(xcrun simctl list devices available -j | \
+            jq -r '
+              .devices
+              | to_entries[]
+              | select(.key | test("iOS-(17-[4-9]|17-[1-9][0-9]|18|19|20|21|22|23|24|25|26)"))
+              | .value[]
+              | select(.name | test("iPhone"))
+              | .udid' | head -1)
+          if [ -z "$UDID" ]; then
+            echo "::error::No iOS 17.4+ / 18+ simulator available."
+            exit 1
+          fi
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Run smoke scenarios
+        env:
+          IOS_UDID: ${{ steps.pick-sim.outputs.udid }}
+        run: |
+          chmod +x ./scripts/af-scenario-runner.sh
+          ./scripts/af-scenario-runner.sh \
+            --platform ios \
+            --plan .af-smoke/rc-test-plan.json \
+            --build \
+            --verbose
+
+      - name: Upload smoke reports (iOS)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc-smoke-ios-reports
+          path: .af-smoke/reports/
+          if-no-files-found: warn
+          retention-days: 30
+
+  post-check-run:
+    name: Post rc-smoke/npm check
+    needs: [decide, smoke-android, smoke-ios]
+    if: ${{ always() && needs.decide.outputs.should_run == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compute conclusion
+        id: outcome
+        run: |
+          a="${{ needs.smoke-android.result }}"
+          i="${{ needs.smoke-ios.result }}"
+          if [ "$a" = "success" ] && [ "$i" = "success" ]; then
+            echo "conclusion=success" >> "$GITHUB_OUTPUT"
+            echo "summary=Both Android and iOS RC smoke runs passed against npm-pinned ${{ needs.decide.outputs.rc_version }}." >> "$GITHUB_OUTPUT"
+          else
+            echo "conclusion=failure" >> "$GITHUB_OUTPUT"
+            echo "summary=RC smoke failed: android=$a ios=$i" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Post check_run on release branch HEAD
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          script: |
+            const sha = "${{ needs.decide.outputs.head_sha }}";
+            const conclusion = "${{ steps.outcome.outputs.conclusion }}";
+            const summary = `${{ steps.outcome.outputs.summary }}`;
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'rc-smoke/npm',
+              head_sha: sha,
+              status: 'completed',
+              conclusion,
+              output: {
+                title: `rc-smoke/npm — ${conclusion}`,
+                summary,
+              },
+            });
+
+  notify-failure:
+    name: Notify Slack (smoke failure)
+    needs: [decide, smoke-android, smoke-ios]
+    # Fire only for genuine smoke regressions (the RC is on npm but smoke is
+    # red). Skipped/dry-run paths go through post-skipped-check and produce no
+    # Slack noise. Production promotion is blocked until rcN+1 is published.
+    if: |
+      always() &&
+      needs.decide.outputs.should_run == 'true' &&
+      (needs.smoke-android.result == 'failure' || needs.smoke-ios.result == 'failure' ||
+       needs.smoke-android.result == 'cancelled' || needs.smoke-ios.result == 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack failure notification
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "<!here>\n:warning: *Capacitor rc-smoke failed for `${{ needs.decide.outputs.rc_version }}`*\n\nThe RC is published on npm but smoke checks did not pass on the artifact. Production promotion is blocked.\n\n*Smoke results:*\n• iOS: ${{ needs.smoke-ios.result }}\n• Android: ${{ needs.smoke-android.result }}\n\n*Branch:* ${{ needs.decide.outputs.release_branch }}\n*Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n*Next step:* Bump to `rcN+1` and rerun the RC-release workflow with `dry_run=false`. Republishing the same RC version is not supported by npm."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+
+  post-skipped-check:
+    name: Post rc-smoke/npm = skipped
+    needs: decide
+    if: ${{ needs.decide.outputs.should_run == 'false' && github.event_name == 'workflow_run' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve head SHA
+        id: sha
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+        run: |
+          BR="${{ github.event.workflow_run.head_branch }}"
+          if [ -z "$BR" ]; then
+            echo "no head_branch on parent workflow_run; nothing to post"
+            echo "head_sha=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "head_sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+      - name: Post skipped check
+        if: ${{ steps.sha.outputs.head_sha != '' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          script: |
+            const sha = "${{ steps.sha.outputs.head_sha }}";
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'rc-smoke/npm',
+              head_sha: sha,
+              status: 'completed',
+              conclusion: 'skipped',
+              output: {
+                title: 'rc-smoke/npm — skipped',
+                summary: 'Parent RC release run did not produce a published artifact (likely a dry-run or failure). Skipping smoke.',
+              },
+            });
