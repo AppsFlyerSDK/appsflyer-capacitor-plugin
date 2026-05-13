@@ -1,0 +1,73 @@
+---
+description: When working on RC release workflows, scenario plans, or the QA test app, follow this rule to align with the plugin-tooling contracts.
+globs: .github/workflows/rc-release.yml,.github/workflows/rc-smoke.yml,.github/workflows/promote-release.yml,.github/workflows/production-release.yml,.github/workflows/lint-test-build.yml,.github/workflows/ios-e2e.yml,.github/workflows/android-e2e.yml,.af-e2e/**,.af-smoke/**,scripts/af-scenario-runner.sh,scripts/synthesize-rc-smoke-app.sh,examples/qa-test-app/**
+alwaysApply: false
+---
+
+# RC release pipeline (Capacitor plugin)
+
+The release pipeline is governed by contracts in [`appsflyer-mobile-plugin-tooling`](https://github.com/AppsFlyerSDK/appsflyer-mobile-plugin-tooling). Treat those as source of truth; this rule maps them to Capacitor specifics.
+
+## Sources of truth
+
+- RC contract: `appsflyer-mobile-plugin-tooling/contracts/rc-release-contract.md`
+- E2E scenarios: `appsflyer-mobile-plugin-tooling/contracts/e2e-test-contract.md`
+- Smoke scenarios: `appsflyer-mobile-plugin-tooling/contracts/smoke-test-contract.md`
+- Test app contract: `appsflyer-mobile-plugin-tooling/contracts/test-app-contract.md`
+- Operator manual: `docs/RELEASE_USER_MANUAL.md`
+
+## Stage → workflow map
+
+| Stage | Workflow file | Trigger |
+|---|---|---|
+| `RC-PREP` | `.github/workflows/rc-release.yml` | `workflow_dispatch` → `prepare-branch` |
+| `RC-CI` | `.github/workflows/lint-test-build.yml` | `workflow_call` from `rc-release.yml` |
+| `RC-E2E iOS` | `.github/workflows/ios-e2e.yml` | `workflow_call` from `rc-release.yml` |
+| `RC-E2E Android` | `.github/workflows/android-e2e.yml` | `workflow_call` from `rc-release.yml` |
+| `RC-PUBLISH` | `.github/workflows/rc-release.yml` | `publish-rc` (honours `dry_run`) |
+| `RC-SMOKE` | `.github/workflows/rc-smoke.yml` | `workflow_run` after RC release succeeds; `workflow_dispatch` for reruns |
+| `RC-PROMOTE` | `.github/workflows/promote-release.yml` | `pull_request: labeled` with `pass QA ready for deploy` |
+| `RC-RELEASE` | `.github/workflows/production-release.yml` | `pull_request: closed` (merged) on `main` |
+
+## Versioning rules
+
+- RC versions match `^\d+\.\d+\.\d+-rc\d+$`.
+- Production versions match `^\d+\.\d+\.\d+$`.
+- Release branches: `releases/<major>.x.x/<major>.<minor>.x/<X.Y.Z>(-rcN)?`.
+- Version surfaces (must stay in sync; CI handles them — never edit by hand): `package.json` (`version`, `iosSdkVersion`, `androidSdkVersion`, `buildNumber`), `ios/Plugin/AppsFlyerPlugin.swift` (`APPSFLYER_PLUGIN_VERSION`), `Package.swift` (SwiftPM `from: "X.Y.Z"`), `README.md` (SDK badges).
+
+## Test app rules
+
+The QA test app at `examples/qa-test-app/` is contract-conformant. When changing it:
+
+- Keep bundle id `com.appsflyer.qa.capacitor` and URL scheme `afqa-capacitor://`.
+- Every SDK API call, callback, and error must log with `[AF_QA][<method>]` prefix.
+- `initSDK` must use `manualStart: true`.
+- Auto-run flow on `DOMContentLoaded` is mandatory; no UI button kicks the SDK.
+- Native folders are committed; do not run `cap add ios` / `cap add android` against this app.
+- iOS deep-link replay goes through `AppDelegate.swift` `-deepLinkURL` launch arg → `Notification.Name.capacitorOpenURL`.
+- iOS `AfQaLogger` plugin appends to `<sandbox>/Documents/af_qa_logs.txt`. Android `AfQaLoggerPlugin` appends to `getFilesDir()/af_qa_logs.txt`.
+
+The existing rich demo at `examples/CapacitorReact/` stays as the developer-facing example; do not collapse the two.
+
+## Do not
+
+- Do not add new release stages that are not documented in the tooling `rc-release-contract.md`.
+- Do not bypass `promote-release.yml` by pushing a version-strip commit directly to a release branch.
+- Do not republish the same RC version; bump to `rcN+1` and rerun.
+- Do not change scenario plans without re-validating against the tooling [`smoke-test-plan.schema.json`](https://github.com/AppsFlyerSDK/appsflyer-mobile-plugin-tooling/blob/main/schemas/smoke-test-plan.schema.json).
+- Do not duplicate contract text in the workflows or rules; link to the tooling repo.
+
+## Secrets
+
+| Secret | Stage | Purpose |
+|---|---|---|
+| `ENV_FILE` | `RC-E2E`, `RC-SMOKE` | QA app `.env` (`DEV_KEY=...`, `APP_ID=...`) |
+| `CI_DEV_GITHUB_TOKEN` | `RC-PREP`, `RC-PROMOTE`, `RC-RELEASE` | branch push, PR open, check_run posting |
+| `CI_SLACK_WEBHOOK_URL` | `RC-PUBLISH`, `RC-SMOKE` (failure), `RC-PROMOTE` (failure), `RC-RELEASE` | Slack webhook for `slackapi/slack-github-action@v1` |
+| `CI_JIRA_EMAIL`, `CI_JIRA_TOKEN` | `RC-PUBLISH`, `RC-RELEASE` | Jira REST API basic auth for `fixVersion=Capacitor SDK v<base_version>` lookup |
+| `CI_JIRA_DOMAIN` (optional) | `RC-PUBLISH`, `RC-RELEASE` | Jira tenant override; defaults to `appsflyer.atlassian.net` |
+
+Both `RC-PUBLISH` and `RC-RELEASE` use npm trusted publishing (`permissions: id-token: write` + `npm publish --provenance`). The OIDC JWT is exchanged for a per-job npm publish token; no `NPM_TOKEN` secret is stored. Trusted publishers must be configured on npmjs.com for both `rc-release.yml` and `production-release.yml`.
+
+CI commits (version bumps in `RC-PREP`, `-rcN` strip in `RC-PROMOTE`) are authored as `github-actions[bot] <github-actions[bot]@users.noreply.github.com>` via inline `git config` in each workflow. No per-person secrets are used.

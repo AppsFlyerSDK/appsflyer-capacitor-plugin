@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AppsFlyer QA</title>
+  </head>
+  <body>
+    <main id="app">
+      <h1>AppsFlyer QA</h1>
+      <p>This app auto-runs the AppsFlyer SDK contract scenarios on launch. See logs (Android: <code>adb logcat | grep AF_QA</code>; iOS: <code>Documents/af_qa_logs.txt</code>).</p>
+      <pre id="status">Booting…</pre>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -142,10 +142,18 @@ Always run `npm run build` and `npm run lint` before pushing.
 
 ## Release process
 
-1. CI creates a release branch via `create-release-branch-workflow.yml` (manual dispatch with version inputs).
-2. A PR is opened from the release branch into `main`.
-3. On merge to `main`, `release-Production-workflow.yml` runs: builds sample apps, creates a GitHub release tag, publishes to npm with provenance, and sends a Slack notification.
-4. Update `CHANGELOG.md` with the release date and summary of changes.
+The plugin uses a six-stage RC release pipeline aligned with [`appsflyer-mobile-plugin-tooling`](https://github.com/AppsFlyerSDK/appsflyer-mobile-plugin-tooling) contracts. See [`docs/RELEASE_USER_MANUAL.md`](mdc:docs/RELEASE_USER_MANUAL.md) for the operator guide and [`.cursor/skills/rc-release/SKILL.md`](mdc:.cursor/skills/rc-release/SKILL.md) for the stage→workflow map.
+
+Brief flow:
+
+1. **RC-PREP** — Maintainer dispatches `rc-release.yml` with version inputs (`X.Y.Z-rcN`). CI cuts a release branch like `releases/<X>.x.x/<X>.<Y>.x/<X.Y.Z>-rcN`, runs `updatePlugin.sh`, pushes.
+2. **RC-CI / RC-E2E** — `lint-test-build.yml`, `ios-e2e.yml`, `android-e2e.yml` run in parallel. `pre-publish-gate` requires all three green.
+3. **RC-PUBLISH** — `rc-release.yml` runs `npm publish --tag QA` (or `--dry-run` if `dry_run=true`), opens a PR to `main`, creates a prerelease tag, sends a Slack notification.
+4. **RC-SMOKE** — `rc-smoke.yml` synthesizes `examples/qa-test-app-rc-smoke/` from the canonical QA app pinned to the registry RC, runs the smoke plan, and posts an `rc-smoke/npm` check on the release-branch HEAD.
+5. **RC-PROMOTE** — Operator labels the PR `pass QA ready for deploy`. `promote-release.yml` verifies `rc-smoke/npm` is green, strips `-rcN`, pushes the strip commit.
+6. **RC-RELEASE** — On merge to `main`, `production-release.yml` runs `npm publish --provenance --access public` via OIDC trusted publishing, creates the GitHub release, sends Slack/Jira notifications.
+
+Always update `CHANGELOG.md` before applying the promote label.
 
 ## Example app
 

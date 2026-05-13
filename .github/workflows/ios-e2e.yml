@@ -1,0 +1,119 @@
+name: iOS E2E
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref to checkout'
+        required: false
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to checkout'
+        required: false
+        type: string
+        default: ''
+  schedule:
+    # Weekly stability run on Sundays 04:00 UTC
+    - cron: '0 4 * * 0'
+
+concurrency:
+  group: ios-e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-e2e:
+    name: iOS E2E (qa-test-app, plugin source)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install plugin dependencies
+        run: npm install
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Write QA test app .env from secret
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        working-directory: examples/qa-test-app
+        run: |
+          if [ -z "$ENV_FILE" ]; then
+            echo "ENV_FILE secret is not set; aborting"
+            exit 1
+          fi
+          printf '%s\n' "$ENV_FILE" > .env
+          echo "Wrote $(wc -l < .env) lines to .env (values redacted)"
+
+      - name: Install QA test app dependencies
+        working-directory: examples/qa-test-app
+        run: npm install
+
+      - name: Build web bundle
+        working-directory: examples/qa-test-app
+        run: npm run build
+
+      - name: Capacitor sync (ios)
+        working-directory: examples/qa-test-app
+        run: npx cap sync ios
+
+      - name: Pick a non-iOS-17.0 simulator
+        id: pick-sim
+        run: |
+          set -eo pipefail
+          # iOS 17.0 simulator triggers an "Open in <App>?" prompt for custom-scheme
+          # deep links that nothing in CI can dismiss. Pick 17.4+ or 18.x.
+          UDID=$(xcrun simctl list devices available -j | \
+            jq -r '
+              .devices
+              | to_entries[]
+              | select(.key | test("iOS-(17-[4-9]|17-[1-9][0-9]|18|19|20|21|22|23|24|25|26)"))
+              | .value[]
+              | select(.name | test("iPhone"))
+              | .udid' | head -1)
+          if [ -z "$UDID" ]; then
+            echo "No suitable iOS 17.4+ / 18+ simulator found. Available runtimes:"
+            xcrun simctl list runtimes
+            exit 1
+          fi
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "Picked simulator UDID: $UDID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Run E2E scenarios via af-scenario-runner
+        env:
+          IOS_UDID: ${{ steps.pick-sim.outputs.udid }}
+        run: |
+          chmod +x ./scripts/af-scenario-runner.sh
+          ./scripts/af-scenario-runner.sh \
+            --platform ios \
+            --plan .af-e2e/test-plan.json \
+            --build \
+            --verbose
+
+      - name: Upload E2E reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-e2e-reports
+          path: |
+            .af-e2e/reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Dump simulator log on failure
+        if: failure()
+        run: |
+          xcrun simctl spawn "${{ steps.pick-sim.outputs.udid }}" log show \
+            --last 10m --style syslog 2>&1 | tail -500 || true

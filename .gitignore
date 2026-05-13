@@ -73,4 +73,7 @@ package-lock.json
 .env
 .env.*
 examples/CapacitorReact/.env
-examples/CapacitorReact/.env.*  
+examples/CapacitorReact/.env.*
+# .env.example files are committed templates, never contain real secrets
+!.env.example
+!**/.env.example
