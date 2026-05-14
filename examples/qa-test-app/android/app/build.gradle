@@ -44,6 +44,16 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// QA MainActivity calls AppsFlyerLib.performOnDeepLinking; the plugin keeps the SDK as
+// implementation-only, so pin the same version as ../../.. package.json (repo root).
+def pluginPackageJson = file("${rootProject.projectDir}/../../../package.json")
+if (pluginPackageJson.exists()) {
+    def pkg = new groovy.json.JsonSlurper().parse(pluginPackageJson)
+    dependencies {
+        implementation "com.appsflyer:af-android-sdk:${pkg.androidSdkVersion}"
+    }
+}
+
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {

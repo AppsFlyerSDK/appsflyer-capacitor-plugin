@@ -43,25 +43,6 @@ class AppsFlyerPlugin : Plugin() {
         super.handleOnNewIntent(intent)
         if (intent == null) return
         activity.intent = intent
-
-        // On real devices and windowed emulators, setIntent alone is enough:
-        // the SDK's ActivityLifecycleCallbacks.onActivityResumed observer reads
-        // activity.getIntent() at the next onResume and processes the deep
-        // link automatically. On the headless x86_64 CI emulator config used by
-        // both this plugin and the Flutter plugin
-        // (-no-window -gpu swiftshader_indirect, ubuntu-latest), that observer
-        // does not see the warm-app resume cycle and the listener never fires.
-        // Forwarding the intent explicitly via performOnDeepLinking matches the
-        // Flutter plugin's c635855 fix and is the single line that keeps the
-        // warm-app deep-link test path green on CI without breaking single
-        // delivery: af_consumed dedup in AFDeepLinkManager.processIntentForDeepLink
-        // ensures the lifecycle path (when it does fire) and this call don't both
-        // notify the listener.
-        // Guard the call to avoid spurious Status.NOT_FOUND callbacks for
-        // non-deep-link intents (notification taps, recents returns, etc.).
-        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
-            AppsFlyerLib.getInstance().performOnDeepLinking(intent, activity.application)
-        }
     }
 
 
