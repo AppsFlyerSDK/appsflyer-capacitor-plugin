@@ -228,7 +228,7 @@ jobs:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
       - name: Ensure latest npm (required for OIDC trusted publishing)
-        run: npm install -g npm@latest
+        run: corepack enable && corepack prepare npm@latest --activate
       - name: Install plugin dependencies
         run: npm install
       - name: Build plugin

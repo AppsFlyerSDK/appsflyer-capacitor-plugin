@@ -57,7 +57,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Ensure latest npm (required for OIDC trusted publishing)
-        run: npm install -g npm@latest
+        run: corepack enable && corepack prepare npm@latest --activate
 
       - name: Read versions from package.json
         id: ver
