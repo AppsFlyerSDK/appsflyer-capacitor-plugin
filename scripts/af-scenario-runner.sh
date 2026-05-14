@@ -688,6 +688,21 @@ run_phase() {
     # sleeping the full ceiling. Use a slower interval here because each ADB
     # `run-as cat` is costly on GitHub's emulator.
     wait_for_qa_marker "[AF_QA][AUTO_APIS] --- Auto run complete ---" "$wait_sec" 10
+
+    # GCD / onInstallConversionData is delivered asynchronously after startSDK.
+    # The auto-run "complete" marker is logged only after post-start APIs,
+    # standard events, and the stop()/resume cycle, so conversion can still be
+    # in flight. Phases that assert this callback in logs must observe it before
+    # deep-link pre-actions (which background the app) or before collection;
+    # otherwise Android E2E phase_3 races and flaky deep links produce captures
+    # with no conversion line (see RC Release Android E2E run 25844800345).
+    if echo "$phase_json" | jq -e \
+      '.checks[]? | select(.pattern? == "[AF_QA][CALLBACK][onInstallConversionData]")' \
+      >/dev/null 2>&1; then
+      local gcd_wait_sec
+      gcd_wait_sec="${GCD_MARKER_WAIT_SEC:-180}"
+      wait_for_qa_marker "[AF_QA][CALLBACK][onInstallConversionData]" "$gcd_wait_sec" 5
+    fi
   fi
 
   # Pre-actions (deep link phases: background the app, etc.)
