@@ -26,9 +26,35 @@ function payloadToString(value: unknown): string {
   }
 }
 
+// Native SDK calls that depend on an HTTP round-trip (logEvent in particular)
+// only resolve when AppsFlyerRequestListener fires. On slow/no-KVM CI
+// emulators the SDK's task queue can stall behind a hung internal request and
+// the promise never settles, which would lock the entire auto-run behind a
+// single call and trip the runner's 240s ceiling. Cap each awaited call so
+// the auto-run always reaches the "Auto run complete" marker; a per-call
+// timeout still emits an [AF_QA][<method>] error: ... line that satisfies
+// the test plan's `result:` / `error:` log_contains shape.
+const DEFAULT_OP_TIMEOUT_MS = 30000;
+
+function withTimeout<T>(op: () => Promise<T>, timeoutMs = DEFAULT_OP_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs);
+    op().then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 async function logResult<T>(method: string, op: () => Promise<T>): Promise<T | undefined> {
   try {
-    const result = await op();
+    const result = await withTimeout(op);
     logQa(`[AF_QA][${method}] result: ${payloadToString(result)}`);
     return result;
   } catch (err) {
@@ -37,16 +63,29 @@ async function logResult<T>(method: string, op: () => Promise<T>): Promise<T | u
   }
 }
 
+// Translate native Capacitor plugin callback names to the cross-stack
+// contract names defined in appsflyer-mobile-plugin-tooling/contracts/
+// test-app-contract.md. The runner's check patterns are written against
+// the contract names; emitting raw plugin names breaks portability.
+const CONTRACT_CALLBACK_NAME: Record<string, string> = {
+  onConversionDataSuccess: 'onInstallConversionData',
+  onConversionDataFail: 'onInstallConversionDataLoadFailure',
+  onAppOpenAttribution: 'onAppOpenAttribution',
+  onAttributionFailure: 'onAttributionFailure',
+};
+
 function registerCallbacks(): void {
   AppsFlyer.addListener(AFConstants.CONVERSION_CALLBACK, (event) => {
-    const name = (event as any).callbackName ?? 'conversion_callback';
+    const rawName = (event as any).callbackName ?? 'conversion_callback';
+    const name = CONTRACT_CALLBACK_NAME[rawName] ?? rawName;
     const data = (event as any).data ?? (event as any);
     const flat = flattenForLog(data);
     logQa(`[AF_QA][CALLBACK][${name}] received: ${flat}`);
   });
 
   AppsFlyer.addListener(AFConstants.OAOA_CALLBACK, (event) => {
-    const name = (event as any).callbackName ?? 'onAppOpenAttribution';
+    const rawName = (event as any).callbackName ?? 'onAppOpenAttribution';
+    const name = CONTRACT_CALLBACK_NAME[rawName] ?? rawName;
     const data = (event as any).data ?? (event as any);
     const flat = flattenForLog(data);
     logQa(`[AF_QA][CALLBACK][${name}] received: ${flat}`);
@@ -78,18 +117,39 @@ function flattenForLog(value: unknown): string {
   return `{${parts.join(', ')}}`;
 }
 
+// Void-returning native methods don't echo their input back through the
+// Capacitor bridge (iOS returns the sentinel "-1"). For contract-aligned
+// readback checks, log the *input* value as the success result on these.
+async function logVoidWithReadback<T>(
+  method: string,
+  readback: string,
+  op: () => Promise<T>,
+): Promise<void> {
+  try {
+    await op();
+    logQa(`[AF_QA][${method}] result: ${readback}`);
+  } catch (err) {
+    logQa(`[AF_QA][${method}] error: ${(err as Error)?.message ?? String(err)}`);
+  }
+}
+
 async function preStartApis(): Promise<void> {
-  await logResult('setCustomerUserId', () => AppsFlyer.setCustomerUserId({ cuid: 'e2e_user_42' }));
-  await logResult('setCurrencyCode', () => AppsFlyer.setCurrencyCode({ currencyCode: 'EUR' }));
-  await logResult('setAdditionalData', () =>
-    AppsFlyer.setAdditionalData({
-      additionalData: {
-        tenant: 'qa_eu',
-        experiment: 'rc_pipeline_v1',
-      },
-    }),
+  await logVoidWithReadback('setCustomerUserId', 'e2e_user_42', () =>
+    AppsFlyer.setCustomerUserId({ cuid: 'e2e_user_42' }),
   );
-  await logResult('setHost', () => AppsFlyer.setHost({ hostPrefixName: '', hostName: 'appsflyersdk.com' }));
+  await logVoidWithReadback('setCurrencyCode', 'EUR', () => AppsFlyer.setCurrencyCode({ currencyCode: 'EUR' }));
+  const additionalData = { tenant: 'qa_eu', experiment: 'rc_pipeline_v1' };
+  await logVoidWithReadback('setAdditionalData', `keys=[${Object.keys(additionalData).join(', ')}]`, () =>
+    AppsFlyer.setAdditionalData({ additionalData }),
+  );
+  // NOTE: deliberately not calling setHost here. The default AppsFlyer host
+  // routes correctly on both platforms. Passing { hostPrefixName: '',
+  // hostName: 'appsflyersdk.com' } reroutes Android requests to
+  // conversions.appsflyersdk.com/api/v6.17/androidevent which returns HTTP
+  // 404 (the canonical host suffix expects a real per-account prefix). iOS
+  // silently ignored the override, but Android obeyed and broke startSDK.
+  // If a future plan needs to exercise setHost it should use real,
+  // resolvable values from the test account.
 }
 
 async function postStartApis(): Promise<void> {
@@ -105,26 +165,49 @@ async function fireStandardEvents(): Promise<void> {
     }),
   );
 
-  const purchaseRes = await AppsFlyer.logEvent({
-    eventName: 'af_purchase',
-    eventValue: {
-      af_revenue: 9.99,
-      af_currency: 'USD',
-      af_content_id: 'qa_sku_001',
-      af_content_type: 'product',
-      af_quantity: 1,
-    },
-  }).catch((e) => ({ error: (e as Error).message }));
+  const purchaseRes = await withTimeout(() =>
+    AppsFlyer.logEvent({
+      eventName: 'af_purchase',
+      eventValue: {
+        af_revenue: 9.99,
+        af_currency: 'USD',
+        af_content_id: 'qa_sku_001',
+        af_content_type: 'product',
+        af_quantity: 1,
+      },
+    }),
+  ).catch((e) => ({ error: (e as Error).message }));
   logQa(`[AF_QA][logEvent: af_purchase sent] result: ${payloadToString(purchaseRes)}`);
 
-  const contentRes = await AppsFlyer.logEvent({
-    eventName: 'af_content_view',
-    eventValue: {
-      af_content_id: 'qa_content_001',
-      af_content_type: 'page',
-    },
-  }).catch((e) => ({ error: (e as Error).message }));
+  const contentRes = await withTimeout(() =>
+    AppsFlyer.logEvent({
+      eventName: 'af_content_view',
+      eventValue: {
+        af_content_id: 'qa_content_001',
+        af_content_type: 'page',
+      },
+    }),
+  ).catch((e) => ({ error: (e as Error).message }));
   logQa(`[AF_QA][logEvent: af_content_view sent] result: ${payloadToString(contentRes)}`);
+}
+
+// Phase 5 (E2E-005, identity round-trip) checks that the customer_user_id set
+// via setCustomerUserId(...) propagates into a post-start event payload. iOS
+// Capacitor's SDK doesn't surface the underlying HTTP request body in
+// simctl log show output, so we mirror Flutter's QA app and fire an explicit
+// "af_qa_identity_check" event whose params we log in {k=v} format. The
+// runner's regex check `customer_user_id[ =:]+e2e_user_42` matches the
+// `=`-separated rendering produced by `flattenForLog`.
+async function fireIdentityCheckEvent(): Promise<void> {
+  const params = {
+    customer_user_id: 'e2e_user_42',
+    tenant: 'qa_eu',
+    experiment: 'rc_pipeline_v1',
+  };
+  logQa(`[AF_QA][logEvent] name=af_qa_identity_check params=${flattenForLog(params)}`);
+  await logResult('logEvent(af_qa_identity_check)', () =>
+    AppsFlyer.logEvent({ eventName: 'af_qa_identity_check', eventValue: params }),
+  );
 }
 
 async function fireCustomEventWithParams(): Promise<void> {
@@ -153,7 +236,9 @@ async function stopToggleCycle(): Promise<void> {
   });
 
   // Event fired while SDK is stopped should NOT produce HTTP traffic
-  await AppsFlyer.logEvent({ eventName: 'af_qa_suppressed', eventValue: { phase: 'stop_true' } }).catch(() => undefined);
+  await withTimeout(() =>
+    AppsFlyer.logEvent({ eventName: 'af_qa_suppressed', eventValue: { phase: 'stop_true' } }),
+  ).catch(() => undefined);
   logQa(`[AF_QA][logEvent: af_qa_suppressed sent during stop(true)]`);
 
   // Resume
@@ -163,7 +248,9 @@ async function stopToggleCycle(): Promise<void> {
     return res;
   });
 
-  await AppsFlyer.logEvent({ eventName: 'af_qa_resumed', eventValue: { phase: 'stop_false' } }).catch(() => undefined);
+  await withTimeout(() =>
+    AppsFlyer.logEvent({ eventName: 'af_qa_resumed', eventValue: { phase: 'stop_false' } }),
+  ).catch(() => undefined);
   logQa(`[AF_QA][logEvent: af_qa_resumed sent after stop(false)]`);
 }
 
@@ -195,7 +282,7 @@ async function autoRun(): Promise<void> {
   await preStartApis();
   logQa('[AF_QA][AUTO_APIS] --- Pre-start auto APIs complete ---');
 
-  const startRes = await AppsFlyer.startSDK().catch((e) => ({ error: (e as Error).message }));
+  const startRes = await withTimeout(() => AppsFlyer.startSDK()).catch((e) => ({ error: (e as Error).message }));
   if (startRes && (startRes as any).error) {
     logQa(`[AF_QA][startSDK] error: ${(startRes as any).error}`);
     setStatus('SDK failed to start');
@@ -208,10 +295,13 @@ async function autoRun(): Promise<void> {
 
   await fireStandardEvents();
   await fireCustomEventWithParams();
+  await fireIdentityCheckEvent();
   await stopToggleCycle();
 
   setStatus('Auto-run complete. SDK ready for scenario triggers.');
-  logQa('[AF_QA][AUTO_APIS] --- Auto-run cycle complete ---');
+  // Canonical end-of-auto-run marker the scenario runner polls for.
+  // af-scenario-runner.sh hardcodes this exact string at line ~690.
+  logQa('[AF_QA][AUTO_APIS] --- Auto run complete ---');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

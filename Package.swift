@@ -22,7 +22,14 @@ let package = Package(
                 .product(name: "AppsFlyerLib-Static", package: "AppsFlyerFramework-Static")
             ],
             path: "ios/Plugin",
-            exclude: ["Info.plist", "AppsFlyerPlugin.m", "AppsFlyerPlugin.h"]),
+            // The plugin uses the modern Capacitor 6+ CAPBridgedPlugin
+            // protocol for registration (see AppsFlyerPlugin.swift), so
+            // there is no .m file to compile. SwiftPM doesn't allow mixed
+            // Swift + Objective-C source in a single target anyway, so
+            // adding one back would break SPM consumers (Capacitor 8's
+            // default). Info.plist stays excluded; it's resource metadata,
+            // not source.
+            exclude: ["Info.plist"]),
         .testTarget(
             name: "AppsFlyerPluginTests",
             dependencies: ["AppsFlyerPlugin"],

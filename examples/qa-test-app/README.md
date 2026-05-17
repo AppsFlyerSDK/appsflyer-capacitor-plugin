@@ -24,9 +24,14 @@ Every line is tagged `[AF_QA]` so `grep AF_QA` is enough to validate scenarios.
 
 | Surface | Value |
 |---|---|
-| Bundle / package id | `com.appsflyer.qa.capacitor` |
+| Bundle / package id | `com.appsflyer.engagement` |
 | URL scheme | `afqa-capacitor://` |
 | Plugin slug | `capacitor` |
+
+The bundle id is shared with the Flutter QA test app because the dev key
+used for both runs is registered against `com.appsflyer.engagement` in the
+AppsFlyer dashboard. The contract allows reusing existing ids; the URL
+scheme keeps the plugin-specific `afqa-capacitor` to stay distinct.
 
 ## Build
 
@@ -70,7 +75,7 @@ App: `ios/App/build/Build/Products/Debug-iphonesimulator/App.app`
 `xcrun simctl openurl` triggers iOS 17/18's "Open in <App>?" prompt that nothing in CI can dismiss. This app's `AppDelegate.swift` instead reads a `-deepLinkURL <url>` launch argument and posts it to Capacitor's open-URL notification — same plugin pipeline as a real custom-scheme open, no prompt.
 
 ```sh
-xcrun simctl launch <UDID> com.appsflyer.qa.capacitor -deepLinkURL "afqa-capacitor://deeplink?deep_link_value=qa_deeplink_bg"
+xcrun simctl launch <UDID> com.appsflyer.engagement -deepLinkURL "afqa-capacitor://deeplink?deep_link_value=qa_deeplink_bg"
 ```
 
 ## Run via the scenario runner

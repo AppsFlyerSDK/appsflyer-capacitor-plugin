@@ -11,13 +11,13 @@
 
   "config": {
     "android": {
-      "package_name": "com.appsflyer.qa.capacitor",
+      "package_name": "com.appsflyer.engagement",
       "activity": ".MainActivity",
       "apk_path": "examples/qa-test-app-rc-smoke/android/app/build/outputs/apk/debug/app-debug.apk",
       "build_cmd": "cd examples/qa-test-app-rc-smoke && npm install && npm run build && npx cap sync android && cd android && ./gradlew assembleDebug"
     },
     "ios": {
-      "bundle_id": "com.appsflyer.qa.capacitor",
+      "bundle_id": "com.appsflyer.engagement",
       "app_path": "examples/qa-test-app-rc-smoke/ios/App/build/Build/Products/Debug-iphonesimulator/App.app",
       "build_cmd": "cd examples/qa-test-app-rc-smoke && npm install && npm run build && npx cap sync ios && cd ios/App && xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build CODE_SIGNING_ALLOWED=NO build"
     }
@@ -95,7 +95,7 @@
       "wait_after_trigger_sec": 90,
       "deep_link_url": "afqa-capacitor://deeplink?deep_link_value=qa_deeplink_bg&af_sub1=background_test&pid=testmedia&c=deeplink_test",
       "pre_actions": {
-        "android": ["adb shell input keyevent KEYCODE_HOME", "sleep 2"],
+        "android": ["adb shell input keyevent KEYCODE_HOME", "sleep 5"],
         "ios": ["xcrun simctl terminate {{UDID}} {{BUNDLE_ID}}", "sleep 1"]
       },
       "trigger": {
@@ -137,7 +137,7 @@
       "wait_after_trigger_sec": 90,
       "deep_link_url": "afqa-capacitor://deeplink?deep_link_value=qa_deeplink_fg&af_sub1=foreground_test&pid=testmedia&c=deeplink_test",
       "pre_actions": {
-        "android": ["adb shell am start -a android.intent.action.MAIN -c android.intent.category.HOME", "sleep 1"],
+        "android": ["adb shell am start -a android.intent.action.MAIN -c android.intent.category.HOME", "sleep 5"],
         "ios": ["xcrun simctl terminate {{UDID}} {{BUNDLE_ID}}", "sleep 1"]
       },
       "trigger": {

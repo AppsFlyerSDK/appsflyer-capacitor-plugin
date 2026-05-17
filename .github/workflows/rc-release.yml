@@ -213,37 +213,46 @@ jobs:
     needs: [validate-release, pre-publish-gate]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write   # OIDC trusted publishing on npm
+      contents: read
     outputs:
-      published: ${{ steps.publish.outputs.published }}
+      published: ${{ steps.set-publish-out.outputs.published }}
+    env:
+      GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.validate-release.outputs.release_branch }}
-          token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          registry-url: 'https://registry.npmjs.org'
-      - name: Ensure latest npm (required for OIDC trusted publishing)
-        run: npm install -g npm@latest
-      - name: Install plugin dependencies
-        run: npm install
-      - name: Build plugin
-        run: npm run build
-      - id: publish
-        name: Publish RC to npm (OIDC + provenance)
+      - name: Dispatch npm OIDC publish workflow and wait
+        id: dispatch
         env:
+          BRANCH: ${{ needs.validate-release.outputs.release_branch }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          if [ "$DRY_RUN" = "true" ]; then
-            echo "Dry run; skipping npm publish."
-            npm publish --tag QA --access public --provenance --dry-run
+          set -euo pipefail
+          PREV="$(gh run list --workflow=npm-publish-oidc.yml --branch "$BRANCH" --limit 1 --json databaseId -q '.[0].databaseId // empty')"
+          gh workflow run npm-publish-oidc.yml --ref "$BRANCH" \
+            -f "git_ref=$BRANCH" \
+            -f "dist_tag=QA" \
+            -f "dry_run=$DRY_RUN"
+          run_id=""
+          for _ in $(seq 1 120); do
+            cur="$(gh run list --workflow=npm-publish-oidc.yml --branch "$BRANCH" --limit 1 --json databaseId -q '.[0].databaseId // empty')"
+            if [[ -n "$cur" && "$cur" != "$PREV" ]]; then
+              run_id="$cur"
+              break
+            fi
+            sleep 2
+          done
+          if [[ -z "$run_id" ]]; then
+            echo "::error::Timed out waiting for npm-publish-oidc.yml run to appear on branch $BRANCH"
+            exit 1
+          fi
+          gh run watch "$run_id" --exit-status
+
+      - name: Set published output
+        id: set-publish-out
+        if: success()
+        run: |
+          if ${{ inputs.dry_run }}; then
             echo "published=false" >> "$GITHUB_OUTPUT"
           else
-            npm publish --tag QA --access public --provenance
             echo "published=true" >> "$GITHUB_OUTPUT"
           fi
 

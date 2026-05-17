@@ -151,7 +151,7 @@ Brief flow:
 3. **RC-PUBLISH** — `rc-release.yml` runs `npm publish --tag QA` (or `--dry-run` if `dry_run=true`), opens a PR to `main`, creates a prerelease tag, sends a Slack notification.
 4. **RC-SMOKE** — `rc-smoke.yml` synthesizes `examples/qa-test-app-rc-smoke/` from the canonical QA app pinned to the registry RC, runs the smoke plan, and posts an `rc-smoke/npm` check on the release-branch HEAD.
 5. **RC-PROMOTE** — Operator labels the PR `pass QA ready for deploy`. `promote-release.yml` verifies `rc-smoke/npm` is green, strips `-rcN`, pushes the strip commit.
-6. **RC-RELEASE** — On merge to `main`, `production-release.yml` runs `npm publish --provenance --access public` via OIDC trusted publishing, creates the GitHub release, sends Slack/Jira notifications.
+6. **RC-RELEASE** — On merge to `main`, `production-release.yml` dispatches `npm-publish-oidc.yml`, which runs `npm publish --provenance --access public` via OIDC trusted publishing; the parent workflow creates the GitHub release and sends Slack/Jira notifications.
 
 Always update `CHANGELOG.md` before applying the promote label.
 

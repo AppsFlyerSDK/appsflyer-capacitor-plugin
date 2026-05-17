@@ -14,7 +14,7 @@ public class AfQaLogger: CAPPlugin, CAPBridgedPlugin {
     ]
 
     private static let logFileName = "af_qa_logs.txt"
-    private let writeQueue = DispatchQueue(label: "com.appsflyer.qa.capacitor.AfQaLogger")
+    private let writeQueue = DispatchQueue(label: "com.appsflyer.engagement.AfQaLogger")
 
     @objc func log(_ call: CAPPluginCall) {
         guard let msg = call.getString("msg") else {

@@ -41,9 +41,8 @@ class AppsFlyerPlugin : Plugin() {
 
     override fun handleOnNewIntent(intent: Intent?) {
         super.handleOnNewIntent(intent)
-        if (intent != null) {
-            activity.intent = intent
-        }
+        if (intent == null) return
+        activity.intent = intent
     }
 
 

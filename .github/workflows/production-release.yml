@@ -24,8 +24,7 @@ jobs:
        startsWith(github.event.pull_request.head.ref, 'releases/'))
     runs-on: ubuntu-latest
     permissions:
-      id-token: write   # OIDC trusted publishing on npm
-      contents: write   # Create GH release
+      contents: write   # Create GH release; dispatch npm via PAT
     outputs:
       ref: ${{ steps.ref.outputs.ref }}
       plugin_version: ${{ steps.ver.outputs.plugin_version }}
@@ -44,20 +43,37 @@ jobs:
             echo "ref=main" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Dispatch npm OIDC publish workflow and wait
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          GIT_REF: ${{ steps.ref.outputs.ref }}
+        run: |
+          set -euo pipefail
+          PREV="$(gh run list --workflow=npm-publish-oidc.yml --branch "$GIT_REF" --limit 1 --json databaseId -q '.[0].databaseId // empty')"
+          gh workflow run npm-publish-oidc.yml --ref "$GIT_REF" \
+            -f "git_ref=$GIT_REF" \
+            -f "dist_tag=latest" \
+            -f "dry_run=false"
+          run_id=""
+          for _ in $(seq 1 120); do
+            cur="$(gh run list --workflow=npm-publish-oidc.yml --branch "$GIT_REF" --limit 1 --json databaseId -q '.[0].databaseId // empty')"
+            if [[ -n "$cur" && "$cur" != "$PREV" ]]; then
+              run_id="$cur"
+              break
+            fi
+            sleep 2
+          done
+          if [[ -z "$run_id" ]]; then
+            echo "::error::Timed out waiting for npm-publish-oidc.yml run to appear for ref $GIT_REF"
+            exit 1
+          fi
+          gh run watch "$run_id" --exit-status
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.ref.outputs.ref }}
           token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
           persist-credentials: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Ensure latest npm (required for OIDC trusted publishing)
-        run: npm install -g npm@latest
 
       - name: Read versions from package.json
         id: ver
@@ -75,15 +91,6 @@ jobs:
           echo "ios_sdk_version=$IOS_SDK_VERSION" >> "$GITHUB_OUTPUT"
           echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
           echo "tag=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Install plugin dependencies
-        run: npm install
-
-      - name: Build plugin
-        run: npm run build
-
-      - name: Publish to npm (OIDC trusted publishing + provenance)
-        run: npm publish --provenance --access public
 
       - name: Wait for npm registry visibility
         env:

@@ -1,4 +1,4 @@
-package com.appsflyer.qa.capacitor;
+package com.appsflyer.engagement;
 
 import android.util.Log;
 
