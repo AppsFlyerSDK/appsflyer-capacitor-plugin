@@ -25,7 +25,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin.git"
+    "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin"
   },
   "bugs": {
     "url": "https://github.com/AppsFlyerSDK/appsflyer-capacitor-plugin/issues"
