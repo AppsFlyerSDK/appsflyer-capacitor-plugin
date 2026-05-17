@@ -10,7 +10,7 @@ For contract meaning and stage IDs, see [`rc-release-contract.md`](https://githu
 
 - Write access to `AppsFlyerSDK/appsflyer-capacitor-plugin` on GitHub.
 - Repo secrets: `ENV_FILE`, `CI_DEV_GITHUB_TOKEN`, `CI_SLACK_WEBHOOK_URL`, `CI_JIRA_EMAIL`, `CI_JIRA_TOKEN`. Optional: `CI_JIRA_DOMAIN` (defaults to `appsflyer.atlassian.net`). `ENV_FILE` must contain a valid `DEV_KEY` and `APP_ID` that launch cleanly on both platforms. CI commits are authored as `github-actions[bot]` via the workflow identity; no per-person secrets needed.
-- npm trusted publishing configured on `appsflyer-capacitor-plugin` for both `rc-release.yml` and `production-release.yml`. Both workflows exchange the GitHub OIDC JWT for a per-job npm publish token; no `NPM_TOKEN` is stored in the repo.
+- npm trusted publishing on `appsflyer-capacitor-plugin` for **`npm-publish-oidc.yml` only** ([npm trusted publishers](https://docs.npmjs.com/trusted-publishers); one workflow filename per package). RC and production workflows dispatch that file; OIDC + `npm publish --provenance` run there. No `NPM_TOKEN` in the repo. `CI_DEV_GITHUB_TOKEN` must be allowed to **trigger workflow runs** (e.g. classic PAT with `workflow` / `actions: write`, or fine-grained equivalent).
 
 ## Step 1 — Trigger the RC workflow
 
@@ -49,7 +49,7 @@ Four checks must go green before you do anything:
 
 ## Step 3 — Review the auto-opened PR
 
-`rc-release.yml` opens a PR from the release branch to `main` automatically after `publish-rc`. Review:
+`rc-release.yml` opens a PR from the release branch to `main` automatically after `publish-rc` (which runs the **`npm publish (OIDC)`** workflow on the release branch). Review:
 
 - Version bumps in `package.json`, `ios/Plugin/AppsFlyerPlugin.swift`, `Package.swift`, `README.md`.
 - `CHANGELOG.md`; add the new version section if it isn't there yet.
@@ -81,7 +81,7 @@ When both clear, merge the PR manually. Bot merges are blocked, so a human click
 
 `production-release.yml` fires on the `main` merge commit:
 
-- Publishes `appsflyer-capacitor-plugin@X.Y.Z` to npm with `--provenance --access public` via OIDC trusted publishing.
+- Dispatches **`npm publish (OIDC)`** (`npm-publish-oidc.yml`), which publishes `appsflyer-capacitor-plugin@X.Y.Z` to npm with `--provenance --access public` via OIDC trusted publishing.
 - Creates GitHub release `X.Y.Z`.
 - Sends a Slack release notification.
 

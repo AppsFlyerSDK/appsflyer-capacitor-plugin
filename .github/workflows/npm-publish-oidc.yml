@@ -1,0 +1,67 @@
+# Single workflow file for npm trusted publishing (OIDC). npm allows one trusted
+# publisher workflow name per package. RC and production entry workflows trigger
+# this file via workflow_dispatch so the executing workflow matches npm config.
+# See https://docs.npmjs.com/trusted-publishers#troubleshooting (workflow_call caveat).
+
+name: npm publish (OIDC)
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: 'Git ref (branch or SHA) to checkout and publish from'
+        required: true
+        type: string
+      dist_tag:
+        description: 'npm dist-tag (QA for RC; latest for production default tag)'
+        required: true
+        type: string
+      dry_run:
+        description: 'If true, run npm publish --dry-run only'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: npm-publish-oidc-${{ inputs.git_ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm (OIDC + provenance)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
+          token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Ensure latest npm (required for OIDC trusted publishing)
+        run: corepack enable && corepack prepare npm@latest --activate
+
+      - name: Install plugin dependencies
+        run: npm install
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Publish to npm
+        run: |
+          set -euo pipefail
+          args=(--access public --provenance)
+          if [ "${{ inputs.dist_tag }}" != "latest" ]; then
+            args+=(--tag "${{ inputs.dist_tag }}")
+          fi
+          if ${{ inputs.dry_run }}; then
+            echo "Dry run; not publishing to the registry."
+            npm publish "${args[@]}" --dry-run
+          else
+            npm publish "${args[@]}"
+          fi

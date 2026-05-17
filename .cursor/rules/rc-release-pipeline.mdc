@@ -1,6 +1,6 @@
 ---
 description: When working on RC release workflows, scenario plans, or the QA test app, follow this rule to align with the plugin-tooling contracts.
-globs: .github/workflows/rc-release.yml,.github/workflows/rc-smoke.yml,.github/workflows/promote-release.yml,.github/workflows/production-release.yml,.github/workflows/lint-test-build.yml,.github/workflows/ios-e2e.yml,.github/workflows/android-e2e.yml,.af-e2e/**,.af-smoke/**,scripts/af-scenario-runner.sh,scripts/synthesize-rc-smoke-app.sh,examples/qa-test-app/**
+globs: .github/workflows/rc-release.yml,.github/workflows/rc-smoke.yml,.github/workflows/promote-release.yml,.github/workflows/production-release.yml,.github/workflows/npm-publish-oidc.yml,.github/workflows/lint-test-build.yml,.github/workflows/ios-e2e.yml,.github/workflows/android-e2e.yml,.af-e2e/**,.af-smoke/**,scripts/af-scenario-runner.sh,scripts/synthesize-rc-smoke-app.sh,examples/qa-test-app/**
 alwaysApply: false
 ---
 
@@ -24,10 +24,10 @@ The release pipeline is governed by contracts in [`appsflyer-mobile-plugin-tooli
 | `RC-CI` | `.github/workflows/lint-test-build.yml` | `workflow_call` from `rc-release.yml` |
 | `RC-E2E iOS` | `.github/workflows/ios-e2e.yml` | `workflow_call` from `rc-release.yml` |
 | `RC-E2E Android` | `.github/workflows/android-e2e.yml` | `workflow_call` from `rc-release.yml` |
-| `RC-PUBLISH` | `.github/workflows/rc-release.yml` | `publish-rc` (honours `dry_run`) |
+| `RC-PUBLISH` | `.github/workflows/rc-release.yml` | `publish-rc` dispatches `npm-publish-oidc.yml` (honours `dry_run`) |
 | `RC-SMOKE` | `.github/workflows/rc-smoke.yml` | `workflow_run` after RC release succeeds; `workflow_dispatch` for reruns |
 | `RC-PROMOTE` | `.github/workflows/promote-release.yml` | `pull_request: labeled` with `pass QA ready for deploy` |
-| `RC-RELEASE` | `.github/workflows/production-release.yml` | `pull_request: closed` (merged) on `main` |
+| `RC-RELEASE` | `.github/workflows/production-release.yml` | `pull_request: closed` (merged) on `main`; npm via `npm-publish-oidc.yml` |
 
 ## Versioning rules
 
@@ -63,11 +63,11 @@ The existing rich demo at `examples/CapacitorReact/` stays as the developer-faci
 | Secret | Stage | Purpose |
 |---|---|---|
 | `ENV_FILE` | `RC-E2E`, `RC-SMOKE` | QA app `.env` (`DEV_KEY=...`, `APP_ID=...`) |
-| `CI_DEV_GITHUB_TOKEN` | `RC-PREP`, `RC-PROMOTE`, `RC-RELEASE` | branch push, PR open, check_run posting |
+| `CI_DEV_GITHUB_TOKEN` | `RC-PREP`, `RC-PUBLISH` (dispatch npm workflow), `RC-PROMOTE`, `RC-RELEASE` | branch push, PR open, `workflow_dispatch` of `npm-publish-oidc.yml`, check_run posting |
 | `CI_SLACK_WEBHOOK_URL` | `RC-PUBLISH`, `RC-SMOKE` (failure), `RC-PROMOTE` (failure), `RC-RELEASE` | Slack webhook for `slackapi/slack-github-action@v1` |
 | `CI_JIRA_EMAIL`, `CI_JIRA_TOKEN` | `RC-PUBLISH`, `RC-RELEASE` | Jira REST API basic auth for `fixVersion=Capacitor SDK v<base_version>` lookup |
 | `CI_JIRA_DOMAIN` (optional) | `RC-PUBLISH`, `RC-RELEASE` | Jira tenant override; defaults to `appsflyer.atlassian.net` |
 
-Both `RC-PUBLISH` and `RC-RELEASE` use npm trusted publishing (`permissions: id-token: write` + `npm publish --provenance`). The OIDC JWT is exchanged for a per-job npm publish token; no `NPM_TOKEN` secret is stored. Trusted publishers must be configured on npmjs.com for both `rc-release.yml` and `production-release.yml`.
+npm trusted publishing runs only in **`npm-publish-oidc.yml`** (`id-token: write` + `npm publish --provenance`). Configure that single workflow filename on npmjs.com ([trusted publishers](https://docs.npmjs.com/trusted-publishers)). `RC-PUBLISH` and `RC-RELEASE` dispatch it; do not register `rc-release.yml` or `production-release.yml` as publishers. No `NPM_TOKEN` secret is stored.
 
 CI commits (version bumps in `RC-PREP`, `-rcN` strip in `RC-PROMOTE`) are authored as `github-actions[bot] <github-actions[bot]@users.noreply.github.com>` via inline `git config` in each workflow. No per-person secrets are used.
