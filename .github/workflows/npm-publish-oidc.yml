@@ -53,6 +53,8 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ''
         run: |
           set -euo pipefail
           args=(--access public --provenance)
