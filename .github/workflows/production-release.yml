@@ -46,6 +46,8 @@ jobs:
       - name: Dispatch npm OIDC publish workflow and wait
         env:
           GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          # Dispatch runs before checkout; gh needs an explicit repo (no .git in cwd).
+          GH_REPO: ${{ github.repository }}
           GIT_REF: ${{ steps.ref.outputs.ref }}
         run: |
           set -euo pipefail

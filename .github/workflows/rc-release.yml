@@ -222,6 +222,8 @@ jobs:
       - name: Dispatch npm OIDC publish workflow and wait
         id: dispatch
         env:
+          # This job does not checkout; gh needs an explicit repo (no .git in cwd).
+          GH_REPO: ${{ github.repository }}
           BRANCH: ${{ needs.validate-release.outputs.release_branch }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
