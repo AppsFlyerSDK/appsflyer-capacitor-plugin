@@ -214,14 +214,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
     outputs:
       published: ${{ steps.set-publish-out.outputs.published }}
     env:
       GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
     steps:
+      - name: Assert npm OIDC workflow is active
+        env:
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          state="$(gh api "repos/${GH_REPO}/actions/workflows/npm-publish-oidc.yml" --jq '.state' 2>/dev/null || echo "missing")"
+          if [ "$state" != "active" ]; then
+            echo "::error::npm-publish-oidc.yml is not active on the default branch (state=$state)."
+            exit 1
+          fi
+
       - name: Dispatch npm OIDC publish workflow and wait
         id: dispatch
         env:
+          # This job does not checkout; gh needs an explicit repo (no .git in cwd).
+          GH_REPO: ${{ github.repository }}
           BRANCH: ${{ needs.validate-release.outputs.release_branch }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |

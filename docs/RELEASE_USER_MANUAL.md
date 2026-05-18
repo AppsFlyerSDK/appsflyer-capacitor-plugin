@@ -89,6 +89,10 @@ Verify at <https://www.npmjs.com/package/appsflyer-capacitor-plugin> (a few minu
 
 ## Troubleshooting
 
+### `npm publish` fails with `ENEEDAUTH`
+
+`ENEEDAUTH` in `npm-publish-oidc.yml` usually means npm did not detect the GitHub OIDC trusted-publishing environment. Check that the publish job is using npm CLI `11.5.1+`, that `ACTIONS_ID_TOKEN_REQUEST_TOKEN` and `ACTIONS_ID_TOKEN_REQUEST_URL` are present, and that the npm trusted publisher still points to `npm-publish-oidc.yml`.
+
 ### `iOS E2E` or `Android E2E` is red
 
 1. Open the failing workflow run (`ios-e2e.yml` or `android-e2e.yml`) and download the report artifact.

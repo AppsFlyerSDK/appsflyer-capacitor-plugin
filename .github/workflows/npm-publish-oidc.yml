@@ -39,12 +39,21 @@ jobs:
           ref: ${{ inputs.git_ref }}
           token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
 
-      - name: Ensure latest npm (required for OIDC trusted publishing)
-        run: corepack enable && corepack prepare npm@latest --activate
+      - name: Ensure npm supports OIDC trusted publishing
+        run: |
+          set -euo pipefail
+          npm install -g 'npm@^11.5.1'
+          echo "node $(node --version)"
+          NPM_VERSION="$(npm --version)"
+          echo "npm ${NPM_VERSION}"
+          export NPM_VERSION
+          node -e 'const version = process.env.NPM_VERSION || ""; const parts = version.split(".").map(Number); const ok = parts[0] > 11 || (parts[0] === 11 && (parts[1] > 5 || (parts[1] === 5 && parts[2] >= 1))); if (!ok) { console.error("npm " + version + " is too old for OIDC trusted publishing; need >=11.5.1"); process.exit(1); }'
 
       - name: Install plugin dependencies
         run: npm install
@@ -52,9 +61,37 @@ jobs:
       - name: Build plugin
         run: npm run build
 
+      - name: Strip token auth from npm configs
+        run: |
+          set -euo pipefail
+          for file in ".npmrc" "$HOME/.npmrc" "${NPM_CONFIG_USERCONFIG:-}"; do
+            if [ -n "$file" ] && [ -f "$file" ]; then
+              sed -i '/_authToken=/d' "$file"
+            fi
+          done
+
+      - name: Debug OIDC claims (temporary)
+        env:
+          OIDC_AUDIENCE: npm:registry.npmjs.org
+        run: |
+          set -euo pipefail
+          : "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:?missing OIDC env - id-token: write probably not granted}"
+          : "${ACTIONS_ID_TOKEN_REQUEST_URL:?missing OIDC env - id-token: write probably not granted}"
+          token="$(curl -fsSL \
+            -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${OIDC_AUDIENCE}" \
+            | jq -r '.value')"
+          if [ -z "$token" ] || [ "$token" = "null" ]; then
+            echo "::error::GitHub did not return an OIDC token"
+            exit 1
+          fi
+          OIDC_TOKEN="$token" node -e 'const payload = JSON.parse(Buffer.from(process.env.OIDC_TOKEN.split(".")[1], "base64url").toString("utf8")); const safeClaims = (({repository, workflow, workflow_ref, event_name, ref, sub, job_workflow_ref}) => ({repository, workflow, workflow_ref, event_name, ref, sub, job_workflow_ref}))(payload); console.log(JSON.stringify(safeClaims, null, 2));'
+
       - name: Publish to npm
         run: |
           set -euo pipefail
+          : "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:?missing OIDC env - id-token: write probably not granted}"
+          : "${ACTIONS_ID_TOKEN_REQUEST_URL:?missing OIDC env - id-token: write probably not granted}"
           args=(--access public --provenance)
           if [ "${{ inputs.dist_tag }}" != "latest" ]; then
             args+=(--tag "${{ inputs.dist_tag }}")
