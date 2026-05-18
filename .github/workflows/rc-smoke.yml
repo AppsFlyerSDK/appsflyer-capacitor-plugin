@@ -132,6 +132,11 @@ jobs:
         working-directory: examples/qa-test-app-rc-smoke
         run: npm install
 
+      - name: Validate installed RC package (Android)
+        run: |
+          chmod +x ./scripts/validate-npm-package-files.sh
+          ./scripts/validate-npm-package-files.sh dir-android examples/qa-test-app-rc-smoke/node_modules/appsflyer-capacitor-plugin
+
       - name: Build web bundle
         working-directory: examples/qa-test-app-rc-smoke
         run: npm run build
@@ -205,6 +210,11 @@ jobs:
       - name: Install smoke app dependencies (registry RC)
         working-directory: examples/qa-test-app-rc-smoke
         run: npm install
+
+      - name: Validate installed RC package (iOS)
+        run: |
+          chmod +x ./scripts/validate-npm-package-files.sh
+          ./scripts/validate-npm-package-files.sh dir-ios examples/qa-test-app-rc-smoke/node_modules/appsflyer-capacitor-plugin
 
       - name: Build web bundle
         working-directory: examples/qa-test-app-rc-smoke

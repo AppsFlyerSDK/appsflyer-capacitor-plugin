@@ -29,11 +29,7 @@ let package = Package(
             // adding one back would break SPM consumers (Capacitor 8's
             // default). Info.plist stays excluded; it's resource metadata,
             // not source.
-            exclude: ["Info.plist"]),
-        .testTarget(
-            name: "AppsFlyerPluginTests",
-            dependencies: ["AppsFlyerPlugin"],
-            path: "ios/PluginTests")
+            exclude: ["Info.plist"])
     ],
     swiftLanguageVersions: [.v5]
 )

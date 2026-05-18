@@ -119,6 +119,10 @@ Verify at <https://www.npmjs.com/package/appsflyer-capacitor-plugin> (a few minu
 1. Rerun Step 1 with `plugin_version=X.Y.Z-rcN+1`. npm doesn't allow republishing the same version.
 2. The existing release branch gets the new version bump on top; the old RC stays on npm but is superseded.
 
+### iOS smoke says the plugin is not implemented
+
+This means the npm artifact installed successfully, but Capacitor could not register the iOS native plugin. The usual cause is a missing `Package.swift` or iOS plugin source in the published tarball. Fix the package file list, verify with `scripts/validate-npm-package-files.sh pack`, then publish the next `rcN`.
+
 **Only the test harness or fixture is broken** (smoke plan, scenario runner, example app behavior, workflow YAML; the published artifact is fine):
 
 1. Push the fix directly to the release branch: `git checkout releases/6.x.x/.../X.Y.Z-rcN`, edit, commit, `git push`. Cherry-pick from `develop` if the fix already lives there.

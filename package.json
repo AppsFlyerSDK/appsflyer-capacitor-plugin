@@ -14,6 +14,7 @@
     "android/build.gradle",
     "dist/",
     "ios/Plugin/",
+    "Package.swift",
     "src/",
     "package.json",
     "README.md",

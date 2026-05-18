@@ -61,6 +61,11 @@ jobs:
       - name: Build plugin
         run: npm run build
 
+      - name: Validate npm package contents
+        run: |
+          chmod +x ./scripts/validate-npm-package-files.sh
+          ./scripts/validate-npm-package-files.sh pack
+
       - name: Strip token auth from npm configs
         run: |
           set -euo pipefail
