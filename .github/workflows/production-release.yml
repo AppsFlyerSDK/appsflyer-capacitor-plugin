@@ -252,24 +252,94 @@ jobs:
             } >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Build Slack success payload
+        id: slack-success-payload
+        if: steps.status.outputs.success == 'true'
+        env:
+          PLUGIN_VERSION: ${{ needs.publish.outputs.plugin_version }}
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ needs.publish.outputs.tag }}
+          RUN_ID: ${{ github.run_id }}
+          CHANGELOG_BODY: ${{ steps.changelog.outputs.body }}
+          JIRA_TICKETS: ${{ steps.jira-tickets.outputs.tickets }}
+          ANDROID_SDK_VERSION: ${{ needs.publish.outputs.android_sdk_version }}
+          IOS_SDK_VERSION: ${{ needs.publish.outputs.ios_sdk_version }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const env = process.env;
+          const text = [
+            '<!here>',
+            ':capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:',
+            '',
+            `*Capacitor SDK ${env.PLUGIN_VERSION}* is published to Production.`,
+            '',
+            ':white_check_mark: rc-smoke/npm passed before promotion (verified by promote-release.yml).',
+            '',
+            '*Installation:*',
+            ':npm: `npm install appsflyer-capacitor-plugin@latest`',
+            'or pinned:',
+            `:npm: \`npm install appsflyer-capacitor-plugin@${env.PLUGIN_VERSION}\``,
+            '',
+            '*Sources:*',
+            `:github: Tree: https://github.com/${env.REPOSITORY}/tree/main`,
+            `:github: Release: https://github.com/${env.REPOSITORY}/releases/tag/${env.TAG}`,
+            `:github: Run: https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,
+            `:npm: https://www.npmjs.com/package/appsflyer-capacitor-plugin/v/${env.PLUGIN_VERSION}`,
+            '',
+            '*Changes and fixes:*',
+            env.CHANGELOG_BODY || '• Check CHANGELOG.md for details',
+            '',
+            '*Linked tickets and issues:*',
+            env.JIRA_TICKETS || 'No assigned fix version found',
+            '',
+            "*Native SDK's:*",
+            `:android: ${env.ANDROID_SDK_VERSION}`,
+            `:apple_company: ${env.IOS_SDK_VERSION}`,
+            '',
+            ':capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:',
+          ].join('\n');
+          fs.appendFileSync(env.GITHUB_OUTPUT, `payload=${JSON.stringify({ text })}\n`);
+          NODE
+
       - name: Send Slack notification (Success)
         if: steps.status.outputs.success == 'true'
         uses: slackapi/slack-github-action@v1
         with:
-          payload: |
-            {
-              "text": "<!here>\n:capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:\n\n*Capacitor SDK ${{ needs.publish.outputs.plugin_version }}* is published to Production.\n\n:white_check_mark: rc-smoke/npm passed before promotion (verified by promote-release.yml).\n\n*Installation:*\n:npm: `npm install appsflyer-capacitor-plugin@latest`\nor pinned:\n:npm: `npm install appsflyer-capacitor-plugin@${{ needs.publish.outputs.plugin_version }}`\n\n*Sources:*\n:github: Tree: https://github.com/${{ github.repository }}/tree/main\n:github: Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.publish.outputs.tag }}\n:github: Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n:npm: https://www.npmjs.com/package/appsflyer-capacitor-plugin/v/${{ needs.publish.outputs.plugin_version }}\n\n*Changes and fixes:*\n${{ steps.changelog.outputs.body }}\n\n*Linked tickets and issues:*\n${{ steps.jira-tickets.outputs.tickets }}\n\n*Native SDK's:*\n:android: ${{ needs.publish.outputs.android_sdk_version }}\n:apple_company: ${{ needs.publish.outputs.ios_sdk_version }}\n\n:capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:"
-            }
+          payload: ${{ steps.slack-success-payload.outputs.payload }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+
+      - name: Build Slack failure payload
+        id: slack-failure-payload
+        if: steps.status.outputs.success == 'false'
+        env:
+          FAILED_STAGE: ${{ steps.status.outputs.failed_stage }}
+          PLUGIN_VERSION: ${{ needs.publish.outputs.plugin_version || 'unknown' }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const env = process.env;
+          const text = [
+            '<!here>',
+            `:warning: *Capacitor production release failed at \`${env.FAILED_STAGE}\`*`,
+            '',
+            `Version: ${env.PLUGIN_VERSION}`,
+            `Run: https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,
+            '',
+            '*Stage results:*',
+            `• publish: ${env.PUBLISH_RESULT}`,
+          ].join('\n');
+          fs.appendFileSync(env.GITHUB_OUTPUT, `payload=${JSON.stringify({ text })}\n`);
+          NODE
 
       - name: Send Slack notification (Failure)
         if: steps.status.outputs.success == 'false'
         uses: slackapi/slack-github-action@v1
         with:
-          payload: |
-            {
-              "text": "<!here>\n:warning: *Capacitor production release failed at `${{ steps.status.outputs.failed_stage }}`*\n\nVersion: ${{ needs.publish.outputs.plugin_version || 'unknown' }}\nRun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n*Stage results:*\n• publish: ${{ needs.publish.result }}"
-            }
+          payload: ${{ steps.slack-failure-payload.outputs.payload }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}

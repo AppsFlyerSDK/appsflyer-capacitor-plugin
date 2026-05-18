@@ -333,13 +333,41 @@ jobs:
        needs.smoke-android.result == 'cancelled' || needs.smoke-ios.result == 'cancelled')
     runs-on: ubuntu-latest
     steps:
+      - name: Build Slack failure payload
+        id: slack-failure-payload
+        env:
+          RC_VERSION: ${{ needs.decide.outputs.rc_version }}
+          IOS_RESULT: ${{ needs.smoke-ios.result }}
+          ANDROID_RESULT: ${{ needs.smoke-android.result }}
+          RELEASE_BRANCH: ${{ needs.decide.outputs.release_branch }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const env = process.env;
+          const text = [
+            '<!here>',
+            `:warning: *Capacitor rc-smoke failed for \`${env.RC_VERSION}\`*`,
+            '',
+            'The RC is published on npm but smoke checks did not pass on the artifact. Production promotion is blocked.',
+            '',
+            '*Smoke results:*',
+            `• iOS: ${env.IOS_RESULT}`,
+            `• Android: ${env.ANDROID_RESULT}`,
+            '',
+            `*Branch:* ${env.RELEASE_BRANCH}`,
+            `*Run:* https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,
+            '',
+            '*Next step:* Bump to `rcN+1` and rerun the RC-release workflow with `dry_run=false`. Republishing the same RC version is not supported by npm.',
+          ].join('\n');
+          fs.appendFileSync(env.GITHUB_OUTPUT, `payload=${JSON.stringify({ text })}\n`);
+          NODE
+
       - name: Send Slack failure notification
         uses: slackapi/slack-github-action@v1
         with:
-          payload: |
-            {
-              "text": "<!here>\n:warning: *Capacitor rc-smoke failed for `${{ needs.decide.outputs.rc_version }}`*\n\nThe RC is published on npm but smoke checks did not pass on the artifact. Production promotion is blocked.\n\n*Smoke results:*\n• iOS: ${{ needs.smoke-ios.result }}\n• Android: ${{ needs.smoke-android.result }}\n\n*Branch:* ${{ needs.decide.outputs.release_branch }}\n*Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n*Next step:* Bump to `rcN+1` and rerun the RC-release workflow with `dry_run=false`. Republishing the same RC version is not supported by npm."
-            }
+          payload: ${{ steps.slack-failure-payload.outputs.payload }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
 
