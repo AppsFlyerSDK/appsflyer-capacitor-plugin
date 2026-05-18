@@ -1,9 +1,6 @@
 name: RC Smoke
 
 on:
-  workflow_run:
-    workflows: ['RC Release']
-    types: [completed]
   workflow_dispatch:
     inputs:
       rc_version:
@@ -16,7 +13,7 @@ on:
         type: string
 
 concurrency:
-  group: rc-smoke-${{ github.workflow }}-${{ github.event.inputs.rc_version || github.event.workflow_run.id }}
+  group: rc-smoke-${{ github.workflow }}-${{ inputs.rc_version }}
   cancel-in-progress: false
 
 permissions:
@@ -36,43 +33,19 @@ jobs:
       - id: gate
         env:
           GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          RC: ${{ inputs.rc_version }}
+          BR: ${{ inputs.release_branch }}
         run: |
           set -eo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            RC="${{ inputs.rc_version }}"
-            BR="${{ inputs.release_branch }}"
-          else
-            # Triggered by the RC Release workflow. Read its outputs / inputs.
-            CONCLUSION="${{ github.event.workflow_run.conclusion }}"
-            if [ "$CONCLUSION" != "success" ]; then
-              echo "RC Release run did not succeed (conclusion=$CONCLUSION). Skipping smoke."
-              echo "should_run=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            RUN_ID="${{ github.event.workflow_run.id }}"
-            INPUTS=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.referenced_workflows // []')
-            EVENT=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.event')
-            if [ "$EVENT" != "workflow_dispatch" ]; then
-              echo "Parent run was not a workflow_dispatch (event=$EVENT). Skipping smoke."
-              echo "should_run=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            RC=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.display_title' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+' | head -1 || true)
-            if [ -z "$RC" ]; then
-              # Fallback: read inputs from the dispatch event
-              RC=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.referenced_workflows[]?.path' || true)
-            fi
-            BR=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}" --jq '.head_branch')
-          fi
           if ! [[ "$RC" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$ ]]; then
-            echo "Could not derive RC version from parent run; got '$RC'. Skipping smoke."
+            echo "Invalid RC version input: '$RC'."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            exit 1
           fi
           if ! [[ "$BR" =~ ^releases/ ]]; then
-            echo "Parent branch '$BR' is not a release branch. Skipping smoke."
+            echo "Release branch input '$BR' is not a release branch."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            exit 1
           fi
 
           HEAD_SHA=$(gh api "repos/${{ github.repository }}/git/ref/heads/${BR}" --jq '.object.sha')
@@ -302,7 +275,7 @@ jobs:
       - name: Post check_run on release branch HEAD
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           script: |
             const sha = "${{ needs.decide.outputs.head_sha }}";
             const conclusion = "${{ steps.outcome.outputs.conclusion }}";
@@ -324,8 +297,8 @@ jobs:
     name: Notify Slack (smoke failure)
     needs: [decide, smoke-android, smoke-ios]
     # Fire only for genuine smoke regressions (the RC is on npm but smoke is
-    # red). Skipped/dry-run paths go through post-skipped-check and produce no
-    # Slack noise. Production promotion is blocked until rcN+1 is published.
+    # red). Dry-run paths never dispatch this workflow. Production promotion is
+    # blocked until rcN+1 is published.
     if: |
       always() &&
       needs.decide.outputs.should_run == 'true' &&
@@ -370,41 +343,3 @@ jobs:
           payload: ${{ steps.slack-failure-payload.outputs.payload }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
-
-  post-skipped-check:
-    name: Post rc-smoke/npm = skipped
-    needs: decide
-    if: ${{ needs.decide.outputs.should_run == 'false' && github.event_name == 'workflow_run' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Resolve head SHA
-        id: sha
-        env:
-          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
-        run: |
-          BR="${{ github.event.workflow_run.head_branch }}"
-          if [ -z "$BR" ]; then
-            echo "no head_branch on parent workflow_run; nothing to post"
-            echo "head_sha=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "head_sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
-      - name: Post skipped check
-        if: ${{ steps.sha.outputs.head_sha != '' }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
-          script: |
-            const sha = "${{ steps.sha.outputs.head_sha }}";
-            await github.rest.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: 'rc-smoke/npm',
-              head_sha: sha,
-              status: 'completed',
-              conclusion: 'skipped',
-              output: {
-                title: 'rc-smoke/npm — skipped',
-                summary: 'Parent RC release run did not produce a published artifact (likely a dry-run or failure). Skipping smoke.',
-              },
-            });
