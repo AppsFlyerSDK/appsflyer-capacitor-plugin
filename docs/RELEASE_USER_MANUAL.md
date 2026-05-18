@@ -40,12 +40,12 @@ Four checks must go green before you do anything:
 | `Lint, Test & Build` | `lint-test-build.yml` (via `rc-release.yml`) | ESLint, Prettier, plugin build, plus debug Android/iOS QA-app builds |
 | `iOS E2E` | `ios-e2e.yml` | RC-E2E iOS gate |
 | `Android E2E` | `android-e2e.yml` | RC-E2E Android gate |
-| `rc-smoke/npm` | `rc-smoke.yml` | Posts only after `publish-rc` succeeds with `dry_run=false` |
+| `Verify rc-smoke/npm` | `rc-smoke-gate.yml` | PR-visible gate that waits for `rc-smoke/npm` from `rc-smoke.yml` on the PR head SHA |
 
 - If any E2E gate fails, fix the code on the release branch and push. E2E re-runs automatically.
 - If publish fails on a version collision, bump to `rcN+1` and rerun Step 1 with the new version.
-- If `rc-smoke/npm` is red, the RC is broken on npm. Bump to `rcN+1`.
-- If `rc-smoke/npm` is `skipped`, the parent run was a dry run or the RC isn't on npm yet. Don't apply the promote label; promotion will reject `skipped`.
+- If `Verify rc-smoke/npm` is red because `rc-smoke/npm` is red, the RC is broken on npm. Bump to `rcN+1`.
+- If `Verify rc-smoke/npm` times out, confirm `dispatch-rc-smoke` succeeded or re-run `rc-smoke.yml` manually with the RC version and release branch.
 
 ## Step 3 — Review the auto-opened PR
 
@@ -53,7 +53,7 @@ Four checks must go green before you do anything:
 
 - Version bumps in `package.json`, `ios/Plugin/AppsFlyerPlugin.swift`, `Package.swift`, `README.md`.
 - `CHANGELOG.md`; add the new version section if it isn't there yet.
-- All four checks green on the PR head SHA.
+- All four checks green on the PR head SHA. The smoke gate is `Verify rc-smoke/npm`; it passes only after `rc-smoke/npm` is green on the same commit.
 
 Slack gets a ping from `notify-team` with the RC link and the Jira tickets pinned to `Capacitor SDK v<base_version>`.
 
@@ -63,7 +63,7 @@ When everything is green, apply the label **`pass QA ready for deploy`** to the 
 
 This triggers `promote-release.yml`, which:
 
-1. Verifies `rc-smoke/npm` is `success` on the PR head SHA. A missing, in-progress, or `skipped` check fails this step with a PR comment; fix and re-apply the label.
+1. Verifies `rc-smoke/npm` is `success` on the PR head SHA. A missing or in-progress check fails this step with a PR comment; fix and re-apply the label.
 2. Strips `-rcN` from `package.json` and `ios/Plugin/AppsFlyerPlugin.swift`.
 3. Commits and pushes to the release branch.
 4. Updates the PR title and body to "Ready for manual merge."
@@ -107,10 +107,10 @@ Verify at <https://www.npmjs.com/package/appsflyer-capacitor-plugin> (a few minu
 3. Typical causes: the npm RC has a genuine defect (bump to `rcN+1`), or a test-app regression shared with E2E (fix and bump).
 4. After fixing, rerun Step 1 with `rc-release.yml` and the next `rcN`.
 
-### `rc-smoke/npm` is skipped
+### `rc-smoke/npm` is missing
 
-- Parent run was `dry_run=true`: re-run Step 1 with `dry_run=false`.
-- RC isn't indexed on npm yet: wait ~5 minutes and re-run `rc-smoke.yml` manually from the Actions tab with `rc_version` and `release_branch` inputs.
+- Confirm the `dispatch-rc-smoke` job in `rc-release.yml` succeeded.
+- If dispatch succeeded but the smoke run is still missing, re-run `rc-smoke.yml` manually from the Actions tab with `rc_version` and `release_branch` inputs.
 
 ### When smoke is red: rcN+1 vs cherry-pick
 
@@ -118,6 +118,10 @@ Verify at <https://www.npmjs.com/package/appsflyer-capacitor-plugin> (a few minu
 
 1. Rerun Step 1 with `plugin_version=X.Y.Z-rcN+1`. npm doesn't allow republishing the same version.
 2. The existing release branch gets the new version bump on top; the old RC stays on npm but is superseded.
+
+### iOS smoke says the plugin is not implemented
+
+This means the npm artifact installed successfully, but Capacitor could not register the iOS native plugin. The usual cause is a missing `Package.swift` or iOS plugin source in the published tarball. Fix the package file list, verify with `scripts/validate-npm-package-files.sh pack`, then publish the next `rcN`.
 
 **Only the test harness or fixture is broken** (smoke plan, scenario runner, example app behavior, workflow YAML; the published artifact is fine):
 
@@ -145,9 +149,8 @@ Out of scope. The npm publish is immutable; a rollback is "bump the next patch r
 To exercise the pipeline without touching a real version:
 
 1. Step 1 inputs: `plugin_version=99.99.99-rc1`, `ios_sdk_version=6.17.9`, `android_sdk_version=6.17.6`, `dry_run=true`.
-2. Confirm E2E runs, `publish-rc` runs `npm publish --dry-run` (no real publish), PR is **not** opened, prerelease tag is **not** created, `rc-smoke/npm` posts `skipped`.
-3. Apply the promote label and confirm it rejects with a PR comment ("rc-smoke/npm is skipped").
-4. Clean up: delete the scratch release branch.
+2. Confirm E2E runs, `publish-rc` runs `npm publish --dry-run` (no real publish), PR is **not** opened, prerelease tag is **not** created, and `rc-smoke.yml` is not dispatched.
+3. Clean up: delete the scratch release branch.
 
 ## Reference
 

@@ -342,6 +342,39 @@ jobs:
             gh pr edit "$existing" --body "$body" --title "Release ${VERSION}"
           fi
 
+  dispatch-rc-smoke:
+    name: Dispatch RC smoke
+    needs: [validate-release, publish-rc, create-prerelease-tag, open-pr]
+    if: ${{ inputs.dry_run != true && needs.publish-rc.outputs.published == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Assert RC smoke workflow is active
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          state="$(gh api "repos/${GH_REPO}/actions/workflows/rc-smoke.yml" --jq '.state' 2>/dev/null || echo "missing")"
+          if [ "$state" != "active" ]; then
+            echo "::error::rc-smoke.yml is not active on the default branch (state=$state)."
+            exit 1
+          fi
+
+      - name: Dispatch RC smoke workflow
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: ${{ needs.validate-release.outputs.release_branch }}
+          RC_VERSION: ${{ inputs.plugin_version }}
+        run: |
+          set -euo pipefail
+          gh workflow run rc-smoke.yml --ref "$BRANCH" \
+            -f "rc_version=$RC_VERSION" \
+            -f "release_branch=$BRANCH"
+          echo "Dispatched rc-smoke.yml for $RC_VERSION on $BRANCH"
+
   notify-team:
     name: Notify Slack
     needs:
@@ -354,6 +387,7 @@ jobs:
       - publish-rc
       - create-prerelease-tag
       - open-pr
+      - dispatch-rc-smoke
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -368,6 +402,7 @@ jobs:
           PUBLISH_RESULT: ${{ needs.publish-rc.result }}
           PRERELEASE_RESULT: ${{ needs.create-prerelease-tag.result }}
           OPEN_PR_RESULT: ${{ needs.open-pr.result }}
+          SMOKE_DISPATCH_RESULT: ${{ needs.dispatch-rc-smoke.result }}
         run: |
           set -euo pipefail
           if [[ "$VALIDATE_RESULT" == "success" \
@@ -375,7 +410,8 @@ jobs:
              && "$GATE_RESULT"      == "success" \
              && "$PUBLISH_RESULT"   == "success" \
              && "$PRERELEASE_RESULT" == "success" \
-             && "$OPEN_PR_RESULT"    == "success" ]]; then
+             && "$OPEN_PR_RESULT"    == "success" \
+             && "$SMOKE_DISPATCH_RESULT" == "success" ]]; then
             echo "success=true" >> "$GITHUB_OUTPUT"
             echo "failed_stage=" >> "$GITHUB_OUTPUT"
             exit 0
@@ -387,7 +423,8 @@ jobs:
           elif [[ "$GATE_RESULT"      != "success" ]]; then echo "failed_stage=pre-publish-gate"   >> "$GITHUB_OUTPUT"
           elif [[ "$PUBLISH_RESULT"   != "success" ]]; then echo "failed_stage=publish-rc"         >> "$GITHUB_OUTPUT"
           elif [[ "$PRERELEASE_RESULT" != "success" ]]; then echo "failed_stage=create-prerelease-tag" >> "$GITHUB_OUTPUT"
-          else echo "failed_stage=open-pr" >> "$GITHUB_OUTPUT"
+          elif [[ "$OPEN_PR_RESULT"    != "success" ]]; then echo "failed_stage=open-pr" >> "$GITHUB_OUTPUT"
+          else echo "failed_stage=dispatch-rc-smoke" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Format pre-publish leg results
@@ -490,26 +527,128 @@ jobs:
             } >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Send Slack notification (Success)
+      - name: Build Slack success payload
+        id: slack-success-payload
         # Skip during dry runs so iterative pipeline testing doesn't spam the
         # QA channel. Real RCs (dry_run=false) post normally.
         if: steps.status.outputs.success == 'true' && inputs.dry_run != true
+        env:
+          PLUGIN_VERSION: ${{ inputs.plugin_version }}
+          CI_ICON: ${{ steps.legs.outputs.ci_icon }}
+          CI_RESULT: ${{ steps.legs.outputs.ci_result }}
+          IOS_ICON: ${{ steps.legs.outputs.ios_icon }}
+          IOS_RESULT: ${{ steps.legs.outputs.e2e_ios_result }}
+          ANDROID_ICON: ${{ steps.legs.outputs.android_icon }}
+          ANDROID_RESULT: ${{ steps.legs.outputs.e2e_android_result }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_BRANCH: ${{ needs.validate-release.outputs.release_branch }}
+          TAG_NAME: ${{ needs.validate-release.outputs.tag_name }}
+          RUN_ID: ${{ github.run_id }}
+          JIRA_TICKETS: ${{ steps.jira-tickets.outputs.tickets }}
+          ANDROID_SDK_VERSION: ${{ inputs.android_sdk_version }}
+          IOS_SDK_VERSION: ${{ inputs.ios_sdk_version }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const env = process.env;
+          const text = [
+            '<!here>',
+            ':capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:',
+            '',
+            '*Capacitor Release Candidate:*',
+            `appsflyer-capacitor-plugin: ${env.PLUGIN_VERSION} is ready for QA testing.`,
+            '',
+            '*Pre-publish checks:*',
+            `${env.CI_ICON} Lint, Test & Build: ${env.CI_RESULT}`,
+            `${env.IOS_ICON} RC-E2E iOS: ${env.IOS_RESULT}`,
+            `${env.ANDROID_ICON} RC-E2E Android: ${env.ANDROID_RESULT}`,
+            '',
+            `:hourglass_flowing_sand: Smoke (\`rc-smoke/npm\`) will auto-run once ${env.PLUGIN_VERSION} appears on npm (typically 1-5 min).`,
+            '',
+            '*Installation:*',
+            ':npm: `npm install appsflyer-capacitor-plugin@QA`',
+            'or pinned:',
+            `:npm: \`npm install appsflyer-capacitor-plugin@${env.PLUGIN_VERSION}\``,
+            '',
+            '*Sources:*',
+            `:github: Branch: https://github.com/${env.REPOSITORY}/tree/${env.RELEASE_BRANCH}`,
+            `:github: Prerelease: https://github.com/${env.REPOSITORY}/releases/tag/${env.TAG_NAME}`,
+            `:github: Run: https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,
+            `:npm: https://www.npmjs.com/package/appsflyer-capacitor-plugin/v/${env.PLUGIN_VERSION}`,
+            '',
+            '*Linked tickets and issues:*',
+            env.JIRA_TICKETS || 'No assigned fix version found',
+            '',
+            "*Native SDK's:*",
+            `:android: ${env.ANDROID_SDK_VERSION}`,
+            `:apple_company: ${env.IOS_SDK_VERSION}`,
+            '',
+            ':capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:',
+          ].join('\n');
+          fs.appendFileSync(env.GITHUB_OUTPUT, `payload=${JSON.stringify({ text })}\n`);
+          NODE
+
+      - name: Send Slack notification (Success)
+        if: steps.status.outputs.success == 'true' && inputs.dry_run != true
         uses: slackapi/slack-github-action@v1
         with:
-          payload: |
-            {
-              "text": "<!here>\n:capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:\n\n*Capacitor Release Candidate:*\nappsflyer-capacitor-plugin: ${{ inputs.plugin_version }} is ready for QA testing.\n\n*Pre-publish checks:*\n${{ steps.legs.outputs.ci_icon }} Lint, Test & Build: ${{ steps.legs.outputs.ci_result }}\n${{ steps.legs.outputs.ios_icon }} RC-E2E iOS: ${{ steps.legs.outputs.e2e_ios_result }}\n${{ steps.legs.outputs.android_icon }} RC-E2E Android: ${{ steps.legs.outputs.e2e_android_result }}\n\n:hourglass_flowing_sand: Smoke (`rc-smoke/npm`) will auto-run once ${{ inputs.plugin_version }} appears on npm (typically 1-5 min).\n\n*Installation:*\n:npm: `npm install appsflyer-capacitor-plugin@QA`\nor pinned:\n:npm: `npm install appsflyer-capacitor-plugin@${{ inputs.plugin_version }}`\n\n*Sources:*\n:github: Branch: https://github.com/${{ github.repository }}/tree/${{ needs.validate-release.outputs.release_branch }}\n:github: Prerelease: https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate-release.outputs.tag_name }}\n:github: Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n:npm: https://www.npmjs.com/package/appsflyer-capacitor-plugin/v/${{ inputs.plugin_version }}\n\n*Linked tickets and issues:*\n${{ steps.jira-tickets.outputs.tickets }}\n\n*Native SDK's:*\n:android: ${{ inputs.android_sdk_version }}\n:apple_company: ${{ inputs.ios_sdk_version }}\n\n:capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:"
-            }
+          payload: ${{ steps.slack-success-payload.outputs.payload }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
+
+      - name: Build Slack failure payload
+        id: slack-failure-payload
+        if: steps.status.outputs.success == 'false' && inputs.dry_run != true
+        env:
+          FAILED_STAGE: ${{ steps.status.outputs.failed_stage }}
+          PLUGIN_VERSION: ${{ inputs.plugin_version }}
+          RELEASE_BRANCH: ${{ needs.validate-release.outputs.release_branch }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          CI_ICON: ${{ steps.legs.outputs.ci_icon }}
+          CI_RESULT: ${{ steps.legs.outputs.ci_result }}
+          IOS_ICON: ${{ steps.legs.outputs.ios_icon }}
+          IOS_RESULT: ${{ steps.legs.outputs.e2e_ios_result }}
+          ANDROID_ICON: ${{ steps.legs.outputs.android_icon }}
+          ANDROID_RESULT: ${{ steps.legs.outputs.e2e_android_result }}
+          PREPARE_RESULT: ${{ needs.prepare-branch.result }}
+          GATE_RESULT: ${{ needs.pre-publish-gate.result }}
+          PUBLISH_RESULT: ${{ needs.publish-rc.result }}
+          PRERELEASE_RESULT: ${{ needs.create-prerelease-tag.result }}
+          OPEN_PR_RESULT: ${{ needs.open-pr.result }}
+          SMOKE_DISPATCH_RESULT: ${{ needs.dispatch-rc-smoke.result }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const env = process.env;
+          const text = [
+            '<!here>',
+            `:warning: *Capacitor RC failed at \`${env.FAILED_STAGE}\`*`,
+            '',
+            `Version: ${env.PLUGIN_VERSION}`,
+            `Branch: ${env.RELEASE_BRANCH}`,
+            `Run: https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,
+            '',
+            '*Pre-publish checks:*',
+            `${env.CI_ICON} Lint, Test & Build: ${env.CI_RESULT}`,
+            `${env.IOS_ICON} RC-E2E iOS: ${env.IOS_RESULT}`,
+            `${env.ANDROID_ICON} RC-E2E Android: ${env.ANDROID_RESULT}`,
+            '',
+            '*Downstream stages:*',
+            `• prepare-branch: ${env.PREPARE_RESULT}`,
+            `• pre-publish-gate: ${env.GATE_RESULT}`,
+            `• publish-rc: ${env.PUBLISH_RESULT}`,
+            `• create-prerelease-tag: ${env.PRERELEASE_RESULT}`,
+            `• open-pr: ${env.OPEN_PR_RESULT}`,
+            `• dispatch-rc-smoke: ${env.SMOKE_DISPATCH_RESULT}`,
+          ].join('\n');
+          fs.appendFileSync(env.GITHUB_OUTPUT, `payload=${JSON.stringify({ text })}\n`);
+          NODE
 
       - name: Send Slack notification (Failure)
         if: steps.status.outputs.success == 'false' && inputs.dry_run != true
         uses: slackapi/slack-github-action@v1
         with:
-          payload: |
-            {
-              "text": "<!here>\n:warning: *Capacitor RC failed at `${{ steps.status.outputs.failed_stage }}`*\n\nVersion: ${{ inputs.plugin_version }}\nBranch: ${{ needs.validate-release.outputs.release_branch }}\nRun: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n*Pre-publish checks:*\n${{ steps.legs.outputs.ci_icon }} Lint, Test & Build: ${{ steps.legs.outputs.ci_result }}\n${{ steps.legs.outputs.ios_icon }} RC-E2E iOS: ${{ steps.legs.outputs.e2e_ios_result }}\n${{ steps.legs.outputs.android_icon }} RC-E2E Android: ${{ steps.legs.outputs.e2e_android_result }}\n\n*Downstream stages:*\n• prepare-branch: ${{ needs.prepare-branch.result }}\n• pre-publish-gate: ${{ needs.pre-publish-gate.result }}\n• publish-rc: ${{ needs.publish-rc.result }}\n• create-prerelease-tag: ${{ needs.create-prerelease-tag.result }}\n• open-pr: ${{ needs.open-pr.result }}"
-            }
+          payload: ${{ steps.slack-failure-payload.outputs.payload }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_SLACK_WEBHOOK_URL }}
