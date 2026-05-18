@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write   # Create GH release; dispatch npm via PAT
+      id-token: write
     outputs:
       ref: ${{ steps.ref.outputs.ref }}
       plugin_version: ${{ steps.ver.outputs.plugin_version }}
@@ -41,6 +42,18 @@ jobs:
             # Merged PR — use the merge commit on main; the version is whatever
             # the PR merged (already -rcN-stripped by promote-release.yml).
             echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Assert npm OIDC workflow is active
+        env:
+          GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          state="$(gh api "repos/${GH_REPO}/actions/workflows/npm-publish-oidc.yml" --jq '.state' 2>/dev/null || echo "missing")"
+          if [ "$state" != "active" ]; then
+            echo "::error::npm-publish-oidc.yml is not active on the default branch (state=$state)."
+            exit 1
           fi
 
       - name: Dispatch npm OIDC publish workflow and wait
