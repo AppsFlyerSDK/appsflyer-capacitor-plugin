@@ -40,12 +40,12 @@ Four checks must go green before you do anything:
 | `Lint, Test & Build` | `lint-test-build.yml` (via `rc-release.yml`) | ESLint, Prettier, plugin build, plus debug Android/iOS QA-app builds |
 | `iOS E2E` | `ios-e2e.yml` | RC-E2E iOS gate |
 | `Android E2E` | `android-e2e.yml` | RC-E2E Android gate |
-| `rc-smoke/npm` | `rc-smoke.yml` | Dispatched after `publish-rc` succeeds with `dry_run=false` |
+| `Verify rc-smoke/npm` | `rc-smoke-gate.yml` | PR-visible gate that waits for `rc-smoke/npm` from `rc-smoke.yml` on the PR head SHA |
 
 - If any E2E gate fails, fix the code on the release branch and push. E2E re-runs automatically.
 - If publish fails on a version collision, bump to `rcN+1` and rerun Step 1 with the new version.
-- If `rc-smoke/npm` is red, the RC is broken on npm. Bump to `rcN+1`.
-- If `rc-smoke/npm` is missing, confirm `dispatch-rc-smoke` succeeded or re-run `rc-smoke.yml` manually with the RC version and release branch.
+- If `Verify rc-smoke/npm` is red because `rc-smoke/npm` is red, the RC is broken on npm. Bump to `rcN+1`.
+- If `Verify rc-smoke/npm` times out, confirm `dispatch-rc-smoke` succeeded or re-run `rc-smoke.yml` manually with the RC version and release branch.
 
 ## Step 3 — Review the auto-opened PR
 
@@ -53,7 +53,7 @@ Four checks must go green before you do anything:
 
 - Version bumps in `package.json`, `ios/Plugin/AppsFlyerPlugin.swift`, `Package.swift`, `README.md`.
 - `CHANGELOG.md`; add the new version section if it isn't there yet.
-- All four checks green on the PR head SHA.
+- All four checks green on the PR head SHA. The smoke gate is `Verify rc-smoke/npm`; it passes only after `rc-smoke/npm` is green on the same commit.
 
 Slack gets a ping from `notify-team` with the RC link and the Jira tickets pinned to `Capacitor SDK v<base_version>`.
 
