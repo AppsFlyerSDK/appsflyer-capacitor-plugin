@@ -77,3 +77,4 @@ examples/CapacitorReact/.env.*
 # .env.example files are committed templates, never contain real secrets
 !.env.example
 !**/.env.example
+*.code-workspace

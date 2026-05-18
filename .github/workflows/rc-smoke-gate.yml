@@ -1,0 +1,70 @@
+name: RC Smoke Gate
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    branches: [main]
+
+concurrency:
+  group: rc-smoke-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: read
+
+jobs:
+  verify-smoke:
+    name: Verify rc-smoke/npm
+    if: ${{ startsWith(github.event.pull_request.head.ref, 'releases/') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Wait for rc-smoke/npm on PR head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+
+          echo "Waiting for rc-smoke/npm on ${HEAD_SHA}"
+          echo "PR: ${PR_URL}"
+
+          deadline=$(( $(date +%s) + 2400 ))
+          while true; do
+            check="$(gh api "repos/${GH_REPO}/commits/${HEAD_SHA}/check-runs" \
+              --jq '[.check_runs[] | select(.name=="rc-smoke/npm")] | sort_by(.completed_at // .started_at // "") | last // empty')"
+
+            if [ -n "$check" ]; then
+              status="$(jq -r '.status // ""' <<< "$check")"
+              conclusion="$(jq -r '.conclusion // ""' <<< "$check")"
+              details_url="$(jq -r '.details_url // ""' <<< "$check")"
+
+              echo "rc-smoke/npm status=${status} conclusion=${conclusion}"
+              if [ -n "$details_url" ]; then
+                echo "Details: $details_url"
+              fi
+
+              case "$status:$conclusion" in
+                completed:success)
+                  exit 0
+                  ;;
+                completed:failure|completed:cancelled|completed:timed_out|completed:action_required|completed:skipped|completed:neutral)
+                  echo "::error::rc-smoke/npm completed with conclusion '${conclusion}' on ${HEAD_SHA}."
+                  exit 1
+                  ;;
+              esac
+            else
+              echo "rc-smoke/npm is not attached to ${HEAD_SHA} yet."
+            fi
+
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::Timed out waiting for rc-smoke/npm on ${HEAD_SHA}."
+              echo "::error::Confirm rc-smoke.yml was dispatched with rc_version and release_branch for this PR head."
+              exit 1
+            fi
+
+            sleep 30
+          done
