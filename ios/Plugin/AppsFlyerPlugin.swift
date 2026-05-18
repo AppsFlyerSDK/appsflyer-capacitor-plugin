@@ -57,7 +57,7 @@ public class AppsFlyerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "isSDKStopped", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "validateAndLogInAppPurchaseV2", returnType: CAPPluginReturnPromise),
     ]
-    private let APPSFLYER_PLUGIN_VERSION = "6.18.0-rc1"
+    private let APPSFLYER_PLUGIN_VERSION = "6.18.0-rc2"
     private var conversion = true
     private var oaoa = true
     private var udl = false
