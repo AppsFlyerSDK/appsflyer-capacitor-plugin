@@ -1,2 +1,12 @@
+# ponytail: package.json "files" whitelist already excludes everything below —
+# npm ignores this file entirely once "files" is set. Kept for doc/consistency only.
 assets
 examples
+src/__tests__
+.af-e2e
+.af-smoke
+.cursor
+.superpowers
+.swiftpm
+.build
+docs/superpowers

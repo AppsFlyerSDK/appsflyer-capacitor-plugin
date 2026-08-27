@@ -1,10 +1,18 @@
-import { registerPlugin } from '@capacitor/core';
+import { AppsFlyerSDK } from '@appsflyer-sdk/js-core-plugin';
 
-import type { AppsFlyerPlugin } from './definitions';
+import pkg from '../package.json';
 
-const AppsFlyer = registerPlugin<AppsFlyerPlugin>('AppsFlyerPlugin', {});
+import { CapacitorTransport } from './capacitor-transport';
 
-export * from './definitions';
-export * from './Appsflyer_constants';
-export * from './appsflyer_interfaces';
+// Re-exports every RPC method's param/return types and the RpcTransport/RpcEvent contract.
+export * from '@appsflyer-sdk/js-core-plugin';
+// js-core-plugin does not export AFPurchaseType/MediationNetwork equivalents (Task 1 finding).
+export * from './constants';
+
+const AppsFlyer = new AppsFlyerSDK(new CapacitorTransport(), {
+  plugin: 'capacitor',
+  pluginVersion: pkg.version,
+});
+
 export { AppsFlyer };
+export default AppsFlyer;

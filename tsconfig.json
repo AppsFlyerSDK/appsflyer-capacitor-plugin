@@ -11,6 +11,8 @@
     "noUnusedParameters": true,
     "outDir": "dist/esm",
     "pretty": true,
+    "resolveJsonModule": true,
+    "rootDir": "src",
     "sourceMap": true,
     "skipLibCheck": true,
     "strict": true,

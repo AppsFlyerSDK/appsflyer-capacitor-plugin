@@ -1,9 +1,10 @@
 {
   "name": "appsflyer-capacitor-plugin",
-  "version": "6.18.0",
-  "iosSdkVersion": "6.18.0",
-  "androidSdkVersion": "6.18.0",
-  "buildNumber": "20",
+  "version": "7.0.2",
+  "iosSdkVersion": "7.0.13",
+  "androidSdkVersion": "7.0.1",
+  "androidPluginBridgeVersion": "7.0.12",
+  "buildNumber": "1",
   "description": "AppsFlyer SDK plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
@@ -16,6 +17,7 @@
     "ios/Plugin/",
     "Package.swift",
     "src/",
+    "!src/__tests__",
     "package.json",
     "README.md",
     "tsconfig.json",
@@ -46,30 +48,34 @@
     "eslint": "eslint . --ext ts",
     "prettier": "prettier --plugin=prettier-plugin-java \"**/*.{css,html,ts,js,java}\"",
     "swiftlint": "node-swiftlint",
-    "docgen": "docgen --api AppsFlyerPlugin --output-readme README.md --output-json dist/docs.json",
     "build": "npm run clean  && tsc && rollup -c rollup.config.mjs",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build",
-    "rimraf": "./node_modules/rimraf/bin.js"
+    "rimraf": "./node_modules/rimraf/bin.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@appsflyer-sdk/js-core-plugin": "7.0.15"
   },
   "devDependencies": {
     "@angular/cli": "^12.1.1",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@capacitor/android": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
-    "@capacitor/docgen": "^0.2.0",
-    "@capacitor/ios": "^8.0.0",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@ionic/eslint-config": "^0.4.0",
     "@ionic/prettier-config": "^4.0.0",
     "@ionic/swiftlint-config": "^2.0.0",
+    "@rollup/plugin-json": "^6.1.0",
     "eslint": "^8.57.1",
     "prettier": "^3.x",
     "prettier-plugin-java": "^2.x",
     "rimraf": "^6.x",
     "rollup": "^4.x",
     "swiftlint": "^2.0.0",
-    "typescript": "~5.7.0"
+    "typescript": "~5.7.0",
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "@capacitor/core": ">=8.0.0"
