@@ -20,6 +20,10 @@ on:
         description: 'Android SDK version (X.Y.Z)'
         required: true
         type: string
+      android_plugin_bridge_version:
+        description: 'Android af-android-plugin-bridge version (X.Y.Z) — required alongside android_sdk_version'
+        required: true
+        type: string
       skip_unit:
         description: 'Skip lint + unit checks (fast iteration)'
         required: false
@@ -57,6 +61,7 @@ jobs:
           PLUGIN_VERSION: ${{ inputs.plugin_version }}
           IOS_SDK_VERSION: ${{ inputs.ios_sdk_version }}
           ANDROID_SDK_VERSION: ${{ inputs.android_sdk_version }}
+          ANDROID_PLUGIN_BRIDGE_VERSION: ${{ inputs.android_plugin_bridge_version }}
         run: |
           if ! [[ "$PLUGIN_VERSION" =~ $VERSION_REGEX ]]; then
             echo "Plugin version '$PLUGIN_VERSION' does not match $VERSION_REGEX"
@@ -68,6 +73,10 @@ jobs:
           fi
           if ! [[ "$ANDROID_SDK_VERSION" =~ $SDK_VERSION_REGEX ]]; then
             echo "Android SDK version '$ANDROID_SDK_VERSION' does not match $SDK_VERSION_REGEX"
+            exit 1
+          fi
+          if ! [[ "$ANDROID_PLUGIN_BRIDGE_VERSION" =~ $SDK_VERSION_REGEX ]]; then
+            echo "Android plugin bridge version '$ANDROID_PLUGIN_BRIDGE_VERSION' does not match $SDK_VERSION_REGEX"
             exit 1
           fi
           echo "Inputs OK"
@@ -107,9 +116,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 22.x
+          node-version: '24'
 
       - name: Create release branch
         run: |
@@ -129,7 +138,8 @@ jobs:
             pluginVersion=${{ inputs.plugin_version }} \
             buildNumber=${{ github.run_number }} \
             iOSVersion=${{ inputs.ios_sdk_version }} \
-            androidVersion=${{ inputs.android_sdk_version }}
+            androidVersion=${{ inputs.android_sdk_version }} \
+            androidPluginBridgeVersion=${{ inputs.android_plugin_bridge_version }}
 
       - name: Commit version bump
         run: |
@@ -546,6 +556,7 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           JIRA_TICKETS: ${{ steps.jira-tickets.outputs.tickets }}
           ANDROID_SDK_VERSION: ${{ inputs.android_sdk_version }}
+          ANDROID_PLUGIN_BRIDGE_VERSION: ${{ inputs.android_plugin_bridge_version }}
           IOS_SDK_VERSION: ${{ inputs.ios_sdk_version }}
         run: |
           node <<'NODE'
@@ -581,6 +592,7 @@ jobs:
             '',
             "*Native SDK's:*",
             `:android: ${env.ANDROID_SDK_VERSION}`,
+            `:gear: af-android-plugin-bridge ${env.ANDROID_PLUGIN_BRIDGE_VERSION}`,
             `:apple_company: ${env.IOS_SDK_VERSION}`,
             '',
             ':capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:',

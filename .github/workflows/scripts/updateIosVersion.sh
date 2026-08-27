@@ -17,5 +17,7 @@ sed -i -r -e "s/\"iosSdkVersion\": \"[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\"/\"iosSdk
 echo "Updating README.md file"
 sed -i -r -e "s/iOS AppsFlyer SDK \*\*[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\*\*/\iOS AppsFlyer SDK **$newIosVersion**/gi" README.md
 echo "Updating Package.swift SwiftPM pin"
-sed -i -r -e "s|(AppsFlyerFramework-Static\.git\", from: \")[0-9]+\.[0-9]+\.[0-9]+|\1${newIosVersion}|g" Package.swift
-git add package.json README.md Package.swift
+sed -i -r -e "s|(appsflyer-apple-rpc\.git\", exact: \")[0-9]+\.[0-9]+\.[0-9]+|\1${newIosVersion}|g" Package.swift
+echo "Updating ios/Podfile CocoaPods pin"
+sed -i -r -e "s/(pod 'AppsFlyerRPC', ')[0-9]+\.[0-9]+\.[0-9]+(')/\1${newIosVersion}\2/g" ios/Podfile
+git add package.json README.md Package.swift ios/Podfile
