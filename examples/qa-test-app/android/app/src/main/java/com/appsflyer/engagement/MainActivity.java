@@ -3,7 +3,6 @@ package com.appsflyer.engagement;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.appsflyer.AppsFlyerLib;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -13,18 +12,14 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
     }
 
-    /**
-     * CI headless emulators can miss the warm-resume intent path; {@code performOnDeepLinking}
-     * SDK dedup avoids double delivery when lifecycle also runs.
-     */
+    // SDK 7's af-android-plugin-bridge observes intents via its own
+    // Application.ActivityLifecycleCallbacks (registered at init()/start()),
+    // so the host Activity just needs to make the new intent visible through
+    // getIntent() — no direct AppsFlyerLib call here. Matches the RN plugin's
+    // example MainActivity.kt.
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (intent != null
-                && Intent.ACTION_VIEW.equals(intent.getAction())
-                && intent.getData() != null) {
-            AppsFlyerLib.getInstance().performOnDeepLinking(intent, getApplication());
-        }
     }
 }

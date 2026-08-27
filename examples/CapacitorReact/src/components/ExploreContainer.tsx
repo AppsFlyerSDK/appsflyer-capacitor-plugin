@@ -1,23 +1,23 @@
 import './ExploreContainer.css';
-import { IonButton, isPlatform } from '@ionic/react';
-import { AFEvent, AFPurchaseDetailsV2, AFPurchaseType, AppsFlyer } from "appsflyer-capacitor-plugin";
+import { IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, isPlatform } from '@ionic/react';
+import { AFPurchaseType, AppsFlyer, LogEventParams } from "appsflyer-capacitor-plugin";
 import React from "react";
 
 interface ContainerProps {
 }
 
 function logEventClicked() {
-    const data: AFEvent = {
+    const data: LogEventParams = {
         eventName: 'test',
-        eventValue: {
+        eventValues: {
             af_revenue: 956,
             af_receipt_id: 'id536',
             af_currency: 'USD'
         }
     };
     AppsFlyer.logEvent(data)
-        .then(r => alert('logEvent ~~>' + r.res))
-        .catch(err => alert('logEvent err ~~>' + err));
+        .then(() => console.log('logEvent triggered'))
+        .catch(err => console.log('logEvent err ~~>' + err));
 }
 
 
@@ -35,7 +35,7 @@ function resolveDeepLinksUrls() {
 
 function getSDKVersion() {
     AppsFlyer.getSdkVersion()
-        .then(v => alert('SDK Version: ' + v.res));
+        .then(version => console.log('SDK Version: ' + version));
 }
 
 function myLogger(msg: string) {
@@ -44,82 +44,54 @@ function myLogger(msg: string) {
 
 function getAppsFlyerID() {
     AppsFlyer.getAppsFlyerUID()
-        .then(res => alert('AppsFlyer ID:' + res.uid));
+        .then(uid => console.log('AppsFlyer ID:' + uid));
 }
 
 function generateInviteLink() {
     AppsFlyer.generateInviteLink({
-        addParameters: { code: '1256abc', page: '152' },
-        campaign: 'appsflyer_plugin',
-        channel: 'sms',
+        parameters: { code: '1256abc', page: '152', campaign: 'appsflyer_plugin', channel: 'sms' },
     })
-        .then(r => alert('user invite link: ' + r.link))
-        .catch(e => alert('user invite error: ' + e));
+        .then(link => console.log('user invite link: ' + link))
+        .catch(e => console.log('user invite error: ' + e));
 }
 
-function validateAndLogInAppPurchaseV2() {
-    const purchaseData: AFPurchaseDetailsV2 = {
-        purchaseDetails: {
-            purchaseType: AFPurchaseType.oneTimePurchase,
+function validateAndLogInAppPurchase(purchaseType: AFPurchaseType) {
+    AppsFlyer.validateAndLogInAppPurchase({
+        purchase: {
+            purchaseType,
             purchaseToken: isPlatform('android') ? 'android_purchase_token_example' : 'ios_transaction_id_example',
-            productId: 'com.example.product.premium'
+            productId: purchaseType === AFPurchaseType.subscription ? 'com.example.subscription.monthly' : 'com.example.product.premium',
         },
         additionalParameters: {
             'test_param': 'test_value',
             'custom_data': 'example_data'
         }
-    };
-
-    AppsFlyer.validateAndLogInAppPurchaseV2(purchaseData)
+    })
         .then(result => {
-            alert('validateAndLogInAppPurchaseV2 success: ' + JSON.stringify(result));
+            console.log('validateAndLogInAppPurchase success: ' + JSON.stringify(result));
         })
         .catch(error => {
-            alert('validateAndLogInAppPurchaseV2 error: ' + JSON.stringify(error));
-        });
-}
-
-function validateAndLogInAppPurchaseV2Subscription() {
-    const purchaseData: AFPurchaseDetailsV2 = {
-        purchaseDetails: {
-            purchaseType: AFPurchaseType.subscription,
-            purchaseToken: isPlatform('android') ? 'android_subscription_token_example' : 'ios_subscription_transaction_id_example',
-            productId: 'com.example.subscription.monthly'
-        },
-        additionalParameters: {
-            'subscription_period': 'monthly',
-            'test_subscription': 'true'
-        }
-    };
-
-    AppsFlyer.validateAndLogInAppPurchaseV2(purchaseData)
-        .then(result => {
-
-            alert('validateAndLogInAppPurchaseV2 (Subscription) success: ' + JSON.stringify(result));
-        })
-        .catch(error => {
-            alert('validateAndLogInAppPurchaseV2 (Subscription) error: ' + JSON.stringify(error));
+            console.log('validateAndLogInAppPurchase error: ' + JSON.stringify(error));
         });
 }
 
 function setSharingFilterForAllPartners() {
-    AppsFlyer.setSharingFilterForAllPartners();
+    AppsFlyer.setSharingFilterForPartners({ partners: null });
 }
 
 function setSharingFilter() {
-    AppsFlyer.setSharingFilter({ filters: ['google_int'] });
+    AppsFlyer.setSharingFilterForPartners({ partners: ['google_int'] });
 }
 
 function anonymizeUser() {
-    AppsFlyer.anonymizeUser({ anonymizeUser: true });
+    AppsFlyer.anonymizeUser({ shouldAnonymize: true });
 }
 
 function stop() {
-    AppsFlyer.stop()
-        .then(res => { //return current state
-            AppsFlyer.stop({ stop: !res.isStopped }) //change state
-                .then(r => alert('isStopped: ' + r.isStopped)); //show state after change
-        });
+    AppsFlyer.isStopped().then(isStopped => {
+        AppsFlyer.stop({ shouldStop: !isStopped }) //toggle state
+            .then(() => console.log('isStopped: ' + !isStopped));
+    });
 }
 
 // function logAdRevenueExample() {
@@ -155,52 +127,72 @@ function sendConsentTest() {
         hasConsentForAdStorage: null
         };
     
-      AppsFlyer.setConsentDataV2(consentOptions)
-      .then(r => alert('setConsentDataV2 triggered'))
-      .catch(e => alert('setConsentDataV2 returned error: ' + e));
+      AppsFlyer.setConsentData(consentOptions)
+      .then(() => console.log('setConsentData triggered'))
+      .catch(e => console.log('setConsentData returned error: ' + e));
 }
 
 function startSDK() {
-    AppsFlyer.startSDK()
-    .then(r => alert('startSDK triggered: ' + r.res))
-    .catch(e => alert('startSDK returned error: ' + e));
+    AppsFlyer.start()
+    .then(() => console.log('start() triggered'))
+    .catch(e => console.log('start() returned error: ' + e));
 }
 
 function checkSdkState() {
-    Promise.all([AppsFlyer.isSDKStarted(), AppsFlyer.isSDKStopped()])
-        .then(([startedRes, stoppedRes]) => {
-            alert(`SDK state => isStarted: ${startedRes.isStarted} | isStopped: ${stoppedRes.isStopped}`);
-        })
-        .catch(err => alert('SDK state error: ' + err));
+    AppsFlyer.isStopped()
+        .then(isStopped => console.log(`SDK state => isStopped: ${isStopped}`))
+        .catch(err => console.log('SDK state error: ' + err));
 }
 
 const ExploreContainer: React.FC<ContainerProps> = () => {
     return (
         <div className="container">
+            <IonCard>
+                <IonCardHeader>
+                    <IonCardTitle>Attribution & Deep Linking</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                    <IonButton expand="block" onClick={() => brandedDomains()}>Set Branded Domains</IonButton>
+                    <IonButton expand="block" onClick={() => resolveDeepLinksUrls()}>Set Resolve Deep Link URLs</IonButton>
+                    <IonButton expand="block" onClick={() => generateInviteLink()}>Generate Invite Link</IonButton>
+                </IonCardContent>
+            </IonCard>
 
-            <IonButton color="primary" expand="block" onClick={() => logEventClicked()}>Log Event</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => brandedDomains()}>set branded domains</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => resolveDeepLinksUrls()}>set Resolve
-                DeepLink</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => getSDKVersion()}>get sdk version</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => getAppsFlyerID()}>get AppsFlyer ID</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => anonymizeUser()}>Set Anonymize User</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => stop()}>Stop SDK</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => generateInviteLink()}>generate Invite
-                Link</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => validateAndLogInAppPurchaseV2()}>Validate IAP
-                (One-time Purchase)</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => validateAndLogInAppPurchaseV2Subscription()}>Validate IAP
-                (Subscription)</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => setSharingFilter()}>set Sharing Filter</IonButton>
+            <IonCard>
+                <IonCardHeader>
+                    <IonCardTitle>Events & Purchases</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                    <IonButton expand="block" onClick={() => logEventClicked()}>Log Event</IonButton>
+                    <IonButton expand="block" onClick={() => validateAndLogInAppPurchase(AFPurchaseType.oneTimePurchase)}>Validate IAP (One-time Purchase)</IonButton>
+                    <IonButton expand="block" onClick={() => validateAndLogInAppPurchase(AFPurchaseType.subscription)}>Validate IAP (Subscription)</IonButton>
+                </IonCardContent>
+            </IonCard>
 
-            <IonButton color="primary" expand="block" onClick={() => setSharingFilterForAllPartners()}>set Sharing
-                Filter For
-                All
-                Partners</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => sendConsentTest()}>set consentOptions</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => startSDK()}>StartSDK</IonButton>
-            <IonButton color="primary" expand="block" onClick={() => checkSdkState()}>Check SDK State</IonButton>
+            <IonCard>
+                <IonCardHeader>
+                    <IonCardTitle>Privacy & Consent</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                    <IonButton expand="block" onClick={() => setSharingFilter()}>Set Sharing Filter</IonButton>
+                    <IonButton expand="block" onClick={() => setSharingFilterForAllPartners()}>Set Sharing Filter For All Partners</IonButton>
+                    <IonButton expand="block" onClick={() => anonymizeUser()}>Set Anonymize User</IonButton>
+                    <IonButton expand="block" onClick={() => sendConsentTest()}>Set Consent Options</IonButton>
+                </IonCardContent>
+            </IonCard>
+
+            <IonCard>
+                <IonCardHeader>
+                    <IonCardTitle>SDK Control</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                    <IonButton expand="block" onClick={() => getSDKVersion()}>Get SDK Version</IonButton>
+                    <IonButton expand="block" onClick={() => getAppsFlyerID()}>Get AppsFlyer ID</IonButton>
+                    <IonButton expand="block" onClick={() => startSDK()}>Start SDK</IonButton>
+                    <IonButton expand="block" onClick={() => stop()}>Stop SDK</IonButton>
+                    <IonButton expand="block" onClick={() => checkSdkState()}>Check SDK State</IonButton>
+                </IonCardContent>
+            </IonCard>
         </div>
     );
 };

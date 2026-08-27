@@ -37,6 +37,8 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to deliver personalized ads to you and measure the effectiveness of our advertising campaigns.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

@@ -7,16 +7,16 @@ This app exists to be **driven by automation**, not used by humans. It auto-runs
 ## What it does on cold launch
 
 1. Reads `DEV_KEY` and `APP_ID` from `.env` (Vite injects them at build time).
-2. Registers all three SDK callbacks (`conversion_callback`, `oaoa_callback`, `udl_callback`).
-3. Calls `initSDK({ manualStart: true })` and logs the result.
-4. Calls pre-start APIs (`setCustomerUserId`, `setCurrencyCode`, `setAdditionalData`, `setHost`) with QA-canonical values.
+2. Registers the conversion and deep-link (UDL) callbacks — SDK 7 folds OAOA into UDL, so there's no separate `oaoa_callback`.
+3. Calls `init({ devKey, appId })` and `enableDebug({ enabled: true })`, logging each result.
+4. Calls pre-start APIs (`setCustomerUserId`, `setCurrencyCode`, `setAdditionalData`) with QA-canonical values. `setHost` is deliberately skipped — see the comment in `preStartApis()`.
 5. Logs `[AF_QA][AUTO_APIS] --- Pre-start auto APIs complete ---`.
-6. Calls `startSDK()` and logs `[AF_QA][startSDK] result: SUCCESS` or `... error: <msg>`.
+6. Registers the session-ready listener, calls `start()` from inside it (SDK 7's manual-start model), and logs `[AF_QA][start] result: SUCCESS` or `... error: <msg>`.
 7. Calls post-start APIs (`getSdkVersion`, `getAppsFlyerUID`).
 8. Logs `[AF_QA][AUTO_APIS] --- Post-start auto APIs complete ---`.
 9. Fires the three standard events (`af_demo_launch`, `af_purchase`, `af_content_view`).
 10. Fires a custom event (`af_qa_custom_purchase`) with multi-type parameters and a nested `metadata` map.
-11. Runs the consent toggle cycle: `stop(true)` → suppressed event → `stop(false)` → resumed event.
+11. Runs the consent toggle cycle: `stop({ shouldStop: true })` → suppressed event → `stop({ shouldStop: false })` → resumed event.
 
 Every line is tagged `[AF_QA]` so `grep AF_QA` is enough to validate scenarios.
 
