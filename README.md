@@ -13,9 +13,12 @@ To do so, please follow [this article](https://support.appsflyer.com/hc/en-us/ar
 
 ### <a id="plugin-build-for"> This plugin is built for:
 
-<img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18">  Android AppsFlyer SDK **6.18.0**</br>
-<img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **6.18.0**</br>
+<img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18">  Android AppsFlyer SDK **7.0.1**</br>
+<img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **7.0.13**</br>
 <img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18">  Capacitor 8</br>
+
+## <a id="breaking-changes-7-0-2"> 	❗❗ Breaking changes when updating to v7.0.2 ❗❗
+Starting from v7.0.2, this plugin is built on the js-core RPC architecture and its public API changed (method names, argument shapes, and the OAOA listener were all affected). See the [migration guide](/docs/API.md#migrating-from-6x) before upgrading.
 
 ## <a id="breaking-changes-6-17-91"> 	❗❗ Breaking changes when updating to v6.17.91 ❗❗
 Starting from v6.17.91, this plugin works only with Capacitor 8. </br>
@@ -38,12 +41,8 @@ Starting from v6.9.2, this plugin works only with Capacitor 4. </br>
 If you are still interested in using Capacitor 3, please follow the instructions [here](/docs/Installation.md#cap3) to install the latest version that supports Capacitor 3.
 
 
-<!---
-
-## <a id="migration"> ⏩ Migration 
-  
-✏️✏️ Migration guided if needed✏️✏️ 
--->
+## <a id="migration"> ⏩ Migration
+Upgrading from a pre-7.0 version? See the [migration guide](/docs/API.md#migrating-from-6x) for the full 6.x → 7.x method/argument mapping.
 
  ##  📖 Guides
 - [Adding the SDK to your project](/docs/Installation.md)

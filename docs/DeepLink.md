@@ -10,117 +10,89 @@
 #### <a id="Deep-Linking"> The 3 Deep Linking Types:
 Since users may or may not have the mobile app installed, there are 2 types of deep linking:
 
-1. Deferred Deep Linking (**Legacy APIs**) - Serving personalized content to new or former users, directly after the installation.  -
-2. Direct Deep Linking (**Legacy APIs**)  - Directly serving personalized content to existing users, which already have the mobile app installed.  
-3. Unified deep linking - Unified deep linking sends new and existing users to a specific in-app activity as soon as the app is opened.<br>
+1. Deferred Deep Linking - Serving personalized content to new or former users, directly after the installation, via the conversion listener.
+2. Unified deep linking - Unified deep linking sends new and existing users to a specific in-app activity as soon as the app is opened.<br>
 
 For more info about <ins>Deferred Deep Linking</ins> please check out the [OneLink™ Deferred deep linking Guide](https://dev.appsflyer.com/hc/docs/android-legacy-apis#deferred-deep-linking). <br>
-For more info about <ins>Direct Deep linking</ins> please check out the [OneLink™ Direct Deep Linking Guide](https://dev.appsflyer.com/hc/docs/android-legacy-apis#deep-linking). <br>
 For more info about <ins>Unified Deep Linking</ins> please check out the [OneLink™ Direct Deep Linking Guide](https://dev.appsflyer.com/hc/docs/unified-deep-linking-udl). <br>
 
 ### ❗️Important!
 * **Deferred deep linking using the legacy method of onConversionDataSuccess may not work for iOS 14.5+, since it requires attribution data that may not be available due to privacy protection.
 We recommend using unified deep linking (UDL). UDL conforms to the iOS 14.5+ privacy standards and only returns parameters relevant to deep linking and deferred deep linking: deep_link_value and deep_link_sub1. Attribution parameters (such as media_source, campaign, af_sub1-5, etc.), return null and can’t be used for deep linking purposes.**
 
-###  <a id="deferred-deep-linking"> 1. Deferred Deep Linking (Get Conversion Data) - Legacy APIs
+###  <a id="deferred-deep-linking"> 1. Deferred Deep Linking (Get Conversion Data)
 
 
 Check out the deferred deeplinkg guide from the AppFlyer knowledge base [here](https://support.appsflyer.com/hc/en-us/articles/207032096-Accessing-AppsFlyer-Attribution-Conversion-Data-from-the-SDK-Deferred-Deeplinking-#Introduction)
 
-Code Sample to handle the conversion data:
+Code Sample to handle the conversion data. Register the listener synchronously right **after**
+calling `init()` — not chained inside `init().then(...)`:
 
 ```typescript
   constructor(public platform: Platform) {
-    this.platform.ready().then(() => {
+    this.platform.ready().then(async () => {
 .....
 .....
+      await AppsFlyer.init({ appId: '1234567890', devKey: 'your_dev_key' });
       this.setConversions();
-      AppsFlyer.initSDK(options).then(res => alert(JSON.stringify(res))).catch(e =>alert(e));
+      AppsFlyer.registerSessionReadyListener(() => AppsFlyer.start());
     });
   }
-	
+
   // set a listener
   setConversions() {
-    AppsFlyer.addListener(AFConstants.CONVERSION_CALLBACK, event => {
-      alert('CONVERSION_CALLBACK ~~>' + JSON.stringify(event));
-      if (event.callbackName === AFConstants.onConversionDataSuccess){
-        if(event.data.af_status === 'Non-organic' ){
-          if(event.data.is_first_launch === true ){
-              const deepLinkValue = event.data.deep_link_value;
-              this.handleLink(deepLinkValue);
+    AppsFlyer.registerConversionListener({
+      onConversionDataSuccess: (data) => {
+        alert('onConversionDataSuccess ~~>' + JSON.stringify(data));
+        if (data.af_status === 'Non-organic') {
+          if (data.is_first_launch === true) {
+            const deepLinkValue = data.deep_link_value;
+            this.handleLink(deepLinkValue);
           }
         }
-      }
+      },
+      onConversionDataFail: (error) => console.log(error),
     });
   }
 ```
 
+**Breaking change:** there is no separate OAOA (`onAppOpenAttribution`) listener anymore — app-open
+attribution is folded into the unified deep-link (`onDeepLinking`) callback below.
 
-
-
-###  <a id="handle-deeplinking"> 2. Direct Deeplinking (onAppOpenAttribution) Legacy APIs 
-    
-In order to implement deeplink with AppsFlyer, you must call register the listener **before** `initSDK`<br>
-For more information on deeplinks, please read [here](https://dev.appsflyer.com/hc/docs/getting-started-1)
-
-
-
-
-```typescript
-  constructor(public platform: Platform) {
-    this.platform.ready().then(() => {
-.....
-.....
-      this.setOAOA();
-      AppsFlyer.initSDK(options).then(res => alert(JSON.stringify(res))).catch(e =>alert(e));
-    });
-  }
-  
-  // set a listener
-  setOAOA() {
-    AppsFlyer.addListener(AFConstants.OAOA_CALLBACK, res => {
-      alert('OAOA_CALLBACK ~~>' + JSON.stringify(event));
-      if(res.callbackName === AFConstants.onAppOpenAttribution){
-        const deepLinkValue = res.data.deep_link_value;
-        this.handleLink(deepLinkValue);
-      }else{
-        console.log(res.errorMessage);
-      }
-    });
-  }
-```
-
-###  <a id="unified-deep-linking"> 3. Unified deep linking
-In order to use the unified deep link you need to send the `registerOnDeepLink: true` flag inside the object that sent to the sdk.<br>
-**NOTE:** when sending this flag, the sdk will ignore `onAppOpenAttribution`!<br>
+###  <a id="unified-deep-linking"> 2. Unified deep linking
+Register `registerDeepLinkListener` **before** calling `init()` to receive both deferred and direct
+deep links (including former OAOA events) on the same `onDeepLinking` callback.<br>
 For more information about this api, please check [OneLink Guide Here](https://dev.appsflyer.com/docs/android-unified-deep-linking)
 
 
 ```typescript
   constructor(public platform: Platform) {
-    this.platform.ready().then(() => {
+    this.platform.ready().then(async () => {
 .....
 .....
       this.setUDL();
-      AppsFlyer.initSDK(options).then(res => alert(JSON.stringify(res))).catch(e =>alert(e));
+      await AppsFlyer.init({ appId: '1234567890', devKey: 'your_dev_key' });
+      AppsFlyer.registerSessionReadyListener(() => AppsFlyer.start());
     });
   }
-  
+
   // set a listener
   setUDL() {
-    AppsFlyer.addListener(AFConstants.UDL_CALLBACK, res => {
-      alert('UDL_CALLBACK ~~>' + JSON.stringify(res));
-      if (res.status === 'FOUND') {
-        const deepLinkValue = res.deepLink.deep_link_value;
-        this.handleLink(deepLinkValue);
-      } else if (res.status === 'ERROR') {
-        console.log('udl error: ' + res.error);
-      }
+    AppsFlyer.registerDeepLinkListener({
+      onDeepLinking: (res) => {
+        alert('onDeepLinking ~~>' + JSON.stringify(res));
+        if (res.status === 'FOUND') {
+          const deepLinkValue = res.deepLink.deep_link_value;
+          this.handleLink(deepLinkValue);
+        } else if (res.status === 'ERROR') {
+          console.log('udl error: ' + res.error);
+        }
+      },
     });
   }
 ```
 
-**Note:** The code implementation for `onDeepLink` must be made **prior to the initialization** code of the SDK.
+**Note:** The listener registration must be made **prior to the initialization** code of the SDK.
 
 ###  <a id="android-deeplink"> Android Deeplink Setup
     
