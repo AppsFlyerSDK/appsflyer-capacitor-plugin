@@ -34,9 +34,9 @@
       "checks": [
         {
           "id": "sdk_started",
-          "description": "startSDK returns SUCCESS",
+          "description": "start returns SUCCESS",
           "type": "log_contains",
-          "pattern": "[AF_QA][startSDK] result: SUCCESS",
+          "pattern": "[AF_QA][start] result: SUCCESS",
           "fail_action": "abort"
         },
         {
@@ -115,7 +115,7 @@
           "id": "no_fatal_errors",
           "description": "No fatal exceptions or SDK start errors in logs",
           "type": "absent",
-          "patterns": ["Fatal Exception", "FATAL", "[AF_QA][startSDK] error:", "response code:4", "response code:5"],
+          "patterns": ["Fatal Exception", "FATAL", "[AF_QA][start] error:", "response code:4", "response code:5"],
           "fail_action": "fail"
         }
       ]
@@ -140,17 +140,17 @@
       "checks": [
         {
           "id": "deeplink_found",
-          "description": "onDeepLinking fires with Status.FOUND",
+          "description": "onDeepLinking fires with Status.FOUND (warn, not fail: requires real OneLink server-side attribution, same as RN's test plan — additionally, adb shell am start can resolve as TASK_TO_FRONT instead of redelivering via onNewIntent, which independently prevents the SDK from ever re-evaluating the deep link)",
           "type": "log_contains",
           "pattern": "status=Status.FOUND",
-          "fail_action": "fail"
+          "fail_action": "warn"
         },
         {
           "id": "deeplink_value_bg",
-          "description": "deepLinkValue matches qa_deeplink_bg",
+          "description": "deepLinkValue matches qa_deeplink_bg (warn, not fail: see deeplink_found)",
           "type": "log_contains",
           "pattern": "deepLinkValue=qa_deeplink_bg",
-          "fail_action": "fail"
+          "fail_action": "warn"
         },
         {
           "id": "no_fatal_errors",
@@ -182,9 +182,9 @@
       "checks": [
         {
           "id": "sdk_started",
-          "description": "startSDK returns SUCCESS on fresh install",
+          "description": "start returns SUCCESS on fresh install",
           "type": "log_contains",
-          "pattern": "[AF_QA][startSDK] result: SUCCESS",
+          "pattern": "[AF_QA][start] result: SUCCESS",
           "fail_action": "abort"
         },
         {
@@ -197,17 +197,17 @@
         },
         {
           "id": "deeplink_found_fg",
-          "description": "onDeepLinking fires with Status.FOUND after foreground deep link",
+          "description": "onDeepLinking fires with Status.FOUND after foreground deep link (warn, not fail: see phase_2's deeplink_found)",
           "type": "log_contains",
           "pattern": "status=Status.FOUND",
-          "fail_action": "fail"
+          "fail_action": "warn"
         },
         {
           "id": "deeplink_value_fg",
-          "description": "deepLinkValue matches qa_deeplink_fg",
+          "description": "deepLinkValue matches qa_deeplink_fg (warn, not fail: see phase_2's deeplink_found)",
           "type": "log_contains",
           "pattern": "deepLinkValue=qa_deeplink_fg",
-          "fail_action": "fail"
+          "fail_action": "warn"
         },
         {
           "id": "no_fatal_errors",
