@@ -1,20 +1,18 @@
+import { Capacitor } from '@capacitor/core';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+
+import { AppsFlyerRpcError, CapacitorTransport } from '../capacitor-transport';
 
 const { executeRpc, addListener } = vi.hoisted(() => ({
   executeRpc: vi.fn(),
   addListener: vi.fn(),
 }));
 
+// vi.mock is hoisted above all imports by Vitest, regardless of where it's written in the file.
 vi.mock('@capacitor/core', () => ({
   Capacitor: { getPlatform: () => 'android' },
   registerPlugin: () => ({ executeRpc, addListener }),
 }));
-
-// eslint-disable-next-line import/first -- vi.mock must be set up before the mocked module is imported
-import { Capacitor } from '@capacitor/core';
-
-// eslint-disable-next-line import/first -- vi.mock must be set up before the mocked module is imported
-import { AppsFlyerRpcError, CapacitorTransport } from '../capacitor-transport';
 
 describe('CapacitorTransport', () => {
   beforeEach(() => {
