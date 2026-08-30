@@ -1,5 +1,6 @@
 package capacitor.plugin.appsflyer.sdk
 
+import android.Manifest
 import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.Lifecycle
@@ -10,13 +11,30 @@ import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
+import com.getcapacitor.annotation.Permission
 import org.json.JSONObject
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 
 private const val RPC_EVENT_NAME = "rpcEvent"
 private const val DEEP_LINK_EVENT_NAME = "onDeepLinking"
+
+// Android *wire* method names (post js-core-plugin resolveRpc() mapping, not the public API names --
+// e.g. registerDeepLinkListener -> subscribeForDeepLink) whose native handler mutates AppsFlyerRpcHandler's
+// unsynchronized listener fields. Routed to their own FIFO lane (mirrors appsflyer-react-native-plugin) to
+// avoid head-of-line blocking with general RPC calls.
+private val LISTENER_LIFECYCLE_METHODS: Set<String> = setOf(
+    "init",
+    "registerConversionListener", "unregisterConversionListener",
+    "registerSessionReadyListener", "unregisterSessionReadyListener",
+    "subscribeForDeepLink", "unsubscribeForDeepLink",
+)
+
+// internal (not private) + top-level so AppsFlyerPluginTest can call this directly.
+internal fun isListenerLifecycleCall(requestJson: String): Boolean =
+    parseJsonOrDefault(requestJson, default = false) { it.optString("method") in LISTENER_LIFECYCLE_METHODS }
 
 // Shared by every JSON helper below — best-effort parse, `default` instead of throwing.
 private inline fun <T> parseJsonOrDefault(json: String, default: T, block: (JSONObject) -> T): T {
@@ -46,10 +64,20 @@ internal fun normalizeDeepLinkEvent(eventJson: String): String = parseJsonOrDefa
 }
 
 /** Capacitor bridge — every SDK capability is dispatched via executeRpc -> AppsFlyerRpcHandler. */
-@CapacitorPlugin(name = "AppsFlyerPlugin")
+@CapacitorPlugin(
+    name = "AppsFlyerPlugin",
+    permissions = [Permission(
+        strings = arrayOf(
+            Manifest.permission.INTERNET,
+            Manifest.permission.ACCESS_NETWORK_STATE,
+            "com.google.android.gms.permission.AD_ID"
+        )
+    )]
+)
 class AppsFlyerPlugin : Plugin() {
 
-    // Single FIFO lane matches iOS's RPCQueue: AppsFlyerRpcHandler's listener fields are unsynchronized `var`s, so a pool would race registration against dispatch and could reorder calls (e.g. start() overtaking setCustomerUserId()).
+    // Each lane single-threaded, not pooled: AppsFlyerRpcHandler's listener fields are unsynchronized `var`s, so pooling would race registration against dispatch (e.g. start() overtaking setCustomerUserId()); two lanes just decouples listener calls from general RPC calls.
+    private val listenerExecutor = Executors.newSingleThreadExecutor()
     private val rpcExecutor = Executors.newSingleThreadExecutor()
 
     private val rpcHandler by lazy {
@@ -70,8 +98,13 @@ class AppsFlyerPlugin : Plugin() {
             call.reject("requestJson is required", "INVALID_REQUEST")
             return
         }
+        val executor = if (isListenerLifecycleCall(requestJson)) listenerExecutor else rpcExecutor
+        dispatch(call, executor, requestJson)
+    }
+
+    private fun dispatch(call: PluginCall, executor: ExecutorService, requestJson: String) {
         try {
-            rpcExecutor.execute {
+            executor.execute {
                 // Never let an exception escape the task: uncaught, it hits this worker thread's default UncaughtExceptionHandler and kills the whole process on Android.
                 try {
                     val responseJson = safeDispatchToNative(requestJson)
@@ -90,16 +123,18 @@ class AppsFlyerPlugin : Plugin() {
     override fun handleOnDestroy() {
         super.handleOnDestroy()
         // shutdownNow (not shutdown): don't run queued calls against a torn-down bridge/activity; awaitTermination bounds the wait so onDestroy can't hang on a stuck task.
-        rpcExecutor.shutdownNow()
+        for (executor in listOf(listenerExecutor, rpcExecutor)) {
+            executor.shutdownNow()
+        }
         try {
+            listenerExecutor.awaitTermination(2, TimeUnit.SECONDS)
             rpcExecutor.awaitTermination(2, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
         }
     }
 
-    // The native SDK's automatic onActivityResumed deep-link detection misses a new VIEW intent on an already-resumed singleTask/singleTop activity, so forward it manually here — but only
-    // when already RESUMED, since otherwise onResume is still coming and the automatic path would double-dispatch the same link. shouldTriggerSession=true: a link tapped mid-session is a re-engagement.
+    // Native auto-detection misses a VIEW intent on an already-resumed singleTask/singleTop activity; forward manually, but only if already RESUMED, to avoid double-dispatching with the automatic path.
     override fun handleOnNewIntent(intent: Intent?) {
         super.handleOnNewIntent(intent)
         if (intent == null) return
@@ -126,8 +161,7 @@ class AppsFlyerPlugin : Plugin() {
         return try {
             normalize(rpcHandler.execute(requestJson))
         } catch (e: Exception) {
-            // Don't log `requestJson` — same PII risk as parseJsonOrDefault above (e.g. a
-            // performDeepLinking call carries a URL with PII query params).
+            // Don't log `requestJson` — same PII risk as parseJsonOrDefault above (e.g. a performDeepLinking call carries a URL with PII query params).
             Log.w("AppsFlyerPlugin", "Native RPC dispatch failed", e)
             normalizeError(code = 500, message = "Unexpected native RPC failure")
         }

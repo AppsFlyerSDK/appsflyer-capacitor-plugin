@@ -3,6 +3,7 @@ package capacitor.plugin.appsflyer.sdk
 import com.appsflyer.pluginbridge.model.RpcResponse
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -55,5 +56,19 @@ class AppsFlyerPluginTest {
     fun `normalizeDeepLinkEvent leaves event untouched when data is missing`() {
         val input = """{"event":"onDeepLinking"}"""
         assertEquals(input, normalizeDeepLinkEvent(input))
+    }
+
+    @Test
+    fun `isListenerLifecycleCall is true for init and listener registration methods`() {
+        assertTrue(isListenerLifecycleCall("""{"method":"init","params":{}}"""))
+        assertTrue(isListenerLifecycleCall("""{"method":"registerConversionListener","params":{}}"""))
+        // "subscribeForDeepLink" is the Android wire name for the public registerDeepLinkListener API.
+        assertTrue(isListenerLifecycleCall("""{"method":"subscribeForDeepLink","params":{}}"""))
+    }
+
+    @Test
+    fun `isListenerLifecycleCall is false for general RPC methods`() {
+        assertFalse(isListenerLifecycleCall("""{"method":"logEvent","params":{}}"""))
+        assertFalse(isListenerLifecycleCall("""{"method":"performDeepLinking","params":{}}"""))
     }
 }
