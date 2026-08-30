@@ -25,9 +25,11 @@ await AppsFlyer.logEvent({
 });
 ```
 
-`logEvent` resolves `Promise<void>` — by default as soon as the SDK queues the event, not once it
-reaches AppsFlyer's server. Pass `awaitResponse: true` to instead wait for the native SDK's own
-completion handler. See [`docs/API.md#logevent`](API.md#logevent) for the full parameter table.
+> **Note:** `logEvent` resolves `Promise<void>` as soon as the SDK queues the event, not once it
+> reaches AppsFlyer's server. For revenue- or funnel-critical events, pass `awaitResponse: true`
+> to instead wait for the native SDK's own completion handler before treating the event as sent.
+
+See [`docs/API.md#logevent`](API.md#logevent) for the full parameter table.
 
 ## In-app purchase validation
 

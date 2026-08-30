@@ -2,11 +2,11 @@
 
 <img src="https://massets.appsflyer.com/wp-content/uploads/2018/06/20092440/static-ziv_1TP.png" width="400">
 
-Every method below is generated from `@appsflyer-sdk/js-core-plugin`'s `AppsFlyerSDK` class
-(`node_modules/@appsflyer-sdk/js-core-plugin/dist/appsflyer-sdk.d.ts`) and its RPC dispatch table
-(`dist/generated/rpc-map.js`) — that's the source of truth this page is generated from, and
-your editor's autocomplete on the `AppsFlyer` import will always match it exactly. If this page
-and your editor ever disagree, trust the editor and file an issue.
+Every method below is kept in sync with `@appsflyer-sdk/js-core-plugin`'s public `AppsFlyerSDK`
+class (`node_modules/@appsflyer-sdk/js-core-plugin/dist/appsflyer-sdk.d.ts`) and its RPC dispatch
+table (`dist/generated/rpc-map.js`) — that's the source of truth for this page, and your editor's
+autocomplete on the `AppsFlyer` import will always match it exactly. If this page and your editor
+ever disagree, trust the editor and file an issue.
 
 - [Basic usage](#basic-usage)
 - [Session-ready ordering](#session-ready-ordering)
@@ -232,8 +232,9 @@ await AppsFlyer.enableDebug({ enabled: true });
 
 `logEvent(params) : Promise<void>`
 
-Records an in-app event — see [`docs/InAppEvents.md`](InAppEvents.md) for event naming rules
-(45-character limit) and predefined event names.
+Records an in-app event — see [`docs/InAppEvents.md`](InAppEvents.md) for usage, and AppsFlyer's
+[rich in-app events guide](https://support.appsflyer.com/hc/en-us/articles/115005544169-Rich-in-app-events-guide)
+for event naming rules (45-character limit) and predefined event names.
 
 | parameter | type | description |
 | --- | --- | --- |
@@ -244,7 +245,7 @@ Records an in-app event — see [`docs/InAppEvents.md`](InAppEvents.md) for even
 ```typescript
 await AppsFlyer.logEvent({
   eventName: 'af_add_to_cart',
-  eventValues: { af_content_id: 'id123', af_currency: 'USD', af_revenue: '2' },
+  eventValues: { af_content_id: 'id123', af_currency: 'USD', af_revenue: 2 },
 });
 ```
 
@@ -536,7 +537,9 @@ await AppsFlyer.logInvite({ channel: 'facebook', eventParameters: { af_content_i
 `logCrossPromoteImpression(params) : Promise<void>`
 
 Attributes an impression for a cross-promotion. Use the promoted app's ID as it appears in the
-AppsFlyer dashboard.
+AppsFlyer dashboard. Note this method names the parameter `appId`, while `logAndOpenStore` below
+names the same concept `promotedAppId` — a historical naming inconsistency in the underlying API,
+not a typo.
 
 | parameter | type | description |
 | --- | --- | --- |
@@ -1457,6 +1460,8 @@ each platform, so both fire — pass a no-op for one if you only care about the 
 | onConversionDataFail | function | optional; receives the failure |
 
 ```typescript
+await AppsFlyer.init({ devKey: 'YOUR_DEV_KEY', appId: 'YOUR_APP_ID' });
+
 AppsFlyer.registerConversionListener({
   onConversionDataSuccess: (data) => {
     if (data.is_first_launch && data.af_status === 'Non-organic') {
@@ -1465,8 +1470,6 @@ AppsFlyer.registerConversionListener({
   },
   onConversionDataFail: (error) => console.error(error),
 });
-
-await AppsFlyer.init({ devKey: 'YOUR_DEV_KEY', appId: 'YOUR_APP_ID' });
 ```
 
 The callback receives the conversion-data object directly — not wrapped in a `{data, status,
