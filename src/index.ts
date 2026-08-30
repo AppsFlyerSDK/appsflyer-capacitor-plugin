@@ -1,8 +1,7 @@
 import { AppsFlyerSDK } from '@appsflyer-sdk/js-core-plugin';
 
-import pkg from '../package.json';
-
 import { CapacitorTransport } from './capacitor-transport';
+import { version } from './version';
 
 // Re-exports every RPC method's param/return types and the RpcTransport/RpcEvent contract.
 export * from '@appsflyer-sdk/js-core-plugin';
@@ -11,7 +10,7 @@ export * from './constants';
 
 const AppsFlyer = new AppsFlyerSDK(new CapacitorTransport(), {
   plugin: 'capacitor',
-  pluginVersion: pkg.version,
+  pluginVersion: version,
 });
 
 export { AppsFlyer };
