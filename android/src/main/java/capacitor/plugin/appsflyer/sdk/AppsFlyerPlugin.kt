@@ -23,8 +23,7 @@ private const val DEEP_LINK_EVENT_NAME = "onDeepLinking"
 
 // Android *wire* method names (post js-core-plugin resolveRpc() mapping, not the public API names --
 // e.g. registerDeepLinkListener -> subscribeForDeepLink) whose native handler mutates AppsFlyerRpcHandler's
-// unsynchronized listener fields. Routed to their own FIFO lane (mirrors appsflyer-react-native-plugin) to
-// avoid head-of-line blocking with general RPC calls.
+// unsynchronized listener fields. Routed to their own FIFO lane to avoid head-of-line blocking with general RPC calls.
 private val LISTENER_LIFECYCLE_METHODS: Set<String> = setOf(
     "init",
     "registerConversionListener", "unregisterConversionListener",
