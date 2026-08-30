@@ -56,9 +56,7 @@ describe('CapacitorTransport', () => {
     });
     const transport = new CapacitorTransport();
 
-    await expect(transport.call('start')).rejects.toMatchObject(
-      new AppsFlyerRpcError(500, 'boom'),
-    );
+    await expect(transport.call('start')).rejects.toMatchObject(new AppsFlyerRpcError(500, 'boom'));
   });
 
   it('rejects with a clear error on malformed native response JSON', async () => {
