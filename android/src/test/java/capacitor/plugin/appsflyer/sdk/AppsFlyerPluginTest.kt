@@ -1,37 +1,59 @@
 package capacitor.plugin.appsflyer.sdk
 
+import com.appsflyer.pluginbridge.model.RpcResponse
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppsFlyerPluginTest {
 
+    // Same three cases as AppsFlyerPluginTests.swift's envelope-parity tests — keep in sync; proves both platforms emit an identical { success, data|error } shape despite differently-shaped raw input.
+
     @Test
-    fun `isListenerLifecycleCall is true for init`() {
-        assertTrue(isListenerLifecycleCall("""{"method":"init","params":{}}"""))
+    fun `normalize matches iOS envelope for a successful result with data`() {
+        val json = normalize(RpcResponse.Success(mapOf("uid" to "abc")))
+        assertEquals(JSONObject("""{"success":true,"data":{"uid":"abc"}}""").toString(), JSONObject(json).toString())
     }
 
     @Test
-    fun `isListenerLifecycleCall is false for logEvent`() {
-        assertFalse(isListenerLifecycleCall("""{"method":"logEvent","params":{}}"""))
+    fun `normalize matches iOS envelope for a void success`() {
+        val json = normalize(RpcResponse.VoidSuccess)
+        assertEquals(JSONObject("""{"success":true,"data":null}""").toString(), JSONObject(json).toString())
     }
 
     @Test
-    fun `isListenerLifecycleCall is false for malformed json`() {
-        assertFalse(isListenerLifecycleCall("not json"))
+    fun `normalize matches iOS envelope for a protocol error`() {
+        val json = normalize(RpcResponse.Error(code = 404, message = "not found"))
+        assertEquals(
+            JSONObject("""{"success":false,"error":{"code":404,"message":"not found"}}""").toString(),
+            JSONObject(json).toString(),
+        )
     }
 
     @Test
-    fun `normalizeDeepLinkEvent maps FOUND to found`() {
+    fun `normalizeDeepLinkEvent leaves status untouched — js-core-plugin owns that normalization`() {
         val input = """{"event":"onDeepLinking","data":{"status":"FOUND"}}"""
         val output = normalizeDeepLinkEvent(input)
-        assertTrue(output.contains("\"status\":\"found\""))
+        assertTrue(output.contains("\"status\":\"FOUND\""))
     }
 
     @Test
     fun `normalizeDeepLinkEvent leaves non-deep-link events untouched`() {
         val input = """{"event":"onConversionDataSuccess","data":{"af_status":"Organic"}}"""
+        assertEquals(input, normalizeDeepLinkEvent(input))
+    }
+
+    @Test
+    fun `normalizeDeepLinkEvent lowercases the error field`() {
+        val input = """{"event":"onDeepLinking","data":{"status":"ERROR","error":"NETWORK_TIMEOUT"}}"""
+        val output = normalizeDeepLinkEvent(input)
+        assertTrue(output.contains("\"error\":\"network_timeout\""))
+    }
+
+    @Test
+    fun `normalizeDeepLinkEvent leaves event untouched when data is missing`() {
+        val input = """{"event":"onDeepLinking"}"""
         assertEquals(input, normalizeDeepLinkEvent(input))
     }
 }
