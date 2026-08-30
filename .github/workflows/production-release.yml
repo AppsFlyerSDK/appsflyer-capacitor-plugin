@@ -32,6 +32,7 @@ jobs:
       android_sdk_version: ${{ steps.ver.outputs.android_sdk_version }}
       android_plugin_bridge_version: ${{ steps.ver.outputs.android_plugin_bridge_version }}
       ios_sdk_version: ${{ steps.ver.outputs.ios_sdk_version }}
+      ios_framework_version: ${{ steps.ver.outputs.ios_framework_version }}
       tag: ${{ steps.ver.outputs.tag }}
     steps:
       - name: Resolve target ref
@@ -98,6 +99,7 @@ jobs:
           ANDROID_SDK_VERSION=$(jq -r '.androidSdkVersion' package.json)
           ANDROID_PLUGIN_BRIDGE_VERSION=$(jq -r '.androidPluginBridgeVersion' package.json)
           IOS_SDK_VERSION=$(jq -r '.iosSdkVersion' package.json)
+          IOS_FRAMEWORK_VERSION=$(jq -r '.iosFrameworkVersion' package.json)
           BUILD_NUMBER=$(jq -r '.buildNumber' package.json)
           if ! [[ "$PLUGIN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::package.json version $PLUGIN_VERSION still has -rcN. Promote step missed?"
@@ -107,6 +109,7 @@ jobs:
           echo "android_sdk_version=$ANDROID_SDK_VERSION" >> "$GITHUB_OUTPUT"
           echo "android_plugin_bridge_version=$ANDROID_PLUGIN_BRIDGE_VERSION" >> "$GITHUB_OUTPUT"
           echo "ios_sdk_version=$IOS_SDK_VERSION" >> "$GITHUB_OUTPUT"
+          echo "ios_framework_version=$IOS_FRAMEWORK_VERSION" >> "$GITHUB_OUTPUT"
           echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
           echo "tag=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
 
@@ -270,6 +273,7 @@ jobs:
           ANDROID_SDK_VERSION: ${{ needs.publish.outputs.android_sdk_version }}
           ANDROID_PLUGIN_BRIDGE_VERSION: ${{ needs.publish.outputs.android_plugin_bridge_version }}
           IOS_SDK_VERSION: ${{ needs.publish.outputs.ios_sdk_version }}
+          IOS_FRAMEWORK_VERSION: ${{ needs.publish.outputs.ios_framework_version }}
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -302,7 +306,8 @@ jobs:
             "*Native SDK's:*",
             `:android: ${env.ANDROID_SDK_VERSION}`,
             `:gear: af-android-plugin-bridge ${env.ANDROID_PLUGIN_BRIDGE_VERSION}`,
-            `:apple_company: ${env.IOS_SDK_VERSION}`,
+            `:apple_company: AppsFlyerRPC ${env.IOS_SDK_VERSION}`,
+            `:gear: AppsFlyerFramework-Static ${env.IOS_FRAMEWORK_VERSION}`,
             '',
             ':capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:',
           ].join('\n');

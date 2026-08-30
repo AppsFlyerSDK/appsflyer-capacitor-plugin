@@ -46,6 +46,8 @@ jobs:
           npm run prettier -- --check
       - name: Build plugin (TS + rollup)
         run: npm run build
+      - name: Check Package.swift SPM pin compatibility
+        run: ./.github/workflows/scripts/checkPackageSwiftPins.sh
 
   build-android:
     name: Build QA test app (Android)

@@ -13,7 +13,11 @@ on:
         required: true
         type: string
       ios_sdk_version:
-        description: 'iOS SDK version (X.Y.Z)'
+        description: 'iOS SDK version (X.Y.Z) — this is the AppsFlyerRPC pod/SPM pin, not AppsFlyerFramework'
+        required: true
+        type: string
+      ios_framework_version:
+        description: 'iOS AppsFlyerFramework-Static version (X.Y.Z) — required alongside ios_sdk_version; must be a known-good pairing (see checkPackageSwiftPins.sh)'
         required: true
         type: string
       android_sdk_version:
@@ -60,6 +64,7 @@ jobs:
         env:
           PLUGIN_VERSION: ${{ inputs.plugin_version }}
           IOS_SDK_VERSION: ${{ inputs.ios_sdk_version }}
+          IOS_FRAMEWORK_VERSION: ${{ inputs.ios_framework_version }}
           ANDROID_SDK_VERSION: ${{ inputs.android_sdk_version }}
           ANDROID_PLUGIN_BRIDGE_VERSION: ${{ inputs.android_plugin_bridge_version }}
         run: |
@@ -69,6 +74,10 @@ jobs:
           fi
           if ! [[ "$IOS_SDK_VERSION" =~ $SDK_VERSION_REGEX ]]; then
             echo "iOS SDK version '$IOS_SDK_VERSION' does not match $SDK_VERSION_REGEX"
+            exit 1
+          fi
+          if ! [[ "$IOS_FRAMEWORK_VERSION" =~ $SDK_VERSION_REGEX ]]; then
+            echo "iOS Framework version '$IOS_FRAMEWORK_VERSION' does not match $SDK_VERSION_REGEX"
             exit 1
           fi
           if ! [[ "$ANDROID_SDK_VERSION" =~ $SDK_VERSION_REGEX ]]; then
@@ -132,22 +141,32 @@ jobs:
           fi
 
       - name: Run updatePlugin.sh (bump versions + RC suffix)
+        env:
+          PLUGIN_VERSION: ${{ inputs.plugin_version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          IOS_SDK_VERSION: ${{ inputs.ios_sdk_version }}
+          IOS_FRAMEWORK_VERSION: ${{ inputs.ios_framework_version }}
+          ANDROID_SDK_VERSION: ${{ inputs.android_sdk_version }}
+          ANDROID_PLUGIN_BRIDGE_VERSION: ${{ inputs.android_plugin_bridge_version }}
         run: |
           chmod +x .github/workflows/scripts/*.sh
           .github/workflows/scripts/updatePlugin.sh \
-            pluginVersion=${{ inputs.plugin_version }} \
-            buildNumber=${{ github.run_number }} \
-            iOSVersion=${{ inputs.ios_sdk_version }} \
-            androidVersion=${{ inputs.android_sdk_version }} \
-            androidPluginBridgeVersion=${{ inputs.android_plugin_bridge_version }}
+            pluginVersion="$PLUGIN_VERSION" \
+            buildNumber="$BUILD_NUMBER" \
+            iOSVersion="$IOS_SDK_VERSION" \
+            iOSFrameworkVersion="$IOS_FRAMEWORK_VERSION" \
+            androidVersion="$ANDROID_SDK_VERSION" \
+            androidPluginBridgeVersion="$ANDROID_PLUGIN_BRIDGE_VERSION"
 
       - name: Commit version bump
+        env:
+          PLUGIN_VERSION: ${{ inputs.plugin_version }}
         run: |
           git add -A
           if git diff --cached --quiet; then
             echo "No version diff to commit (likely re-running same RC)."
           else
-            git commit -m "chore: bump plugin to ${{ inputs.plugin_version }} (CI)"
+            git commit -m "chore: bump plugin to $PLUGIN_VERSION (CI)"
           fi
 
       - name: Push release branch
@@ -191,10 +210,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Verify all required jobs succeeded (or skipped legitimately)
+        env:
+          CI_RESULT: ${{ needs.run-ci.result }}
+          IOS_RESULT: ${{ needs.run-e2e-ios.result }}
+          ANDROID_RESULT: ${{ needs.run-e2e-android.result }}
+          SKIP_E2E: ${{ inputs.skip_e2e }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          ci_result="${{ needs.run-ci.result }}"
-          ios_result="${{ needs.run-e2e-ios.result }}"
-          android_result="${{ needs.run-e2e-android.result }}"
+          ci_result="$CI_RESULT"
+          ios_result="$IOS_RESULT"
+          android_result="$ANDROID_RESULT"
 
           fail=0
           for pair in "ci:$ci_result" "ios:$ios_result" "android:$android_result"; do
@@ -213,7 +238,7 @@ jobs:
           if [ "$fail" -ne 0 ]; then
             exit 1
           fi
-          if [ "${{ inputs.skip_e2e }}" = "true" ] && [ "${{ inputs.dry_run }}" != "true" ]; then
+          if [ "$SKIP_E2E" = "true" ] && [ "$DRY_RUN" != "true" ]; then
             echo "::error::skip_e2e is only allowed when dry_run=true"
             exit 1
           fi
@@ -273,8 +298,10 @@ jobs:
       - name: Set published output
         id: set-publish-out
         if: success()
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          if ${{ inputs.dry_run }}; then
+          if [ "$DRY_RUN" = "true" ]; then
             echo "published=false" >> "$GITHUB_OUTPUT"
           else
             echo "published=true" >> "$GITHUB_OUTPUT"
@@ -401,8 +428,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      # Status + legs run env-only and first so the failure Slack still fires
-      # even if checkout / Jira are unhappy. Mirrors Flutter's notify-team.
+      # Status + legs run env-only and first so the failure Slack still fires even if checkout/Jira are unhappy (mirrors Flutter's notify-team).
       - name: Determine status and failed stage
         id: status
         env:
@@ -445,8 +471,7 @@ jobs:
           E2E_ANDROID_RESULT: ${{ needs.run-e2e-android.result }}
         run: |
           set -euo pipefail
-          # CI accepts skipped as a pass (skip_unit); E2E does not (skip_e2e is
-          # dry-run-only). Mirrors Flutter's icon_for helper.
+          # CI accepts skipped as a pass (skip_unit); E2E does not (skip_e2e is dry-run-only).
           icon_for() {
             local kind="$1" result="$2"
             case "$result" in
@@ -467,8 +492,7 @@ jobs:
             echo "e2e_android_result=$E2E_ANDROID_RESULT"
           } >> "$GITHUB_OUTPUT"
 
-      # Enrichment runs only on the success path; failure Slack below references
-      # only needs.*.result + inputs, so a checkout/Jira blip cannot silence it.
+      # Enrichment runs only on the success path; failure Slack below only reads needs.*.result + inputs, so a checkout/Jira blip can't silence it.
       - name: Checkout release branch
         if: steps.status.outputs.success == 'true'
         uses: actions/checkout@v4
@@ -539,8 +563,7 @@ jobs:
 
       - name: Build Slack success payload
         id: slack-success-payload
-        # Skip during dry runs so iterative pipeline testing doesn't spam the
-        # QA channel. Real RCs (dry_run=false) post normally.
+        # Skip during dry runs so iterative pipeline testing doesn't spam the QA channel.
         if: steps.status.outputs.success == 'true' && inputs.dry_run != true
         env:
           PLUGIN_VERSION: ${{ inputs.plugin_version }}
@@ -558,6 +581,7 @@ jobs:
           ANDROID_SDK_VERSION: ${{ inputs.android_sdk_version }}
           ANDROID_PLUGIN_BRIDGE_VERSION: ${{ inputs.android_plugin_bridge_version }}
           IOS_SDK_VERSION: ${{ inputs.ios_sdk_version }}
+          IOS_FRAMEWORK_VERSION: ${{ inputs.ios_framework_version }}
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -593,7 +617,8 @@ jobs:
             "*Native SDK's:*",
             `:android: ${env.ANDROID_SDK_VERSION}`,
             `:gear: af-android-plugin-bridge ${env.ANDROID_PLUGIN_BRIDGE_VERSION}`,
-            `:apple_company: ${env.IOS_SDK_VERSION}`,
+            `:apple_company: AppsFlyerRPC ${env.IOS_SDK_VERSION}`,
+            `:gear: AppsFlyerFramework-Static ${env.IOS_FRAMEWORK_VERSION}`,
             '',
             ':capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor::capacitor:',
           ].join('\n');
