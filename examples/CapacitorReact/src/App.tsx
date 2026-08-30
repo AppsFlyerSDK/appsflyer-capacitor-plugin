@@ -27,23 +27,21 @@ import { AppTrackingTransparency } from "capacitor-plugin-app-tracking-transpare
 
 async function initAppsFlyer() {
   await setUDL();
-  await setConversions();
-  runAppsFlyerAPIs();
   await AppsFlyer.init({
     appId: process.env.REACT_APP_AF_APP_ID ?? '',
     devKey: process.env.REACT_APP_AF_DEV_KEY ?? '',
   });
+  await setConversions();
+  runAppsFlyerAPIs();
   await AppsFlyer.enableDebug({ enabled: true });
   AppsFlyer.registerSessionReadyListener(async () => {
-    // Gate only start() on ATT, not init()/listener registration — start() is
-    // what reads IDFA and transmits, so it's the only call that needs the wait.
+    // Gate only start() on ATT — it's the only call that reads IDFA and transmits.
     const res = await AppTrackingTransparency.requestPermission();
     console.log('ATT status: ' + res.status);
     AppsFlyer.start();
   });
 }
 
-// set a listener
 function setConversions() {
   return AppsFlyer.registerConversionListener({
     onConversionDataSuccess: data => {
@@ -62,8 +60,7 @@ function handleLink(deepLinkValue: string) {
   console.log(deepLinkValue);
 }
 
-// SDK 7 folds OAOA (onAppOpenAttribution) into this same UDL callback —
-// js-core-plugin exposes no separate OAOA registration.
+// SDK 7 folds OAOA (onAppOpenAttribution) into this same UDL callback — no separate OAOA registration exists.
 function setUDL() {
   return AppsFlyer.registerDeepLinkListener({
     onDeepLinking: data => {
@@ -79,16 +76,12 @@ function setUDL() {
 }
 
 function runAppsFlyerAPIs() {
-  //AppsFlyer.setHost({hostName:'af',hostPrefixName:'cn'});
-  //AppsFlyer.disableAdvertisingIdentifier({shouldDisable:true});
-  //AppsFlyer.disableCollectASA({shouldDisable:true});
-  //AppsFlyer.disableSKAdNetwork({shouldDisable:true});
   AppsFlyer.setCurrentDeviceLanguage({ language: 'en' }).catch(e => console.log(e));
   AppsFlyer.setAppInviteOneLink({ oneLinkId: 'your_onelink_id' }).then();
-  AppsFlyer.setCustomerUserId({ customerId: 'csadadadad' });
-  AppsFlyer.setCurrencyCode({ currencyCode: 'ILS' });
-  AppsFlyer.updateServerUninstallToken({ token: 'fdsffddfbnjdfoiuvhof' });
-  AppsFlyer.setOneLinkCustomDomain({ domains: ['promotion.greatapp.com', 'click.greatapp.com', 'deals.greatapp.com'] });
+  AppsFlyer.setCustomerUserId({ customerId: 'csadadadad' }).catch(e => console.log(e));
+  AppsFlyer.setCurrencyCode({ currencyCode: 'ILS' }).catch(e => console.log(e));
+  AppsFlyer.updateServerUninstallToken({ token: 'fdsffddfbnjdfoiuvhof' }).catch(e => console.log(e));
+  AppsFlyer.setOneLinkCustomDomain({ domains: ['promotion.greatapp.com', 'click.greatapp.com', 'deals.greatapp.com'] }).catch(e => console.log(e));
   AppsFlyer.appendParametersToDeepLinkingURL({
     contains: 'af',
     parameters: {
@@ -96,24 +89,20 @@ function runAppsFlyerAPIs() {
       pid: 'cap_app', //Required
       my_param: 'xyz'
     }
-  });
-  AppsFlyer.setResolveDeepLinkURLs({ urls: ['af', 'appsflyer'] });
-  AppsFlyer.addPushNotificationDeepLinkPath({ deepLinkPath: ['af', 'a', 'b'] });
+  }).catch(e => console.log(e));
+  AppsFlyer.setResolveDeepLinkURLs({ urls: ['af', 'appsflyer'] }).catch(e => console.log(e));
+  AppsFlyer.addPushNotificationDeepLinkPath({ deepLinkPath: ['af', 'a', 'b'] }).catch(e => console.log(e));
   AppsFlyer.setAdditionalData({
     customData: {
       capacitor: 'plugin',
       apps: 'Flyer'
     }
-  });
-  //   AppsFlyer.enableFacebookDeferredApplinks({enableFacebookDAL: true})
-  //     .then(res => console.log(res.res))
-  //     .catch(e => console.log(e));
-  //
+  }).catch(e => console.log(e));
 }
 
 const App: React.FC = () => {
   useEffect(() => {
-    initAppsFlyer();
+    initAppsFlyer().catch(e => console.log(e));
   }, []);
 
   return (
