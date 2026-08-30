@@ -2,6 +2,7 @@
   "name": "appsflyer-capacitor-plugin",
   "version": "7.0.2",
   "iosSdkVersion": "7.0.13",
+  "iosFrameworkVersion": "7.0.2",
   "androidSdkVersion": "7.0.1",
   "androidPluginBridgeVersion": "7.0.12",
   "buildNumber": "1",
@@ -48,18 +49,18 @@
     "eslint": "eslint . --ext ts",
     "prettier": "prettier --plugin=prettier-plugin-java \"**/*.{css,html,ts,js,java}\"",
     "swiftlint": "node-swiftlint",
-    "build": "npm run clean  && tsc && rollup -c rollup.config.mjs",
+    "build": "npm run clean && node scripts/gen-version.mjs && tsc && rollup -c rollup.config.mjs",
     "clean": "rimraf ./dist",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build",
     "rimraf": "./node_modules/rimraf/bin.js",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "pretest": "node scripts/gen-version.mjs && npm run typecheck",
     "test": "vitest run"
-  },
-  "dependencies": {
-    "@appsflyer-sdk/js-core-plugin": "7.0.15"
   },
   "devDependencies": {
     "@angular/cli": "^12.1.1",
+    "@appsflyer-sdk/js-core-plugin": "7.0.15",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
@@ -67,7 +68,6 @@
     "@ionic/eslint-config": "^0.4.0",
     "@ionic/prettier-config": "^4.0.0",
     "@ionic/swiftlint-config": "^2.0.0",
-    "@rollup/plugin-json": "^6.1.0",
     "eslint": "^8.57.1",
     "prettier": "^3.x",
     "prettier-plugin-java": "^2.x",
@@ -78,6 +78,7 @@
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
+    "@appsflyer-sdk/js-core-plugin": "7.0.15",
     "@capacitor/core": ">=8.0.0"
   },
   "prettier": "@ionic/prettier-config",
