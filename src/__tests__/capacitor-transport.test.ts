@@ -11,7 +11,10 @@ vi.mock('@capacitor/core', () => ({
 }));
 
 // eslint-disable-next-line import/first -- vi.mock must be set up before the mocked module is imported
-import { CapacitorTransport } from '../capacitor-transport';
+import { Capacitor } from '@capacitor/core';
+
+// eslint-disable-next-line import/first -- vi.mock must be set up before the mocked module is imported
+import { AppsFlyerRpcError, CapacitorTransport } from '../capacitor-transport';
 
 describe('CapacitorTransport', () => {
   beforeEach(() => {
@@ -22,6 +25,14 @@ describe('CapacitorTransport', () => {
   it('reports the Capacitor platform', () => {
     const transport = new CapacitorTransport();
     expect(transport.platform).toBe('android');
+  });
+
+  it('does not throw on construction when Capacitor.getPlatform() returns web', () => {
+    // Construction must never fail: `AppsFlyer` is a module-level singleton (index.ts), so throwing here would crash on import for any app that also builds a web target.
+    const platformSpy = vi.spyOn(Capacitor, 'getPlatform').mockReturnValue('web');
+    const transport = new CapacitorTransport();
+    expect(transport.platform).toBe('web');
+    platformSpy.mockRestore();
   });
 
   it('serializes method+params and resolves data on success', async () => {
@@ -38,19 +49,36 @@ describe('CapacitorTransport', () => {
     expect(result).toEqual({ uid: 'abc' });
   });
 
-  it('rejects with the native error on failure', async () => {
+  it('rejects with an AppsFlyerRpcError on failure', async () => {
     executeRpc.mockResolvedValue({
       responseJson: JSON.stringify({
         success: false,
-        error: { code: 'SDK_ERROR', message: 'boom' },
+        error: { code: 500, message: 'boom' },
       }),
     });
     const transport = new CapacitorTransport();
 
-    await expect(transport.call('start')).rejects.toEqual({
-      code: 'SDK_ERROR',
-      message: 'boom',
-    });
+    await expect(transport.call('start')).rejects.toMatchObject(
+      new AppsFlyerRpcError(500, 'boom'),
+    );
+  });
+
+  it('rejects with a clear error on malformed native response JSON', async () => {
+    executeRpc.mockResolvedValue({ responseJson: 'not json' });
+    const transport = new CapacitorTransport();
+
+    await expect(transport.call('start')).rejects.toThrow(/Malformed RPC response/);
+  });
+
+  it('warns and still sends the call when logEvent uses the renamed eventValue param', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    executeRpc.mockResolvedValue({ responseJson: JSON.stringify({ success: true, data: undefined }) });
+    const transport = new CapacitorTransport();
+
+    await transport.call('logEvent', { eventName: 'af_purchase', eventValue: { af_revenue: 1 } });
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('eventValue'));
+    warnSpy.mockRestore();
   });
 
   it('subscribe parses the envelope JSON and forwards RpcEvent objects', () => {
@@ -68,5 +96,53 @@ describe('CapacitorTransport', () => {
     });
 
     expect(received).toEqual([{ event: 'onConversionDataSuccess', data: { af_status: 'Organic' } }]);
+  });
+
+  it('drops a malformed (non-JSON) rpcEvent payload instead of throwing', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    let capturedCallback: ((data: { envelopeJson: string }) => void) | undefined;
+    addListener.mockImplementation((_name: string, cb: typeof capturedCallback) => {
+      capturedCallback = cb;
+      return Promise.resolve({ remove: vi.fn() });
+    });
+    const transport = new CapacitorTransport();
+    const listener = vi.fn();
+
+    transport.subscribe(listener);
+    expect(() => capturedCallback?.({ envelopeJson: 'not json' })).not.toThrow();
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Malformed rpcEvent payload'));
+    warnSpy.mockRestore();
+  });
+
+  it('drops a well-formed JSON payload missing the required event field', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    let capturedCallback: ((data: { envelopeJson: string }) => void) | undefined;
+    addListener.mockImplementation((_name: string, cb: typeof capturedCallback) => {
+      capturedCallback = cb;
+      return Promise.resolve({ remove: vi.fn() });
+    });
+    const transport = new CapacitorTransport();
+    const listener = vi.fn();
+
+    transport.subscribe(listener);
+    capturedCallback?.({ envelopeJson: JSON.stringify({ data: { af_status: 'Organic' } }) });
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Malformed rpcEvent payload'));
+    warnSpy.mockRestore();
+  });
+
+  it('remove() unregisters the underlying native listener', async () => {
+    const removeSpy = vi.fn();
+    addListener.mockResolvedValue({ remove: removeSpy });
+    const transport = new CapacitorTransport();
+
+    const handle = transport.subscribe(() => undefined);
+    handle.remove();
+    await Promise.resolve();
+
+    expect(removeSpy).toHaveBeenCalled();
   });
 });
