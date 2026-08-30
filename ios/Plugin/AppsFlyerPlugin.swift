@@ -12,52 +12,41 @@ public class AppsFlyerPlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     public override func load() {
+        // AppsFlyerRPCBridge documents event delivery as "any-thread"; notifyListeners drives WKWebView JS evaluation, which is main-thread-only.
         AppsFlyerRPCBridge.shared.setEventHandler { [weak self] jsonEvent in
-            self?.notifyListeners("rpcEvent", data: ["envelopeJson": jsonEvent])
+            DispatchQueue.main.async {
+                self?.notifyListeners("rpcEvent", data: ["envelopeJson": jsonEvent])
+            }
         }
-        NotificationCenter.default
-            .addObserver(
-                self,
-                selector: #selector(self.handleUrlOpened(notification:)),
-                name: Notification.Name.capacitorOpenURL,
-                object: nil
-            )
-        NotificationCenter.default
-            .addObserver(
-                self,
-                selector: #selector(self.handleUniversalLink(notification:)),
-                name: Notification.Name.capacitorOpenUniversalLink,
-                object: nil
-            )
+        let observedNotifications: [(selector: Selector, name: Notification.Name)] = [
+            (#selector(self.handleUrlOpened(notification:)), .capacitorOpenURL),
+            (#selector(self.handleUniversalLink(notification:)), .capacitorOpenUniversalLink),
+        ]
+        for (selector, name) in observedNotifications {
+            NotificationCenter.default.addObserver(self, selector: selector, name: name, object: nil)
+        }
     }
 
-    // Capacitor-idiomatic deep-link/UDL glue — no RN equivalent to port, since RN's
-    // architecture has consuming apps forward these manually via AppDelegate instead.
     @objc func handleUrlOpened(notification: NSNotification) {
-        guard let object = notification.object as? [String: Any?] else {
+        guard
+            let object = notification.object as? [String: Any?],
+            let url = object["url"] as? URL,
+            let options = object["options"] as? [UIApplication.OpenURLOptionsKey: Any]
+        else {
             return
         }
-        guard let url = object["url"] else {
-            return
-        }
-        guard let options = object["options"] else {
-            return
-        }
-        AppsFlyerAttribution.shared.handleOpen(
-            url as! URL,
-            options: options as! [UIApplication.OpenURLOptionsKey: Any]
-        )
+        AppsFlyerAttribution.shared.handleOpen(url, options: options)
     }
 
     @objc func handleUniversalLink(notification: NSNotification) {
-        guard let object = notification.object as? [String: Any?] else {
+        guard
+            let object = notification.object as? [String: Any?],
+            let url = object["url"] as? URL
+        else {
             return
         }
         let user = NSUserActivity(activityType: NSUserActivityTypeBrowsingWeb)
-        guard let url = object["url"] else {
-            return
-        }
-        user.webpageURL = (url as! URL)
+        user.webpageURL = url
         AppsFlyerAttribution.shared.continueUserActivity(user)
     }
 
@@ -107,7 +96,10 @@ public class AppsFlyerPlugin: CAPPlugin, CAPBridgedPlugin {
             return (encodeNormalizedError(code: 500, message: "Missing result in AFRPCResponse"), false)
         }
 
-        if result["success"] as? Bool == false {
+        guard let succeeded = result["success"] as? Bool else {
+            return (encodeNormalizedError(code: 500, message: "AFRPCResponse.result missing success flag"), false)
+        }
+        if !succeeded {
             let message = (result["error"] as? String) ?? (result["message"] as? String) ?? "SDK-level failure"
             return (encodeNormalizedError(code: 500, message: message), false)
         }
