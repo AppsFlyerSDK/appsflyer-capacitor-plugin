@@ -14,8 +14,8 @@ This app exists to be **driven by automation**, not used by humans. It auto-runs
 6. Registers the session-ready listener, calls `start()` from inside it (SDK 7's manual-start model), and logs `[AF_QA][start] result: SUCCESS` or `... error: <msg>`.
 7. Calls post-start APIs (`getSdkVersion`, `getAppsFlyerUID`).
 8. Logs `[AF_QA][AUTO_APIS] --- Post-start auto APIs complete ---`.
-9. Fires the three standard events (`af_demo_launch`, `af_purchase`, `af_content_view`).
-10. Fires a custom event (`af_qa_custom_purchase`) with multi-type parameters and a nested `metadata` map.
+9. Fires the three standard events (`qa_demo_launch`, `af_purchase`, `af_content_view`).
+10. Fires a custom event (`qa_custom_purchase`) with multi-type parameters and a nested `metadata` map.
 11. Runs the consent toggle cycle: `stop({ shouldStop: true })` → suppressed event → `stop({ shouldStop: false })` → resumed event.
 
 Every line is tagged `[AF_QA]` so `grep AF_QA` is enough to validate scenarios.

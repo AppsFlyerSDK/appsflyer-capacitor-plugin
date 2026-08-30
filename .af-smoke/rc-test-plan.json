@@ -62,10 +62,10 @@
           "fail_action": "fail"
         },
         {
-          "id": "event_af_demo_launch",
-          "description": "af_demo_launch event fires",
+          "id": "event_qa_demo_launch",
+          "description": "qa_demo_launch event fires",
           "type": "log_contains",
-          "pattern": "[AF_QA][logEvent(af_demo_launch)] result:",
+          "pattern": "[AF_QA][logEvent(qa_demo_launch)] result:",
           "fail_action": "fail"
         },
         {

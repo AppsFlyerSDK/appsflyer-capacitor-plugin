@@ -26,14 +26,7 @@ function payloadToString(value: unknown): string {
   }
 }
 
-// Native SDK calls that depend on an HTTP round-trip (logEvent in particular)
-// only resolve when AppsFlyerRequestListener fires. On slow/no-KVM CI
-// emulators the SDK's task queue can stall behind a hung internal request and
-// the promise never settles, which would lock the entire auto-run behind a
-// single call and trip the runner's 240s ceiling. Cap each awaited call so
-// the auto-run always reaches the "Auto run complete" marker; a per-call
-// timeout still emits an [AF_QA][<method>] error: ... line that satisfies
-// the test plan's `result:` / `error:` log_contains shape.
+// HTTP-dependent calls (e.g. logEvent) can stall on slow/no-KVM CI emulators and never settle, locking the whole auto-run — cap each call so it always reaches the "Auto run complete" marker.
 const DEFAULT_OP_TIMEOUT_MS = 30000;
 
 function withTimeout<T>(op: () => Promise<T>, timeoutMs = DEFAULT_OP_TIMEOUT_MS): Promise<T> {
@@ -63,12 +56,7 @@ async function logResult<T>(method: string, op: () => Promise<T>): Promise<T | u
   }
 }
 
-// Translate js-core-plugin's callback names to the cross-stack contract
-// names defined in appsflyer-mobile-plugin-tooling/contracts/
-// test-app-contract.md. The runner's check patterns are written against
-// the contract names; emitting raw plugin names breaks portability.
-// Note: SDK 7 folds OAOA (onAppOpenAttribution) into the unified UDL
-// (onDeepLinking) callback — js-core-plugin exposes no separate OAOA event.
+// Translate js-core-plugin's callback names to the cross-stack contract names in appsflyer-mobile-plugin-tooling/contracts/test-app-contract.md — the runner's checks are written against those, not raw plugin names.
 async function registerCallbacks(): Promise<void> {
   await AppsFlyer.registerConversionListener({
     onConversionDataSuccess: (data) => {
@@ -109,9 +97,7 @@ function flattenForLog(value: unknown): string {
   return `{${parts.join(', ')}}`;
 }
 
-// Void-returning native methods don't echo their input back through the
-// Capacitor bridge (iOS returns the sentinel "-1"). For contract-aligned
-// readback checks, log the *input* value as the success result on these.
+// Void-returning native methods don't echo their input back (iOS returns the sentinel "-1"), so log the *input* value as the success result for contract-aligned readback checks.
 async function logVoidWithReadback<T>(
   method: string,
   readback: string,
@@ -134,14 +120,7 @@ async function preStartApis(): Promise<void> {
   await logVoidWithReadback('setAdditionalData', `keys=[${Object.keys(customData).join(', ')}]`, () =>
     AppsFlyer.setAdditionalData({ customData }),
   );
-  // NOTE: deliberately not calling setHost here. The default AppsFlyer host
-  // routes correctly on both platforms. Passing { hostPrefixName: '',
-  // hostName: 'appsflyersdk.com' } reroutes Android requests to
-  // conversions.appsflyersdk.com/api/v6.17/androidevent which returns HTTP
-  // 404 (the canonical host suffix expects a real per-account prefix). iOS
-  // silently ignored the override, but Android obeyed and broke start().
-  // If a future plan needs to exercise setHost it should use real,
-  // resolvable values from the test account.
+  // Deliberately not calling setHost: a placeholder prefix ('') breaks Android's start() with an HTTP 404 (iOS silently ignores it) — a future setHost test needs real per-account values.
 }
 
 async function postStartApis(): Promise<void> {
@@ -150,9 +129,9 @@ async function postStartApis(): Promise<void> {
 }
 
 async function fireStandardEvents(): Promise<void> {
-  await logResult('logEvent(af_demo_launch)', () =>
+  await logResult('logEvent(qa_demo_launch)', () =>
     AppsFlyer.logEvent({
-      eventName: 'af_demo_launch',
+      eventName: 'qa_demo_launch',
       eventValues: { platform: 'capacitor', stage: 'auto_run' },
     }),
   );
@@ -183,22 +162,16 @@ async function fireStandardEvents(): Promise<void> {
   logQa(`[AF_QA][logEvent: af_content_view sent] result: ${payloadToString(contentRes)}`);
 }
 
-// Phase 5 (E2E-005, identity round-trip) checks that the customer_user_id set
-// via setCustomerUserId(...) propagates into a post-start event payload. iOS
-// Capacitor's SDK doesn't surface the underlying HTTP request body in
-// simctl log show output, so we mirror Flutter's QA app and fire an explicit
-// "af_qa_identity_check" event whose params we log in {k=v} format. The
-// runner's regex check `customer_user_id[ =:]+e2e_user_42` matches the
-// `=`-separated rendering produced by `flattenForLog`.
+// iOS doesn't surface the HTTP request body in simctl logs, so fire an explicit "qa_identity_check" event logged in {k=v} format for the E2E-005 identity round-trip check (regex: `customer_user_id[ =:]+e2e_user_42`).
 async function fireIdentityCheckEvent(): Promise<void> {
   const params = {
     customer_user_id: 'e2e_user_42',
     tenant: 'qa_eu',
     experiment: 'rc_pipeline_v1',
   };
-  logQa(`[AF_QA][logEvent] name=af_qa_identity_check params=${flattenForLog(params)}`);
-  await logResult('logEvent(af_qa_identity_check)', () =>
-    AppsFlyer.logEvent({ eventName: 'af_qa_identity_check', eventValues: params }),
+  logQa(`[AF_QA][logEvent] name=qa_identity_check params=${flattenForLog(params)}`);
+  await logResult('logEvent(qa_identity_check)', () =>
+    AppsFlyer.logEvent({ eventName: 'qa_identity_check', eventValues: params }),
   );
 }
 
@@ -214,9 +187,9 @@ async function fireCustomEventWithParams(): Promise<void> {
       tags: ['qa', 'capacitor'],
     },
   };
-  logQa(`[AF_QA][logEvent] name=af_qa_custom_purchase params=${payloadToString(eventValue)}`);
-  await logResult('logEvent(af_qa_custom_purchase)', () =>
-    AppsFlyer.logEvent({ eventName: 'af_qa_custom_purchase', eventValues: eventValue }),
+  logQa(`[AF_QA][logEvent] name=qa_custom_purchase params=${payloadToString(eventValue)}`);
+  await logResult('logEvent(qa_custom_purchase)', () =>
+    AppsFlyer.logEvent({ eventName: 'qa_custom_purchase', eventValues: eventValue }),
   );
 }
 
@@ -229,11 +202,10 @@ async function stopToggleCycle(): Promise<void> {
 
   // Event fired while SDK is stopped should NOT produce HTTP traffic
   await withTimeout(() =>
-    AppsFlyer.logEvent({ eventName: 'af_qa_suppressed', eventValues: { phase: 'stop_true' } }),
+    AppsFlyer.logEvent({ eventName: 'qa_suppressed', eventValues: { phase: 'stop_true' } }),
   ).catch(() => undefined);
-  logQa(`[AF_QA][logEvent: af_qa_suppressed sent during stop(true)]`);
+  logQa(`[AF_QA][logEvent: qa_suppressed sent during stop(true)]`);
 
-  // Resume
   await logResult('stop', async () => {
     const res = await AppsFlyer.stop({ shouldStop: false });
     logQa(`[AF_QA][stop] result: false`);
@@ -241,16 +213,12 @@ async function stopToggleCycle(): Promise<void> {
   });
 
   await withTimeout(() =>
-    AppsFlyer.logEvent({ eventName: 'af_qa_resumed', eventValues: { phase: 'stop_false' } }),
+    AppsFlyer.logEvent({ eventName: 'qa_resumed', eventValues: { phase: 'stop_false' } }),
   ).catch(() => undefined);
-  logQa(`[AF_QA][logEvent: af_qa_resumed sent after stop(false)]`);
+  logQa(`[AF_QA][logEvent: qa_resumed sent after stop(false)]`);
 }
 
-// SDK 7's manual-start model: init() only sets up the SDK, and start() must
-// be called from inside the session-ready callback (js-core-plugin's own
-// doc comment on registerSessionReadyListener). Wrap that callback in a
-// promise so autoRun can await "started" the same way it awaited startSDK()
-// under the old always-manual API.
+// SDK 7's manual-start model requires start() to run inside the session-ready callback — wrap it in a promise so autoRun can await it like the old startSDK().
 function startAfterSessionReady(): Promise<void> {
   return new Promise((resolve, reject) => {
     AppsFlyer.registerSessionReadyListener(() => {
@@ -295,8 +263,7 @@ async function autoRun(): Promise<void> {
   await stopToggleCycle();
 
   setStatus('Auto-run complete. SDK ready for scenario triggers.');
-  // Canonical end-of-auto-run marker the scenario runner polls for.
-  // af-scenario-runner.sh hardcodes this exact string at line ~690.
+  // Canonical end-of-auto-run marker af-scenario-runner.sh polls for (hardcoded at line ~690).
   logQa('[AF_QA][AUTO_APIS] --- Auto run complete ---');
 }
 
