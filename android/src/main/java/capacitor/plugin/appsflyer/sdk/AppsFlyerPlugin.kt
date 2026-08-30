@@ -1,5 +1,8 @@
 package capacitor.plugin.appsflyer.sdk
 
+import android.content.Intent
+import android.util.Log
+import androidx.lifecycle.Lifecycle
 import com.appsflyer.pluginbridge.handler.AppsFlyerRpcHandler
 import com.appsflyer.pluginbridge.model.RpcResponse
 import com.getcapacitor.JSObject
@@ -9,49 +12,35 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import org.json.JSONObject
 import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.TimeUnit
 
 private const val RPC_EVENT_NAME = "rpcEvent"
 private const val DEEP_LINK_EVENT_NAME = "onDeepLinking"
-
-// Normalizes Android's SHOUTING_CASE status to the canonical lowerCamelCase vocabulary
-// js-core-plugin's DeepLinkData expects; `error` has no separate canonical form, just lowercased.
-private val ANDROID_TO_CANONICAL_DEEP_LINK_STATUS: Map<String, String> = mapOf(
-    "FOUND" to "found",
-    "NOT_FOUND" to "notFound",
-    "ERROR" to "failure",
-)
-
-// Methods touching AppsFlyerRpcHandler's unsynchronized listener fields — routed to the FIFO
-// lane, not the pool, so registration/unregistration calls can't race each other.
-private val LISTENER_LIFECYCLE_METHODS: Set<String> = setOf(
-    "init",
-    "registerConversionListener", "unregisterConversionListener",
-    "registerSessionReadyListener", "unregisterSessionReadyListener",
-    "subscribeForDeepLink", "unsubscribeForDeepLink",
-)
 
 // Shared by every JSON helper below — best-effort parse, `default` instead of throwing.
 private inline fun <T> parseJsonOrDefault(json: String, default: T, block: (JSONObject) -> T): T {
     return try {
         block(JSONObject(json))
     } catch (e: Exception) {
+        // Don't log `json` itself — it can be a deep-link event carrying a URL with PII query params.
+        Log.w("AppsFlyerPlugin", "Failed to parse RPC event JSON, passing through unmodified", e)
         default
     }
 }
 
-// Top-level so these are unit-testable without a Capacitor Bridge/PluginCall instance.
-internal fun isListenerLifecycleCall(requestJson: String): Boolean = parseJsonOrDefault(requestJson, false) { request ->
-    request.optString("method") in LISTENER_LIFECYCLE_METHODS
-}
-
+// `status` is left as-is — js-core-plugin's normalizeDeepLinkStatus() already re-normalizes it for every consumer; duplicating that here would just drift out of sync.
 internal fun normalizeDeepLinkEvent(eventJson: String): String = parseJsonOrDefault(eventJson, eventJson) { envelope ->
     if (envelope.optString("event") != DEEP_LINK_EVENT_NAME) return@parseJsonOrDefault eventJson
     val data = envelope.optJSONObject("data") ?: return@parseJsonOrDefault eventJson
 
-    data.optString("status").takeIf { it.isNotEmpty() }?.let { raw ->
-        data.put("status", ANDROID_TO_CANONICAL_DEEP_LINK_STATUS[raw] ?: raw)
+    // Copy instead of mutating `data` in place — pluginNotifier fires from arbitrary native threads and `data` is owned by `envelope`, not this function.
+    val error = data.optString("error").takeIf { it.isNotEmpty() }?.lowercase()
+    if (error != null) {
+        val copy = JSONObject(data.toString())
+        copy.put("error", error)
+        envelope.put("data", copy)
     }
-    data.optString("error").takeIf { it.isNotEmpty() }?.let { data.put("error", it.lowercase()) }
 
     envelope.toString()
 }
@@ -60,12 +49,8 @@ internal fun normalizeDeepLinkEvent(eventJson: String): String = parseJsonOrDefa
 @CapacitorPlugin(name = "AppsFlyerPlugin")
 class AppsFlyerPlugin : Plugin() {
 
-    // FIFO — the listener-lifecycle methods need strict ordering, not just eventual execution.
-    private val listenerExecutor = Executors.newSingleThreadExecutor()
-
-    // Stateless passthroughs run concurrently here so a slow call (start/logEvent) doesn't
-    // head-of-line-block a fast one.
-    private val rpcExecutor = Executors.newFixedThreadPool(4)
+    // Single FIFO lane matches iOS's RPCQueue: AppsFlyerRpcHandler's listener fields are unsynchronized `var`s, so a pool would race registration against dispatch and could reorder calls (e.g. start() overtaking setCustomerUserId()).
+    private val rpcExecutor = Executors.newSingleThreadExecutor()
 
     private val rpcHandler by lazy {
         AppsFlyerRpcHandler(
@@ -82,64 +67,97 @@ class AppsFlyerPlugin : Plugin() {
     fun executeRpc(call: PluginCall) {
         val requestJson = call.getString("requestJson")
         if (requestJson == null) {
-            call.reject("requestJson is required")
+            call.reject("requestJson is required", "INVALID_REQUEST")
             return
         }
-        val executor = if (isListenerLifecycleCall(requestJson)) listenerExecutor else rpcExecutor
-        executor.execute {
-            val responseJson = safeDispatchToNative(requestJson)
-            val result = JSObject()
-            result.put("responseJson", responseJson)
-            call.resolve(result)
+        try {
+            rpcExecutor.execute {
+                // Never let an exception escape the task: uncaught, it hits this worker thread's default UncaughtExceptionHandler and kills the whole process on Android.
+                try {
+                    val responseJson = safeDispatchToNative(requestJson)
+                    val result = JSObject()
+                    result.put("responseJson", responseJson)
+                    call.resolve(result)
+                } catch (e: Exception) {
+                    call.reject("Unexpected RPC dispatch failure: ${e.message}", "NATIVE_DISPATCH_ERROR", e)
+                }
+            }
+        } catch (e: RejectedExecutionException) {
+            call.reject("Plugin is shutting down", "PLUGIN_SHUTTING_DOWN")
         }
     }
 
     override fun handleOnDestroy() {
         super.handleOnDestroy()
-        listenerExecutor.shutdown()
-        rpcExecutor.shutdown()
+        // shutdownNow (not shutdown): don't run queued calls against a torn-down bridge/activity; awaitTermination bounds the wait so onDestroy can't hang on a stuck task.
+        rpcExecutor.shutdownNow()
+        try {
+            rpcExecutor.awaitTermination(2, TimeUnit.SECONDS)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
     }
 
-    // Catches vendored AppsFlyerRpcHandler exceptions here so they fail the call instead of
-    // crashing the process.
+    // The native SDK's automatic onActivityResumed deep-link detection misses a new VIEW intent on an already-resumed singleTask/singleTop activity, so forward it manually here — but only
+    // when already RESUMED, since otherwise onResume is still coming and the automatic path would double-dispatch the same link. shouldTriggerSession=true: a link tapped mid-session is a re-engagement.
+    override fun handleOnNewIntent(intent: Intent?) {
+        super.handleOnNewIntent(intent)
+        if (intent == null) return
+        activity.intent = intent
+
+        if (intent.action != Intent.ACTION_VIEW || intent.data == null) return
+        if (activity.lifecycle.currentState != Lifecycle.State.RESUMED) return
+        val request = JSONObject().apply {
+            put("method", "performDeepLinking")
+            put("params", JSONObject().apply {
+                put("url", intent.dataString)
+                put("shouldTriggerSession", true)
+            })
+        }
+        try {
+            rpcExecutor.execute { safeDispatchToNative(request.toString()) }
+        } catch (e: RejectedExecutionException) {
+            Log.w("AppsFlyerPlugin", "Dropped warm-resume deep link forward: plugin is shutting down")
+        }
+    }
+
+    // Catches AppsFlyerRpcHandler exceptions here so they fail the call instead of crashing the process; never forwards the exception message to JS since it can contain internal class names/paths (CWE-209).
     private fun safeDispatchToNative(requestJson: String): String {
         return try {
             normalize(rpcHandler.execute(requestJson))
         } catch (e: Exception) {
-            normalizeError(code = 500, message = e.message ?: "Unexpected native RPC failure")
+            // Don't log `requestJson` — same PII risk as parseJsonOrDefault above (e.g. a
+            // performDeepLinking call carries a URL with PII query params).
+            Log.w("AppsFlyerPlugin", "Native RPC dispatch failed", e)
+            normalizeError(code = 500, message = "Unexpected native RPC failure")
         }
     }
+}
 
-    // Must match the { success, data|error } envelope iOS's bridge also emits — keep in sync.
-    private fun normalize(response: RpcResponse): String {
-        val normalized = JSONObject()
-        when (response) {
-            is RpcResponse.Success<*> -> {
-                normalized.put("success", true)
-                normalized.put("data", response.result)
-            }
-            is RpcResponse.VoidSuccess -> {
-                normalized.put("success", true)
-                normalized.put("data", JSONObject.NULL)
-            }
-            is RpcResponse.Error -> {
-                val error = JSONObject()
-                error.put("code", response.code)
-                error.put("message", response.message)
-                normalized.put("success", false)
-                normalized.put("error", error)
-            }
+// internal (not private) + top-level so AppsFlyerPluginTest can call these directly without instantiating a Plugin(); must match the { success, data|error } envelope iOS's bridge also emits — keep in sync with AppsFlyerPluginTests.swift.
+internal fun normalize(response: RpcResponse): String {
+    val normalized = JSONObject()
+    when (response) {
+        is RpcResponse.Success<*> -> {
+            normalized.put("success", true)
+            // wrap() also covers a future result type that isn't a Map/Collection, falling back to JSONObject.NULL instead of a stringified blob.
+            normalized.put("data", JSONObject.wrap(response.result) ?: JSONObject.NULL)
         }
-        return normalized.toString()
+        is RpcResponse.VoidSuccess -> {
+            normalized.put("success", true)
+            normalized.put("data", JSONObject.NULL)
+        }
+        is RpcResponse.Error -> return normalizeError(code = response.code, message = response.message)
     }
+    return normalized.toString()
+}
 
-    private fun normalizeError(code: Int, message: String): String {
-        val error = JSONObject()
-        error.put("code", code)
-        error.put("message", message)
-        val normalized = JSONObject()
-        normalized.put("success", false)
-        normalized.put("error", error)
-        return normalized.toString()
-    }
+internal fun normalizeError(code: Int, message: String): String {
+    val error = JSONObject()
+    error.put("code", code)
+    error.put("message", message)
+    val normalized = JSONObject()
+    normalized.put("success", false)
+    normalized.put("error", error)
+    return normalized.toString()
 }
