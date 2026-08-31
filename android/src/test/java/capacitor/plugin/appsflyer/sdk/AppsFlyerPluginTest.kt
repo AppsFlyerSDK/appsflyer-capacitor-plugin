@@ -71,4 +71,19 @@ class AppsFlyerPluginTest {
         assertFalse(isListenerLifecycleCall("""{"method":"logEvent","params":{}}"""))
         assertFalse(isListenerLifecycleCall("""{"method":"performDeepLinking","params":{}}"""))
     }
+
+    @Test
+    fun `isAwaitResponseCall is true for methods that block on a native async response`() {
+        assertTrue(isAwaitResponseCall("""{"method":"start","params":{}}"""))
+        assertTrue(isAwaitResponseCall("""{"method":"logEvent","params":{}}"""))
+        assertTrue(isAwaitResponseCall("""{"method":"generateInviteLink","params":{}}"""))
+        // No "awaitResponse" param exists for this one -- it's always blocking, see AWAIT_RESPONSE_METHODS comment.
+        assertTrue(isAwaitResponseCall("""{"method":"validateAndLogInAppPurchase","params":{}}"""))
+    }
+
+    @Test
+    fun `isAwaitResponseCall is false for fire-and-forget RPC methods`() {
+        assertFalse(isAwaitResponseCall("""{"method":"setCustomerUserId","params":{}}"""))
+        assertFalse(isAwaitResponseCall("""{"method":"performDeepLinking","params":{}}"""))
+    }
 }

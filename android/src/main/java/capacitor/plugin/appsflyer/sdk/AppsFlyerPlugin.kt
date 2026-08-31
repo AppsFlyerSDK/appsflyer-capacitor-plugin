@@ -21,9 +21,7 @@ import java.util.concurrent.TimeUnit
 private const val RPC_EVENT_NAME = "rpcEvent"
 private const val DEEP_LINK_EVENT_NAME = "onDeepLinking"
 
-// Android *wire* method names (post js-core-plugin resolveRpc() mapping, not the public API names --
-// e.g. registerDeepLinkListener -> subscribeForDeepLink) whose native handler mutates AppsFlyerRpcHandler's
-// unsynchronized listener fields. Routed to their own FIFO lane to avoid head-of-line blocking with general RPC calls.
+// Wire method names (post resolveRpc() mapping, e.g. registerDeepLinkListener -> subscribeForDeepLink) whose native handler mutates AppsFlyerRpcHandler's unsynchronized listener fields; own FIFO lane keeps them from racing general RPC dispatch.
 private val LISTENER_LIFECYCLE_METHODS: Set<String> = setOf(
     "init",
     "registerConversionListener", "unregisterConversionListener",
@@ -31,9 +29,17 @@ private val LISTENER_LIFECYCLE_METHODS: Set<String> = setOf(
     "subscribeForDeepLink", "unsubscribeForDeepLink",
 )
 
-// internal (not private) + top-level so AppsFlyerPluginTest can call this directly.
+// Wire method names whose native handler blocks the calling thread on an async response -- optionally via an "awaitResponse" param, or always for validateAndLogInAppPurchase (no such param; its promise needs the store-validation round trip). Own FIFO lane avoids head-of-line-blocking rpcExecutor.
+private val AWAIT_RESPONSE_METHODS: Set<String> = setOf(
+    "start", "logEvent", "generateInviteLink", "validateAndLogInAppPurchase",
+)
+
+// internal (not private) + top-level so AppsFlyerPluginTest can call these directly.
 internal fun isListenerLifecycleCall(requestJson: String): Boolean =
     parseJsonOrDefault(requestJson, default = false) { it.optString("method") in LISTENER_LIFECYCLE_METHODS }
+
+internal fun isAwaitResponseCall(requestJson: String): Boolean =
+    parseJsonOrDefault(requestJson, default = false) { it.optString("method") in AWAIT_RESPONSE_METHODS }
 
 // Shared by every JSON helper below — best-effort parse, `default` instead of throwing.
 private inline fun <T> parseJsonOrDefault(json: String, default: T, block: (JSONObject) -> T): T {
@@ -75,8 +81,9 @@ internal fun normalizeDeepLinkEvent(eventJson: String): String = parseJsonOrDefa
 )
 class AppsFlyerPlugin : Plugin() {
 
-    // Each lane single-threaded, not pooled: AppsFlyerRpcHandler's listener fields are unsynchronized `var`s, so pooling would race registration against dispatch (e.g. start() overtaking setCustomerUserId()); two lanes just decouples listener calls from general RPC calls.
+    // Single-threaded, not pooled: AppsFlyerRpcHandler's listener fields are unsynchronized `var`s, so pooling could race registration against dispatch; three lanes just decouple listener, blocking-awaitResponse, and general RPC calls from each other.
     private val listenerExecutor = Executors.newSingleThreadExecutor()
+    private val awaitResponseExecutor = Executors.newSingleThreadExecutor()
     private val rpcExecutor = Executors.newSingleThreadExecutor()
 
     private val rpcHandler by lazy {
@@ -97,7 +104,11 @@ class AppsFlyerPlugin : Plugin() {
             call.reject("requestJson is required", "INVALID_REQUEST")
             return
         }
-        val executor = if (isListenerLifecycleCall(requestJson)) listenerExecutor else rpcExecutor
+        val executor = when {
+            isListenerLifecycleCall(requestJson) -> listenerExecutor
+            isAwaitResponseCall(requestJson) -> awaitResponseExecutor
+            else -> rpcExecutor
+        }
         dispatch(call, executor, requestJson)
     }
 
@@ -122,11 +133,12 @@ class AppsFlyerPlugin : Plugin() {
     override fun handleOnDestroy() {
         super.handleOnDestroy()
         // shutdownNow (not shutdown): don't run queued calls against a torn-down bridge/activity; awaitTermination bounds the wait so onDestroy can't hang on a stuck task.
-        for (executor in listOf(listenerExecutor, rpcExecutor)) {
+        for (executor in listOf(listenerExecutor, awaitResponseExecutor, rpcExecutor)) {
             executor.shutdownNow()
         }
         try {
             listenerExecutor.awaitTermination(2, TimeUnit.SECONDS)
+            awaitResponseExecutor.awaitTermination(2, TimeUnit.SECONDS)
             rpcExecutor.awaitTermination(2, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
