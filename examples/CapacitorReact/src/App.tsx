@@ -65,6 +65,7 @@ function setUDL() {
   return AppsFlyer.registerDeepLinkListener({
     onDeepLinking: data => {
       console.log('onDeepLinking ~~>' + JSON.stringify(data));
+      alert('onDeepLinking ~~> ' + JSON.stringify(data));
       if (data.status === 'FOUND') {
         const deepLinkValue = (data.deepLink as any)?.deep_link_value;
         handleLink(deepLinkValue);

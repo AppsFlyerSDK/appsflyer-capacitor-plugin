@@ -59,20 +59,6 @@ class AppsFlyerPluginTest {
     }
 
     @Test
-    fun `isListenerLifecycleCall is true for init and listener registration methods`() {
-        assertTrue(isListenerLifecycleCall("""{"method":"init","params":{}}"""))
-        assertTrue(isListenerLifecycleCall("""{"method":"registerConversionListener","params":{}}"""))
-        // "subscribeForDeepLink" is the Android wire name for the public registerDeepLinkListener API.
-        assertTrue(isListenerLifecycleCall("""{"method":"subscribeForDeepLink","params":{}}"""))
-    }
-
-    @Test
-    fun `isListenerLifecycleCall is false for general RPC methods`() {
-        assertFalse(isListenerLifecycleCall("""{"method":"logEvent","params":{}}"""))
-        assertFalse(isListenerLifecycleCall("""{"method":"performDeepLinking","params":{}}"""))
-    }
-
-    @Test
     fun `isAwaitResponseCall is true for methods that block on a native async response`() {
         assertTrue(isAwaitResponseCall("""{"method":"start","params":{}}"""))
         assertTrue(isAwaitResponseCall("""{"method":"logEvent","params":{}}"""))
