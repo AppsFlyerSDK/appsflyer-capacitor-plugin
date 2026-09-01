@@ -1543,25 +1543,10 @@ await AppsFlyer.unregisterSessionReadyListener();
 
 ## Migrating from 6.x
 
-| 6.x | 7.x |
-| --- | --- |
-| `AppsFlyer.initSDK(options)` | `AppsFlyer.init({ devKey, appId })` (see per-option replacements below) |
-| `AppsFlyer.startSDK()` | `AppsFlyer.start()`, called from `registerSessionReadyListener`'s callback |
-| `AppsFlyer.addListener('conversion_callback', cb)` | `AppsFlyer.registerConversionListener({ onConversionDataSuccess, onConversionDataFail })` |
-| `AppsFlyer.addListener('oaoa_callback', cb)` | folded into `registerDeepLinkListener` (see above) |
-| `AppsFlyer.addListener('udl_callback', cb)` | `AppsFlyer.registerDeepLinkListener({ onDeepLinking })` |
-| `setCustomerUserId({ cuid })` | `setCustomerUserId({ customerId })` |
-| `setAdditionalData({ additionalData })` | `setAdditionalData({ customData })` |
-| `stop({ stop: boolean })` | `stop({ shouldStop: boolean })` |
-| `logEvent({ eventValue })` | `logEvent({ eventValues })` |
-| `initSDK`'s `isDebug` option | separate `enableDebug({ enabled })` call |
-| `initSDK`'s `manualStart` option | removed — starting is always manual now (see "Session-ready ordering") |
-| `initSDK`'s `waitForATTUserAuthorization` option | removed — request ATT permission yourself inside the session-ready callback, before calling `start()` (see `docs/AdvancedAPI.md`) |
-| `initSDK`'s `registerConversionListener`/`registerOnDeepLink`/`registerOnAppOpenAttribution` flags | removed — call `registerConversionListener`/`registerDeepLinkListener` explicitly instead |
-
-For every other method, the parameter and return types are unchanged in spirit but individual
-field names may differ — check the [Method reference](#method-reference) above rather than
-assuming a 6.x shape carried over.
+Moved to [`MIGRATION.md`](../MIGRATION.md) at the repo root — the full 6.x → 7.x method/argument
+mapping, per-change detail sections, and a ready-to-use prompt for an LLM coding assistant. This
+page (the method reference above) is the source of truth for exact 7.x param shapes; `MIGRATION.md`
+is the diff against 6.x.
 
 See also: [`docs/AdvancedAPI.md`](AdvancedAPI.md), [`docs/DeepLink.md`](DeepLink.md),
 [`docs/InAppEvents.md`](InAppEvents.md), [`docs/BasicIntegration.md`](BasicIntegration.md).

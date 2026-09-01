@@ -35,4 +35,4 @@ export class HomePage {
 | devKey   | Your application [devKey](https://support.appsflyer.com/hc/en-us/articles/207032126#integration-2-integrating-the-sdk) provided by AppsFlyer (required)  |
 | appId      | Your App Store application ID  (iOS only)  |
 
-Enabling debug logging, deferring the ATT prompt, and registering conversion/deep-link listeners are now separate calls instead of `init()` options — see [`API.md`'s migration table](API.md#migrating-from-6x) for the full list of what moved where.
+Enabling debug logging, deferring the ATT prompt, and registering conversion/deep-link listeners are now separate calls instead of `init()` options — see [`MIGRATION.md`](../MIGRATION.md) for the full list of what moved where.

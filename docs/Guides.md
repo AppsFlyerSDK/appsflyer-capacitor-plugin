@@ -19,7 +19,7 @@
     
 To initialize the AppsFlyer SDK you need to call `init()`, then call `start()` from inside the
 session-ready callback — see [`API.md`](./API.md#session-ready-ordering) for the full method reference
-and the [6.x → 7.x migration table](./API.md#migrating-from-6x).
+and [`MIGRATION.md`](../MIGRATION.md) for the 6.x → 7.x migration guide.
     
 Example:
 ```typescript

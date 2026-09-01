@@ -18,7 +18,7 @@ To do so, please follow [this article](https://support.appsflyer.com/hc/en-us/ar
 <img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18">  Capacitor 8</br>
 
 ## <a id="breaking-changes-7-0-2"> 	❗❗ Breaking changes when updating to v7.0.2 ❗❗
-Starting from v7.0.2, this plugin is built on the js-core RPC architecture and its public API changed (method names, argument shapes, and the OAOA listener were all affected). See the [migration guide](/docs/API.md#migrating-from-6x) before upgrading.
+Starting from v7.0.2, this plugin is built on the js-core RPC architecture and its public API changed (method names, argument shapes, and the OAOA listener were all affected). See the [migration guide](/MIGRATION.md) before upgrading.
 
 ## <a id="breaking-changes-6-17-91"> 	❗❗ Breaking changes when updating to v6.17.91 ❗❗
 Starting from v6.17.91, this plugin works only with Capacitor 8. </br>
@@ -42,7 +42,7 @@ If you are still interested in using Capacitor 3, please follow the instructions
 
 
 ## <a id="migration"> ⏩ Migration
-Upgrading from a pre-7.0 version? See the [migration guide](/docs/API.md#migrating-from-6x) for the full 6.x → 7.x method/argument mapping.
+Upgrading from a pre-7.0 version? See [MIGRATION.md](/MIGRATION.md) for the full 6.x → 7.x method/argument mapping, including a ready-to-use prompt for an LLM coding assistant.
 
  ##  📖 Guides
 - [Adding the SDK to your project](/docs/Installation.md)
