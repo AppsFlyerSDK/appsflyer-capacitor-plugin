@@ -7,115 +7,125 @@ alwaysApply: true
 
 ## Architecture overview
 
-This is a **Capacitor native plugin** wrapping the AppsFlyer SDK for iOS (Swift) and Android (Kotlin). There is no web implementation; all methods target native platforms.
+This is a **Capacitor native plugin** that wraps `@appsflyer-sdk/js-core-plugin` — a shared,
+schema-generated RPC core also used by the React Native and Cordova AppsFlyer plugins. As of
+7.0.2 this plugin no longer hand-declares methods, param types, or per-method native
+implementations: every method, its params, and its wire mapping to native come from
+`js-core-plugin`'s generated `AppsFlyerSDK` class and `rpc-map.js`. There is no web
+implementation; all methods target native platforms.
+
+The whole bridge is one generic call in each direction:
+
+1. JS calls `AppsFlyer.someMethod(params)` on the `AppsFlyerSDK` instance (from `js-core-plugin`).
+2. `AppsFlyerSDK` resolves `someMethod` against `rpc-map.js` to get the platform's real wire
+   method name and param shape, then calls `CapacitorTransport.call(method, params)`.
+3. `CapacitorTransport` (`src/capacitor-transport.ts`) JSON-encodes `{method, params}` and calls
+   the single native bridge method `executeRpc({requestJson})`.
+4. Native (`AppsFlyerPlugin.swift` / `AppsFlyerPlugin.kt`) forwards `requestJson` verbatim to the
+   platform's RPC handler (`AppsFlyerRPCBridge`/`AppsFlyerRpcHandler`, which live in the native
+   AppsFlyer SDK, not this repo) and normalizes the response into a `{success, data|error}`
+   envelope — **the two platforms' envelope shapes must stay in sync**, see the comments at the
+   top of each `executeRpc` implementation.
+5. Persistent listeners (session-ready, conversion, deep link) flow back over one shared event
+   channel, `rpcEvent`, not a per-listener native event name.
 
 ### File layout
 
 | Layer | Path | Language |
-|-------|------|----------|
-| TypeScript API | `src/definitions.ts` | TS |
-| TypeScript interfaces | `src/appsflyer_interfaces.ts` | TS |
-| TypeScript constants/enums | `src/Appsflyer_constants.ts` | TS |
-| Plugin entry | `src/index.ts` | TS |
-| iOS implementation | `ios/Plugin/AppsFlyerPlugin.swift` | Swift |
-| iOS registration | `ios/Plugin/AppsFlyerPlugin.m` | Obj-C |
-| iOS constants | `ios/Plugin/AppsFlyerConstants.swift` | Swift |
-| iOS deep link handler | `ios/Plugin/AppsFlyerAttribution.swift` | Swift |
-| iOS helpers | `ios/Plugin/Extensions.swift` | Swift |
-| Android implementation | `android/src/main/java/capacitor/plugin/appsflyer/sdk/AppsFlyerPlugin.kt` | Kotlin |
-| Android constants | `android/src/main/java/capacitor/plugin/appsflyer/sdk/AppsFlyerConstants.kt` | Kotlin |
-| Android helpers | `android/src/main/java/capacitor/plugin/appsflyer/sdk/AFHelpers.kt` | Kotlin |
-| Example app | `examples/CapacitorReact/` | Ionic React |
+| --- | --- | --- |
+| RPC transport (JSON envelope over `executeRpc`) | `src/capacitor-transport.ts` | TS |
+| Non-generated enums (`AFPurchaseType`, `MediationNetwork`) | `src/constants.ts` | TS |
+| Plugin entry — constructs `AppsFlyerSDK`, re-exports everything | `src/index.ts` | TS |
+| Generated method/param types, RPC dispatch table (owned by `js-core-plugin`, do not hand-edit) | `node_modules/@appsflyer-sdk/js-core-plugin/dist/generated/*` | TS/JS |
+| iOS bridge (single `executeRpc` method) | `ios/Plugin/AppsFlyerPlugin.swift` | Swift |
+| iOS AppDelegate-facing deep link/launch-options facade | `ios/Plugin/AppsFlyerAttribution.swift` | Swift |
+| Android bridge (single `executeRpc` method) | `android/src/main/java/capacitor/plugin/appsflyer/sdk/AppsFlyerPlugin.kt` | Kotlin |
+| Example app | `examples/CapacitorReact/`, `examples/qa-test-app/` | Ionic React / vanilla TS |
 
 ## Adding a new API method
 
-Every new plugin method must be added across **all four layers** in this order:
+New RPC methods are added to `@appsflyer-sdk/js-core-plugin` itself (a separate package), not
+hand-written here. To pick up a new/changed method in this plugin:
 
-1. **TypeScript interface** (`src/appsflyer_interfaces.ts`): define parameter/response types using `AF`-prefixed interface names (e.g., `AFMyFeature`).
-2. **TypeScript definitions** (`src/definitions.ts`): add the method signature to the `AppsFlyerPlugin` interface with a JSDoc comment.
-3. **iOS implementation**:
-   - Add method to `AppsFlyerPlugin.swift` as `@objc func methodName(_ call: CAPPluginCall)`.
-   - Register it in `AppsFlyerPlugin.m` with `CAP_PLUGIN_METHOD(methodName, CAPPluginReturnPromise)` (or `CAPPluginReturnNone`).
-   - Add any new parameter keys to `AppsFlyerConstants.swift` as `static let AF_*`.
-4. **Android implementation**:
-   - Add method to `AppsFlyerPlugin.kt` annotated with `@PluginMethod`.
-   - Add any new parameter keys to `AppsFlyerConstants.kt` as `const val AF_*`.
-5. **Example app**: add a working call in `examples/CapacitorReact/src/components/ExploreContainer.tsx` so the method is testable.
-6. **Documentation**: update `docs/API.md` and any relevant doc under `docs/`.
+1. Bump the `@appsflyer-sdk/js-core-plugin` dependency in `package.json` to the version that
+   ships the method.
+2. Verify `node_modules/@appsflyer-sdk/js-core-plugin/dist/generated/rpc-map.js` and
+   `methods.d.ts` contain it — nothing in this repo needs to change for a method whose shape the
+   generic `executeRpc` dispatch already handles.
+3. **Documentation**: update `docs/API.md` (method table + per-method reference) and any
+   relevant doc under `docs/`.
+4. **Example app**: add a working call in `examples/qa-test-app/src/main.ts` or
+   `examples/CapacitorReact/src/App.tsx` so the method is exercised end-to-end.
+
+Only touch `AppsFlyerPlugin.swift`/`.kt` if a method needs platform glue the generic RPC dispatch
+can't express (e.g. `AppsFlyerAttribution`'s pre-bridge-ready buffering for cold-start deep
+links) — not for ordinary param-in/param-out methods.
 
 ### Platform-only methods
 
-- If a method is iOS-only, the Android implementation should call `call.unavailable()`.
-- If a method is Android-only, the iOS implementation should call `call.unavailable("Android only method - has no effect on iOS apps")`.
+Platform availability is data, not code: a method with no entry for a platform in `rpc-map.js`
+(`android: null` or `ios: null`) rejects on that platform automatically — there is no
+`call.unavailable()` to write per method.
 
 ## Coding conventions
 
 ### TypeScript
 
-- All parameter interfaces use the `AF` prefix: `AFInit`, `AFEvent`, `AFCuid`, etc.
-- Single-field wrappers are fine (e.g., `AFCuid { cuid: string }`); they keep the bridge explicit.
-- Enums live in `Appsflyer_constants.ts` (e.g., `AFConstants`, `AFPurchaseType`, `MediationNetwork`).
-- The plugin is registered as `'AppsFlyerPlugin'` in `src/index.ts` via `registerPlugin`.
-- Linting: `@ionic/eslint-config/recommended` + `@ionic/prettier-config`. Run `npm run lint` to check, `npm run fmt` to fix.
+- Don't hand-write parameter interfaces for RPC methods — they're generated in
+  `js-core-plugin`'s `dist/generated/methods.d.ts` and re-exported via `export * from
+  '@appsflyer-sdk/js-core-plugin'` in `src/index.ts`.
+- `src/constants.ts` is the only place for hand-written exports: enums `js-core-plugin` doesn't
+  provide (`AFPurchaseType`, `MediationNetwork`).
+- The plugin is registered as `'AppsFlyerPlugin'` in `src/capacitor-transport.ts` via
+  `registerPlugin`.
+- Linting: `@ionic/eslint-config/recommended` + `@ionic/prettier-config`. Run `npm run lint` to
+  check, `npm run fmt` to fix.
 
-### Swift (iOS)
+### Swift (iOS) / Kotlin (Android)
 
-- Constants are `static let` in the `AppsFlyerConstants` class, prefixed `AF_`.
-- Methods follow the Capacitor pattern: `@objc func methodName(_ call: CAPPluginCall)`.
-- Extract parameters with `call.getString()`, `call.getBool()`, `call.getObject()`, etc.
-- Reject missing required parameters early with `call.reject("descriptive message")`.
-- Resolve with `call.resolve(["key": value])`.
-- Use extensions on `AppsFlyerPlugin` to group related logic (delegates, helpers, deep link handling).
-- Logging: `NSLog("AppsFlyer [Debug][Capacitor]: \(msg)")`.
+- Both platforms expose exactly one bridged method, `executeRpc`, which forwards raw
+  `requestJson` to the native SDK's own RPC handler and normalizes the response. Don't add
+  per-method `@objc`/`@PluginMethod` functions for ordinary RPC calls — that logic no longer
+  exists on either platform.
+- `AppsFlyerAttribution.swift` is the one piece of hand-written iOS glue: it buffers
+  `handleOpen`/`continueUserActivity`/`handleLaunchOptions` calls that can arrive before the
+  Capacitor bridge (and therefore the RPC channel) is ready.
 - SwiftLint: `@ionic/swiftlint-config`. Run `npm run swiftlint -- lint`.
-
-### Kotlin (Android)
-
-- Constants are top-level `const val` in `AppsFlyerConstants.kt`, prefixed `AF_`.
-- Methods are annotated with `@PluginMethod` (defaults to `RETURN_PROMISE`) or `@PluginMethod(returnType = PluginMethod.RETURN_NONE)`.
-- Use `call.getString()`, `call.getBoolean()`, `call.getObject()`, etc. to extract parameters.
-- Reject with `call.reject("message")`, resolve with `call.resolve(JSObject().apply { put("key", value) })`.
-- Use `AFHelpers` for JSON/Map conversions (`jsonToMap`, `jsonToStringMap`, `mapToJson`, `jsonToBundle`).
-- Logging: `Log.d(TAG, message)` where `TAG = "AppsFlyer_Cap"`.
-
-### Constant key alignment
-
-Parameter keys **must match** across all three constant files. For example, if the JS interface uses `eventName`, the iOS constant must be `AF_EVENT_NAME = "eventName"` and the Android constant must be `const val AF_EVENT_NAME = "eventName"`. Mismatches break the bridge silently.
 
 ## Deprecation pattern
 
-When deprecating an API:
-
-1. **TypeScript**: add `@deprecated` JSDoc tag with a replacement note.
-2. **iOS**: add `@available(*, deprecated, message: "Use newMethod instead")` and keep the old implementation functional or call `call.unavailable()`.
-3. **Android**: add `@Deprecated("Use newMethod instead")` annotation and keep the old implementation functional or call `call.unavailable()`.
-4. **Docs**: mark as deprecated in `docs/API.md` and `docs/InAppEvents.md` with a pointer to the replacement.
+Method-level deprecation lives upstream in `@appsflyer-sdk/js-core-plugin`'s schema — this repo
+picks it up on the next dependency bump. Deprecate this repo's own surface (the plugin entry
+point, `src/constants.ts` exports) the normal way: `@deprecated` JSDoc tag with a replacement
+note, plus a call-out in `docs/API.md`'s migration table.
 
 ## Event listeners
 
-The plugin uses three callback channels, defined identically in TS, iOS, and Android:
-
-- `conversion_callback` (GCD/conversion data)
-- `oaoa_callback` (app open attribution)
-- `udl_callback` (Unified Deep Linking)
-
-Native side emits via `notifyListeners(CALLBACK_NAME, data)`. JS side subscribes via `AppsFlyer.addListener(AFConstants.CALLBACK_NAME, handler)`.
+All persistent listeners (session-ready, conversion data, deep link) flow over one shared native
+event channel, `rpcEvent` (`src/capacitor-transport.ts`), not a per-listener callback name.
+`AppsFlyerSDK` (in `js-core-plugin`) demultiplexes incoming events by their `type` field and
+dispatches to the right registered callback (`onConversionDataSuccess`, `onDeepLinking`, etc.).
+Don't add new native `notifyListeners(...)` call sites for new listener types — add the event
+type to `js-core-plugin`'s schema instead.
 
 ## Deep link handling (iOS)
 
-`AppsFlyerAttribution` is a singleton that queues deep links arriving before the Capacitor bridge is ready. It listens for `Notification.Name.appsflyerBridge` (posted by `reportBridgeReady()` in `initSDK`). Don't bypass this mechanism; deep links that arrive before SDK init will be lost otherwise.
+`AppsFlyerAttribution` is a singleton that queues deep links arriving before the Capacitor bridge
+(and RPC channel) is ready, flushing them once `AppsFlyerPlugin` reports the bridge is up. Don't
+bypass this mechanism; deep links that arrive before the RPC channel is ready will be lost
+otherwise.
 
 ## Versioning
 
 Version numbers are tracked in **multiple places** and must stay in sync:
 
-- `package.json`: `version`, `iosSdkVersion`, `androidSdkVersion`, `buildNumber`
-- `ios/Plugin/AppsFlyerPlugin.swift`: `APPSFLYER_PLUGIN_VERSION`
-- `android/build.gradle`: `af_sdk_version`
+- `package.json`: `version`, `iosSdkVersion`, `androidSdkVersion`, `androidPluginBridgeVersion`
+- `ios/Podfile` / `Package.swift`: `AppsFlyerRPC` pod/SPM version (must match `iosSdkVersion`)
+- `android/build.gradle`: `af_sdk_version` (sourced from `package.json`'s `androidSdkVersion`)
 
-The plugin version number is set to the **latest** of the two native SDK versions. For example, if Android SDK is 6.17.5 and iOS SDK is 6.17.7, the Capacitor plugin version will be 6.17.7.
-
-CI scripts in `.github/workflows/scripts/` handle updates automatically during release branch creation. Don't manually edit version numbers across files; use the `updatePlugin.sh` orchestrator.
+CI scripts in `.github/workflows/scripts/` handle updates automatically during release branch
+creation. Don't manually edit version numbers across files; use the `updatePlugin.sh`
+orchestrator.
 
 ## Branching and workflow
 

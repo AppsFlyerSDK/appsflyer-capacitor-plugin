@@ -21,15 +21,11 @@ IOS_FILES=(
   "AppsflyerCapacitorPlugin.podspec"
   "ios/Plugin/AppsFlyerPlugin.swift"
   "ios/Plugin/AppsFlyerAttribution.swift"
-  "ios/Plugin/AppsFlyerConstants.swift"
-  "ios/Plugin/Extensions.swift"
 )
 
 ANDROID_FILES=(
   "android/build.gradle"
   "android/src/main/AndroidManifest.xml"
-  "android/src/main/java/capacitor/plugin/appsflyer/sdk/AFHelpers.kt"
-  "android/src/main/java/capacitor/plugin/appsflyer/sdk/AppsFlyerConstants.kt"
   "android/src/main/java/capacitor/plugin/appsflyer/sdk/AppsFlyerPlugin.kt"
 )
 

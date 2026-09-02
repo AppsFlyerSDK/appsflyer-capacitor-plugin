@@ -486,7 +486,12 @@ run_phase_command() {
 
   log_info "${label}: ${command}"
   set +e
-  output=$(eval "$command" 2>&1)
+  # stdin is detached because callers iterate command lists with `while read`
+  # fed by a pipe or process substitution. `adb shell` drains stdin, which
+  # would starve the loop and silently skip every remaining command — that is
+  # how the `sleep` pre-actions between backgrounding and a deep link trigger
+  # used to disappear.
+  output=$(eval "$command" 2>&1 </dev/null)
   status=$?
   set -e
 
@@ -544,6 +549,9 @@ validate_check() {
   description=$(echo "$check_json" | jq -r '.description')
   fail_action=$(echo "$check_json" | jq -r '.fail_action // "fail"')
 
+  local fail_status="FAIL"
+  [[ "$fail_action" == "warn" ]] && fail_status="WARN"
+
   log_debug "Validating check: $check_id ($check_type)"
 
   case "$check_type" in
@@ -569,13 +577,14 @@ validate_check() {
               --arg field "$payload_field" \
               --arg expected "$payload_expected" \
               --arg line "$(echo "$match" | head -c 300)" \
-              '{status: "FAIL", evidence: "Pattern found but payload check failed: \($field) != \($expected). Line: \($line)"}'
+              --arg status "$fail_status" \
+              '{status: $status, evidence: "Pattern found but payload check failed: \($field) != \($expected). Line: \($line)"}'
           fi
         else
           echo "{\"status\":\"PASS\",\"evidence\":$(echo "$match" | head -c 500 | jq -Rs .)}"
         fi
       else
-        echo "{\"status\":\"FAIL\",\"evidence\":\"Pattern not found in logs: ${pattern}\"}"
+        echo "{\"status\":\"${fail_status}\",\"evidence\":\"Pattern not found in logs: ${pattern}\"}"
       fi
       ;;
 
@@ -588,7 +597,7 @@ validate_check() {
       if [[ "$count" -ge "$minimum" ]]; then
         echo "{\"status\":\"PASS\",\"evidence\":\"Found ${count} matches (minimum: ${minimum})\"}"
       else
-        echo "{\"status\":\"FAIL\",\"evidence\":\"Found only ${count} matches (minimum: ${minimum})\"}"
+        echo "{\"status\":\"${fail_status}\",\"evidence\":\"Found only ${count} matches (minimum: ${minimum})\"}"
       fi
       ;;
 
@@ -602,7 +611,7 @@ validate_check() {
         local found
         found=$(grep -F "$forbidden_pattern" "$log_file" 2>/dev/null | head -1 || true)
         if [[ -n "$found" ]]; then
-          status="FAIL"
+          status="$fail_status"
           evidence="Forbidden pattern found: ${forbidden_pattern} -> $(echo "$found" | head -c 200)"
           break
         fi
@@ -617,7 +626,7 @@ validate_check() {
       if [[ -n "$match" ]]; then
         echo "{\"status\":\"PASS\",\"evidence\":$(echo "$match" | head -c 500 | jq -Rs .)}"
       else
-        echo "{\"status\":\"FAIL\",\"evidence\":\"Regex not matched in logs: ${pattern}\"}"
+        echo "{\"status\":\"${fail_status}\",\"evidence\":\"Regex not matched in logs: ${pattern}\"}"
       fi
       ;;
 

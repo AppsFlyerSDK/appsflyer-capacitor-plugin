@@ -10,7 +10,7 @@ end
 
 target 'Plugin' do
   capacitor_pods
-    pod 'AppsFlyerFramework', '6.17.9'
+    pod 'AppsFlyerRPC', '7.0.13'
 end
 
 target 'PluginTests' do
