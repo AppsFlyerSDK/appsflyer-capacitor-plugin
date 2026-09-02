@@ -1,6 +1,7 @@
 package capacitor.plugin.appsflyer.sdk
 
 import android.Manifest
+import android.content.Intent
 import android.util.Log
 import com.appsflyer.pluginbridge.handler.AppsFlyerRpcHandler
 import com.appsflyer.pluginbridge.model.RpcResponse
@@ -81,6 +82,12 @@ class AppsFlyerPlugin : Plugin() {
                 notifyListeners(RPC_EVENT_NAME, payload)
             },
         )
+    }
+
+    override fun handleOnNewIntent(intent: Intent?) {
+        super.handleOnNewIntent(intent)
+        if (intent == null) return
+        activity.intent = intent
     }
 
     @PluginMethod
