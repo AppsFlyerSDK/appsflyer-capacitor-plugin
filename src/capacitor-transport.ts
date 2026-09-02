@@ -69,6 +69,7 @@ export class CapacitorTransport implements RpcTransport {
     if (this.subscribed) {
       // eslint-disable-next-line no-console -- misuse (double subscribe), not debug noise
       console.warn('[AppsFlyer] subscribe() called more than once on the same transport instance — ignoring.');
+      // eslint-disable-next-line @typescript-eslint/no-empty-function -- ignored second subscription has nothing to remove
       return { remove: () => {} };
     }
     this.subscribed = true;
