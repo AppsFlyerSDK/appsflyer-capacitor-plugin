@@ -3,6 +3,7 @@
 - [Uninstall](#uninstall)
 - [User invite](#userInvite)
 - [Collect IDFA with ATTrackingManager](#collect)
+- [iOS: forwarding launch options (`handleLaunchOptions`)](#launch-options)
 
 
 ## <a id="uninstall"> Measure Uninstall
@@ -103,11 +104,13 @@ AppsFlyer allows you to attribute and record installs originating from user invi
 Example:
   ```typescript
   AppsFlyer.generateInviteLink({
-      addParameters: {code: '1256abc', page: '152'},
-      campaign: 'appsflyer_plugin',
-      channel: 'sms'
+      parameters: {
+        campaign: 'appsflyer_plugin',
+        channel: 'sms',
+        userParams: { code: '1256abc', page: '152' },
+      },
     })
-      .then(r => alert('user invite link: ' + r.link))
+      .then(link => alert('user invite link: ' + link))
       .catch(e => alert('user invite error: ' + e));
 ```
 
@@ -119,7 +122,7 @@ Example:
     1. Add an entry to the list: Press +  next to `Information Property List`.
     2. Scroll down and select `Privacy - Tracking Usage Description`.
     3. Add as the value the wording you want to present to the user when asking for permission to collect the IDFA.
-3. Set a value to the `waitForATTUserAuthorization` property in the initialization options     
+3. Request tracking authorization yourself, inside the session-ready callback and before calling `start()` (see the code sample below) — there is no `init()`-time option for this anymore.
 4. In the `CAPBridgeViewController.swift` file, add: 
 ```swift
 override func viewDidLoad() {
@@ -134,15 +137,44 @@ For more info visit our Support integration guide [Here](https://support.appsfly
 
 #### Option 2 (3rd party plugin):
 You can use this plugin:  [capacitor-plugin-app-tracking-transparency](https://www.npmjs.com/package/capacitor-plugin-app-tracking-transparency)
-```typescript
- import {AppsFlyer ,AFInit} from 'appsflyer-capacitor-plugin';
 
-constructor(public platform: Platform) {  
-  this.platform.ready().then(() => {  
- ......
- ......
-  AppsFlyer.initSDK(options).then(res => alert(JSON.stringify(res))).catch(e =>alert(e));  
-  AppTrackingTransparency.requestPermission().then(res => alert('ATT status: ' + res.status));
-  });  
+Note: `init()` no longer has a built-in `waitForATTUserAuthorization` option — request the
+ATT permission yourself, inside the session-ready callback, before calling `start()`.
+
+```typescript
+ import {AppsFlyer} from 'appsflyer-capacitor-plugin';
+
+constructor(public platform: Platform) {
+  this.platform.ready().then(async () => {
+    await AppsFlyer.init({ devKey, appId });
+    AppsFlyer.registerSessionReadyListener(async () => {
+      await AppTrackingTransparency.requestPermission();
+      AppsFlyer.start();
+    });
+  });
 }
 ```
+
+## <a id="launch-options"> iOS: forwarding launch options (`handleLaunchOptions`)
+
+Capacitor auto-wires URL-open and universal-link forwarding for you — `AppsFlyerPlugin.swift`
+already observes Capacitor's `capacitorOpenURL`/`capacitorOpenUniversalLink` notifications and
+forwards them into the SDK. There is no Capacitor-side notification for `application(_:didFinishLaunchingWithOptions:)`,
+though, so that one call must be added by hand in your app's `AppDelegate.swift`:
+
+```swift
+import UIKit
+import Capacitor
+import AppsFlyerPlugin
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        AppsFlyerAttribution.shared.handleLaunchOptions(launchOptions)
+        return true
+    }
+}
+```
+
+Add this line even if you don't otherwise hand-integrate `AppDelegate.swift` — unlike the URL/deep-link
+forwarding above, this one has no auto-wired equivalent and won't fire without it.

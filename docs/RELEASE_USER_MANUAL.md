@@ -21,8 +21,10 @@ For contract meaning and stage IDs, see [`rc-release-contract.md`](https://githu
    |---|---|---|
    | `base_branch` | `develop` | Default. Override only when cutting a hotfix off `main`. |
    | `plugin_version` | `6.18.0-rc1` | Must match `^\d+\.\d+\.\d+-rc\d+$` |
-   | `ios_sdk_version` | `6.17.9` | Native iOS SDK version |
-   | `android_sdk_version` | `6.17.6` | Native Android SDK version |
+   | `ios_sdk_version` | `6.17.9` | AppsFlyerRPC pod/SPM pin, not AppsFlyerFramework |
+   | `ios_framework_version` | `6.17.4` | AppsFlyerFramework-Static SPM pin — must be a known-good pairing with `ios_sdk_version` (see `checkPackageSwiftPins.sh`) |
+   | `android_sdk_version` | `6.17.6` | Native Android SDK version (af-android-sdk-bom) |
+   | `android_plugin_bridge_version` | `6.17.6` | af-android-plugin-bridge version |
    | `skip_unit` | `false` | Skips the lint + unit job inside Lint, Test & Build. |
    | `skip_e2e` | `false` | Skips RC-E2E iOS + Android. **Blocks publish-rc** unless `dry_run=true`. |
    | `dry_run` | `false` | Leave `true` for drills; set `false` for a real RC |

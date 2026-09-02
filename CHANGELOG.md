@@ -1,3 +1,13 @@
+## 7.0.2
+ Release date: *2026-08-26*
+
+- Migrated to the js-core RPC architecture (`@appsflyer-sdk/js-core-plugin@7.0.15`) — native Android/iOS now only execute RPC calls; all transport and business logic moved to JS.
+- **Breaking:** public method names and argument shapes changed to match js-core-plugin's generated API (e.g. `initSDK`/`startSDK` → `init`/`start`; `setCustomerUserId({cuid})` → `setCustomerUserId({customerId})`). See updated example apps for migration guidance.
+- **Breaking:** OAOA (`onAppOpenAttribution`) is folded into the unified deep-link (`onDeepLinking`) callback — there is no longer a separate OAOA listener.
+- Updated to AppsFlyer SDK v7.0.1 for Android (+ af-android-plugin-bridge 7.0.12) and AppsFlyerRPC v7.0.13 for iOS.
+- Bumped `@capacitor/core`/`@capacitor/ios`/`@capacitor/android` to `^8.5.0`, which adds `CAPSceneDelegateProxy` (UIScene-lifecycle support) — no plugin code changes required, since it posts the same `capacitorOpenURL`/`capacitorOpenUniversalLink` notifications this plugin already observes.
+- Removed `@capacitor/docgen`/`npm run docgen` — it read JSDoc off the deleted `AppsFlyerPlugin` interface; API docs are no longer generated from this package.
+
 ## 6.17.91
  Release date: *2026-04-15*
 

@@ -34,9 +34,9 @@
       "checks": [
         {
           "id": "sdk_started",
-          "description": "startSDK returns SUCCESS",
+          "description": "start returns SUCCESS",
           "type": "log_contains",
-          "pattern": "[AF_QA][startSDK] result: SUCCESS",
+          "pattern": "[AF_QA][start] result: SUCCESS",
           "fail_action": "abort"
         },
         {
@@ -76,10 +76,10 @@
           "fail_action": "fail"
         },
         {
-          "id": "event_af_demo_launch",
-          "description": "af_demo_launch event fires",
+          "id": "event_qa_demo_launch",
+          "description": "qa_demo_launch event fires",
           "type": "log_contains",
-          "pattern": "[AF_QA][logEvent(af_demo_launch)] result:",
+          "pattern": "[AF_QA][logEvent(qa_demo_launch)] result:",
           "fail_action": "fail"
         },
         {
@@ -115,7 +115,7 @@
           "id": "no_fatal_errors",
           "description": "No fatal exceptions or SDK start errors in logs",
           "type": "absent",
-          "patterns": ["Fatal Exception", "FATAL", "[AF_QA][startSDK] error:", "response code:4", "response code:5"],
+          "patterns": ["Fatal Exception", "FATAL", "[AF_QA][start] error:", "response code:4", "response code:5"],
           "fail_action": "fail"
         }
       ]
@@ -125,7 +125,7 @@
       "id": "phase_2",
       "name": "Background deep link",
       "scenario_ref": "E2E-002",
-      "description": "App is brought down after Phase 1 SDK start; the deep-link URL re-launches it. On Android the app is HOME-keyed to background and re-entered via VIEW intent. On iOS the app is terminated and re-launched with `-deepLinkURL <url>`, which the QA app's AppDelegate replays through Capacitor's open-URL notification path. Both paths fire onDeepLinking with Status.FOUND.",
+      "description": "App is brought down after Phase 1 SDK start; the deep-link URL re-launches it. On Android the app is HOME-keyed to background and re-entered via VIEW intent. On iOS the app is terminated and re-launched with `-deepLinkURL <url>`, which the QA app's AppDelegate replays through Capacitor's open-URL notification path. Both paths fire onDeepLinking with a found status.",
       "requires_fresh_install": false,
       "wait_after_trigger_sec": 90,
       "deep_link_url": "afqa-capacitor://deeplink?deep_link_value=qa_deeplink_bg&af_sub1=background_test&pid=testmedia&c=deeplink_test",
@@ -140,17 +140,17 @@
       "checks": [
         {
           "id": "deeplink_found",
-          "description": "onDeepLinking fires with Status.FOUND",
-          "type": "log_contains",
-          "pattern": "status=Status.FOUND",
-          "fail_action": "fail"
+          "description": "onDeepLinking fires with a found status, either casing (warn, not fail: requires real OneLink server-side attribution, same as RN's test plan — additionally, adb shell am start can resolve as TASK_TO_FRONT instead of redelivering via onNewIntent, which independently prevents the SDK from ever re-evaluating the deep link)",
+          "type": "regex_match",
+          "pattern": "status=Status\\.(FOUND|found)",
+          "fail_action": "warn"
         },
         {
           "id": "deeplink_value_bg",
-          "description": "deepLinkValue matches qa_deeplink_bg",
+          "description": "deepLinkValue matches qa_deeplink_bg (warn, not fail: see deeplink_found)",
           "type": "log_contains",
           "pattern": "deepLinkValue=qa_deeplink_bg",
-          "fail_action": "fail"
+          "fail_action": "warn"
         },
         {
           "id": "no_fatal_errors",
@@ -166,7 +166,7 @@
       "id": "phase_3",
       "name": "Foreground deep link",
       "scenario_ref": "E2E-003",
-      "description": "Fresh install. App is in foreground after SDK start. On Android a brief HOME switch triggers onPause and the VIEW intent brings the app back. On iOS the app is terminated and re-launched with `-deepLinkURL <url>` (same launch-arg path as phase_2). Both paths fire onDeepLinking with Status.FOUND.",
+      "description": "Fresh install. App is in foreground after SDK start. On Android a brief HOME switch triggers onPause and the VIEW intent brings the app back. On iOS the app is terminated and re-launched with `-deepLinkURL <url>` (same launch-arg path as phase_2). Both paths fire onDeepLinking with a found status.",
       "requires_fresh_install": true,
       "wait_after_launch_sec": 240,
       "wait_after_trigger_sec": 90,
@@ -182,9 +182,9 @@
       "checks": [
         {
           "id": "sdk_started",
-          "description": "startSDK returns SUCCESS on fresh install",
+          "description": "start returns SUCCESS on fresh install",
           "type": "log_contains",
-          "pattern": "[AF_QA][startSDK] result: SUCCESS",
+          "pattern": "[AF_QA][start] result: SUCCESS",
           "fail_action": "abort"
         },
         {
@@ -197,17 +197,17 @@
         },
         {
           "id": "deeplink_found_fg",
-          "description": "onDeepLinking fires with Status.FOUND after foreground deep link",
-          "type": "log_contains",
-          "pattern": "status=Status.FOUND",
-          "fail_action": "fail"
+          "description": "onDeepLinking fires with a found status, either casing, after foreground deep link (warn, not fail: see phase_2's deeplink_found)",
+          "type": "regex_match",
+          "pattern": "status=Status\\.(FOUND|found)",
+          "fail_action": "warn"
         },
         {
           "id": "deeplink_value_fg",
-          "description": "deepLinkValue matches qa_deeplink_fg",
+          "description": "deepLinkValue matches qa_deeplink_fg (warn, not fail: see phase_2's deeplink_found)",
           "type": "log_contains",
           "pattern": "deepLinkValue=qa_deeplink_fg",
-          "fail_action": "fail"
+          "fail_action": "warn"
         },
         {
           "id": "no_fatal_errors",
@@ -231,7 +231,7 @@
           "id": "custom_event_logged",
           "description": "logEvent invocation with name and full param map is logged",
           "type": "log_contains",
-          "pattern": "[AF_QA][logEvent] name=af_qa_custom_purchase",
+          "pattern": "[AF_QA][logEvent] name=qa_custom_purchase",
           "fail_action": "fail"
         },
         {
@@ -360,14 +360,14 @@
         },
         {
           "id": "suppressed_event_no_http",
-          "description": "While stopped, af_qa_suppressed must not produce an HTTP 200 response",
+          "description": "While stopped, qa_suppressed must not produce an HTTP 200 response",
           "type": "absent",
-          "patterns": ["af_qa_suppressed.*response code:200", "af_qa_suppressed.*response_status=200"],
+          "patterns": ["qa_suppressed.*response code:200", "qa_suppressed.*response_status=200"],
           "fail_action": "fail"
         },
         {
           "id": "resumed_event_http_200",
-          "description": "After stop(false), af_qa_resumed produces HTTP 200",
+          "description": "After stop(false), qa_resumed produces HTTP 200",
           "type": "count_matches",
           "pattern": "response code:200 OK|response_status=200",
           "minimum": 1,
