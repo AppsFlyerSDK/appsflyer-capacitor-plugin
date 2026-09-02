@@ -1,9 +1,7 @@
 package capacitor.plugin.appsflyer.sdk
 
 import android.Manifest
-import android.content.Intent
 import android.util.Log
-import androidx.lifecycle.Lifecycle
 import com.appsflyer.pluginbridge.handler.AppsFlyerRpcHandler
 import com.appsflyer.pluginbridge.model.RpcResponse
 import com.getcapacitor.JSObject
@@ -125,28 +123,6 @@ class AppsFlyerPlugin : Plugin() {
             rpcExecutor.awaitTermination(2, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
-        }
-    }
-
-    // Native auto-detection misses a VIEW intent on an already-resumed singleTask/singleTop activity; forward manually, but only if already RESUMED, to avoid double-dispatching with the automatic path.
-    override fun handleOnNewIntent(intent: Intent?) {
-        super.handleOnNewIntent(intent)
-        if (intent == null) return
-        activity.intent = intent
-
-        if (intent.action != Intent.ACTION_VIEW || intent.data == null) return
-        if (activity.lifecycle.currentState != Lifecycle.State.RESUMED) return
-        val request = JSONObject().apply {
-            put("method", "performDeepLinking")
-            put("params", JSONObject().apply {
-                put("url", intent.dataString)
-                put("shouldTriggerSession", true)
-            })
-        }
-        try {
-            rpcExecutor.execute { safeDispatchToNative(request.toString()) }
-        } catch (e: RejectedExecutionException) {
-            Log.w("AppsFlyerPlugin", "Dropped warm-resume deep link forward: plugin is shutting down")
         }
     }
 

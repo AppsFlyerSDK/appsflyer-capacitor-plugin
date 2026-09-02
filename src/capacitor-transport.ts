@@ -41,15 +41,6 @@ export class CapacitorTransport implements RpcTransport {
   readonly platform = Capacitor.getPlatform() as 'ios' | 'android';
 
   async call<T = void>(method: string, params: Record<string, unknown> = {}): Promise<T> {
-    // 6.x callers still passing the old `eventValue` key would otherwise silently send logEvent with no values — SDK 7 renamed it to `eventValues`.
-    if (method === 'logEvent' && 'eventValue' in params && !('eventValues' in params)) {
-      // eslint-disable-next-line no-console -- intentional migration warning, not debug noise
-      console.warn(
-        "[AppsFlyer] logEvent's `eventValue` param was renamed to `eventValues` in 7.x — " +
-          'this event will be sent with no event values until you migrate.',
-      );
-    }
-
     const requestJson = JSON.stringify({ method, params });
     const { responseJson } = await AppsFlyerNative.executeRpc({ requestJson });
     let parsed: unknown;
@@ -67,7 +58,21 @@ export class CapacitorTransport implements RpcTransport {
     return (parsed as RpcSuccess<T>).data;
   }
 
+  // Guards against a second native listener: two would each dispatch every RPC event once,
+  // double-firing every registered callback (conversion data, deep links, ...). js-core-plugin's
+  // own AppsFlyerSDK already calls subscribe() at most once per instance, but this class
+  // implements the public RpcTransport interface, so nothing stops a second caller from calling
+  // it again on the same transport instance.
+  private subscribed = false;
+
   subscribe(listener: (event: RpcEvent) => void): ListenerHandle {
+    if (this.subscribed) {
+      // eslint-disable-next-line no-console -- misuse (double subscribe), not debug noise
+      console.warn('[AppsFlyer] subscribe() called more than once on the same transport instance — ignoring.');
+      return { remove: () => {} };
+    }
+    this.subscribed = true;
+
     const handlePromise = AppsFlyerNative.addListener(RPC_EVENT_NAME, ({ envelopeJson }) => {
       let parsed: unknown;
       try {
@@ -85,6 +90,7 @@ export class CapacitorTransport implements RpcTransport {
     });
     return {
       remove: () => {
+        this.subscribed = false;
         // eslint-disable-next-line no-console -- addListener rejecting here means the bridge is
         // already gone; nothing meaningful to do but avoid an unhandled rejection.
         handlePromise.then((handle) => handle.remove()).catch((error: unknown) => console.warn(error));

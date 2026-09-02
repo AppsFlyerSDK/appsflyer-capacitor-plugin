@@ -66,17 +66,6 @@ describe('CapacitorTransport', () => {
     await expect(transport.call('start')).rejects.toThrow(/Malformed RPC response/);
   });
 
-  it('warns and still sends the call when logEvent uses the renamed eventValue param', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    executeRpc.mockResolvedValue({ responseJson: JSON.stringify({ success: true, data: undefined }) });
-    const transport = new CapacitorTransport();
-
-    await transport.call('logEvent', { eventName: 'af_purchase', eventValue: { af_revenue: 1 } });
-
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('eventValue'));
-    warnSpy.mockRestore();
-  });
-
   it('subscribe parses the envelope JSON and forwards RpcEvent objects', () => {
     let capturedCallback: ((data: { envelopeJson: string }) => void) | undefined;
     addListener.mockImplementation((_name: string, cb: typeof capturedCallback) => {
@@ -140,5 +129,30 @@ describe('CapacitorTransport', () => {
     await Promise.resolve();
 
     expect(removeSpy).toHaveBeenCalled();
+  });
+
+  it('ignores a second subscribe() on the same instance instead of double-registering', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    addListener.mockResolvedValue({ remove: vi.fn() });
+    const transport = new CapacitorTransport();
+
+    transport.subscribe(() => undefined);
+    transport.subscribe(() => undefined);
+
+    expect(addListener).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('subscribe() called more than once'));
+    warnSpy.mockRestore();
+  });
+
+  it('allows re-subscribing after remove()', async () => {
+    addListener.mockResolvedValue({ remove: vi.fn() });
+    const transport = new CapacitorTransport();
+
+    const handle = transport.subscribe(() => undefined);
+    handle.remove();
+    await Promise.resolve();
+    transport.subscribe(() => undefined);
+
+    expect(addListener).toHaveBeenCalledTimes(2);
   });
 });
