@@ -3,26 +3,37 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { AppsFlyerRpcError, CapacitorTransport } from '../capacitor-transport';
 
-const { executeRpc, addListener } = vi.hoisted(() => ({
+const { executeRpc, setOaidData, addListener } = vi.hoisted(() => ({
   executeRpc: vi.fn(),
+  setOaidData: vi.fn(),
   addListener: vi.fn(),
 }));
 
 // vi.mock is hoisted above all imports by Vitest, regardless of where it's written in the file.
 vi.mock('@capacitor/core', () => ({
   Capacitor: { getPlatform: () => 'android' },
-  registerPlugin: () => ({ executeRpc, addListener }),
+  registerPlugin: () => ({ executeRpc, setOaidData, addListener }),
 }));
 
 describe('CapacitorTransport', () => {
   beforeEach(() => {
     executeRpc.mockReset();
+    setOaidData.mockReset();
     addListener.mockReset();
   });
 
   it('reports the Capacitor platform', () => {
     const transport = new CapacitorTransport();
     expect(transport.platform).toBe('android');
+  });
+
+  it('forwards OAID data to the native Capacitor method', async () => {
+    setOaidData.mockResolvedValue(undefined);
+    const transport = new CapacitorTransport();
+
+    await transport.setOaidData({ oaid: 'custom-oaid' });
+
+    expect(setOaidData).toHaveBeenCalledWith({ oaid: 'custom-oaid' });
   });
 
   it('does not throw on construction when Capacitor.getPlatform() returns web', () => {

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-const { AppsFlyerSDKMock } = vi.hoisted(() => ({
+const { AppsFlyerSDKMock, setOaidData } = vi.hoisted(() => ({
   AppsFlyerSDKMock: vi.fn(),
+  setOaidData: vi.fn(),
 }));
 
 vi.mock('@appsflyer-sdk/js-core-plugin', () => ({
@@ -10,7 +11,7 @@ vi.mock('@appsflyer-sdk/js-core-plugin', () => ({
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: { getPlatform: () => 'android' },
-  registerPlugin: () => ({ executeRpc: vi.fn(), addListener: vi.fn() }),
+  registerPlugin: () => ({ executeRpc: vi.fn(), setOaidData, addListener: vi.fn() }),
 }));
 
 describe('index', () => {
@@ -29,5 +30,14 @@ describe('index', () => {
   it('exports the same instance as both the named and default export', async () => {
     const indexModule = await import('../index');
     expect(indexModule.default).toBe(indexModule.AppsFlyer);
+  });
+
+  it('exposes setOaidData on the public AppsFlyer instance', async () => {
+    setOaidData.mockResolvedValue(undefined);
+    const { AppsFlyer } = await import('../index');
+
+    await AppsFlyer.setOaidData({ oaid: 'custom-oaid' });
+
+    expect(setOaidData).toHaveBeenCalledWith({ oaid: 'custom-oaid' });
   });
 });

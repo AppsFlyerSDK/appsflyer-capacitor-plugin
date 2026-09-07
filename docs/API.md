@@ -134,6 +134,7 @@ A platform value of "—" means the underlying native SDK has no equivalent call
 | [`setLogLevel`](#setloglevel) | ✅ | — |
 | [`setMinTimeBetweenSessions`](#setmintimebetweensessions) | ✅ | ✅ |
 | [`setOneLinkCustomDomain`](#setonelinkcustomdomain) | ✅ | ✅ |
+| [`setOaidData`](#setoaiddata) | ✅ | — |
 | [`setOutOfStore`](#setoutofstore) | ✅ | — |
 | [`setPartnerData`](#setpartnerdata) | ✅ | ✅ |
 | [`setPluginInfo`](#setplugininfo-internal) | ✅ | ✅ |
@@ -924,6 +925,26 @@ import { Capacitor } from '@capacitor/core';
 if (Capacitor.getPlatform() === 'android') {
   await AppsFlyer.setDisableNetworkData({ isDisable: true });
 }
+```
+
+#### setOaidData
+
+`setOaidData(params) : Promise<void>` — Android only
+
+Supplies an OAID retrieved by the application using a custom OAID provider. Call this method
+before [`init()`](#init). The `oaid` value must be a non-blank string.
+
+| parameter | type | description |
+| --- | --- | --- |
+| oaid | string | OAID retrieved by the application |
+
+```typescript
+import { Capacitor } from '@capacitor/core';
+
+if (Capacitor.getPlatform() === 'android') {
+  await AppsFlyer.setOaidData({ oaid: customOaid });
+}
+await AppsFlyer.init({ devKey: 'K2***********99', appId: '41*****44' });
 ```
 
 #### performDeepLinking

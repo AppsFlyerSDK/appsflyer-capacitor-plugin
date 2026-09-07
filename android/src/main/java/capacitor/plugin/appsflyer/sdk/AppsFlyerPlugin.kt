@@ -3,6 +3,7 @@ package capacitor.plugin.appsflyer.sdk
 import android.Manifest
 import android.content.Intent
 import android.util.Log
+import com.appsflyer.AppsFlyerLib
 import com.appsflyer.pluginbridge.handler.AppsFlyerRpcHandler
 import com.appsflyer.pluginbridge.model.RpcResponse
 import com.getcapacitor.JSObject
@@ -56,6 +57,8 @@ internal fun normalizeDeepLinkEvent(eventJson: String): String = parseJsonOrDefa
     envelope.toString()
 }
 
+internal fun isValidOaid(oaid: String?): Boolean = !oaid.isNullOrBlank()
+
 /** Capacitor bridge — every SDK capability is dispatched via executeRpc -> AppsFlyerRpcHandler. */
 @CapacitorPlugin(
     name = "AppsFlyerPlugin",
@@ -99,6 +102,17 @@ class AppsFlyerPlugin : Plugin() {
         }
         val executor = if (isAwaitResponseCall(requestJson)) awaitResponseExecutor else rpcExecutor
         dispatch(call, executor, requestJson)
+    }
+
+    @PluginMethod
+    fun setOaidData(call: PluginCall) {
+        val oaid = call.getString("oaid")
+        if (!isValidOaid(oaid)) {
+            call.reject("oaid is required and must not be blank", "INVALID_REQUEST")
+            return
+        }
+        AppsFlyerLib.getInstance().setOaidData(oaid)
+        call.resolve()
     }
 
     private fun dispatch(call: PluginCall, executor: ExecutorService, requestJson: String) {

@@ -13,6 +13,7 @@ import type {
   PluginIdentity,
   RpcEvent,
   RpcTransport,
+  SetOaidDataOptions,
 } from '../index';
 
 // Referencing each type keeps `noUnusedLocals`/import-elision from silently dropping the check.
@@ -26,4 +27,5 @@ export type PublicTypesSmokeTest = [
   PluginIdentity,
   RpcEvent,
   RpcTransport,
+  SetOaidDataOptions,
 ];
