@@ -72,4 +72,16 @@ class AppsFlyerPluginTest {
         assertFalse(isAwaitResponseCall("""{"method":"setCustomerUserId","params":{}}"""))
         assertFalse(isAwaitResponseCall("""{"method":"performDeepLinking","params":{}}"""))
     }
+
+    @Test
+    fun `isValidOaid accepts a non-empty OAID`() {
+        assertTrue(isValidOaid("custom-oaid"))
+    }
+
+    @Test
+    fun `isValidOaid rejects missing empty and blank OAIDs`() {
+        assertFalse(isValidOaid(null))
+        assertFalse(isValidOaid(""))
+        assertFalse(isValidOaid("   "))
+    }
 }

@@ -6,6 +6,7 @@ const RPC_EVENT_NAME = 'rpcEvent';
 // The only shape the native side needs to expose; kept private since it has one caller (CapacitorTransport).
 interface AppsFlyerNativePlugin {
   executeRpc(options: { requestJson: string }): Promise<{ responseJson: string }>;
+  setOaidData(options: { oaid: string }): Promise<void>;
   addListener(
     eventName: typeof RPC_EVENT_NAME,
     listenerFunc: (event: { envelopeJson: string }) => void,
@@ -56,6 +57,10 @@ export class CapacitorTransport implements RpcTransport {
       throw new AppsFlyerRpcError(parsed.error.code, parsed.error.message);
     }
     return (parsed as RpcSuccess<T>).data;
+  }
+
+  setOaidData(options: { oaid: string }): Promise<void> {
+    return AppsFlyerNative.setOaidData(options);
   }
 
   // Guards against a second native listener: two would each dispatch every RPC event once,
