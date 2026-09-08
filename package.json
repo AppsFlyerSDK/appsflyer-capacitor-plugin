@@ -1,10 +1,10 @@
 {
   "name": "appsflyer-capacitor-plugin",
-  "version": "7.0.2",
+  "version": "7.0.3",
   "iosSdkVersion": "7.0.13",
   "iosFrameworkVersion": "7.0.2",
   "androidSdkVersion": "7.0.1",
-  "androidPluginBridgeVersion": "7.0.12",
+  "androidPluginBridgeVersion": "7.0.13",
   "buildNumber": "1",
   "description": "AppsFlyer SDK plugin for Capacitor",
   "main": "dist/plugin.cjs.js",
@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@angular/cli": "^12.1.1",
-    "@appsflyer-sdk/js-core-plugin": "7.0.15",
+    "@appsflyer-sdk/js-core-plugin": "7.1.0",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
@@ -78,7 +78,7 @@
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
-    "@appsflyer-sdk/js-core-plugin": "7.0.15",
+    "@appsflyer-sdk/js-core-plugin": "7.1.0",
     "@capacitor/core": ">=8.0.0"
   },
   "prettier": "@ionic/prettier-config",

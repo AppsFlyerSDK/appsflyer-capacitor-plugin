@@ -114,6 +114,7 @@ A platform value of "—" means the underlying native SDK has no equivalent call
 | [`sendPushNotificationData`](#sendpushnotificationdata) | ✅ | — |
 | [`setAdditionalData`](#setadditionaldata) | ✅ | ✅ |
 | [`setAppId`](#setappid) | ✅ | — |
+| [`setAndroidIdData`](#setandroididdata) | ✅ | — |
 | [`setAppInviteOneLink`](#setappinviteonelink) | ✅ | ✅ |
 | [`setCollectAndroidID`](#setcollectandroidid) | ✅ | — |
 | [`setConsentData`](#setconsentdata) | ✅ | ✅ |
@@ -129,10 +130,12 @@ A platform value of "—" means the underlying native SDK has no equivalent call
 | [`setDisableSKAdNetwork`](#setdisableskadnetwork) | — | ✅ |
 | [`setFacebookDeferredAppLink`](#setfacebookdeferredapplink) | — | ✅ |
 | [`setHost`](#sethost) | ✅ | ✅ |
+| [`setImeiData`](#setimeidata) | ✅ | — |
 | [`setInstallId`](#setinstallid) | ✅ | ✅ |
 | [`setIsUpdate`](#setisupdate) | ✅ | — |
 | [`setLogLevel`](#setloglevel) | ✅ | — |
 | [`setMinTimeBetweenSessions`](#setmintimebetweensessions) | ✅ | ✅ |
+| [`setOaidData`](#setoaiddata) | ✅ | — |
 | [`setOneLinkCustomDomain`](#setonelinkcustomdomain) | ✅ | ✅ |
 | [`setOutOfStore`](#setoutofstore) | ✅ | — |
 | [`setPartnerData`](#setpartnerdata) | ✅ | ✅ |
@@ -888,6 +891,24 @@ because it appears on the wire, for parity with the RPC map.
 
 ### Android only
 
+#### setAndroidIdData
+
+`setAndroidIdData(params) : Promise<void>` — Android only
+
+Reports a caller-supplied Android ID to the SDK, for apps that already collect it themselves.
+
+| parameter | type | description |
+| --- | --- | --- |
+| androidId | string | the device's Android ID |
+
+```typescript
+import { Capacitor } from '@capacitor/core';
+
+if (Capacitor.getPlatform() === 'android') {
+  await AppsFlyer.setAndroidIdData({ androidId: '9774d56d682e549c' });
+}
+```
+
 #### setCollectAndroidID
 
 `setCollectAndroidID(params) : Promise<void>` — Android only
@@ -905,6 +926,43 @@ import { Capacitor } from '@capacitor/core';
 
 if (Capacitor.getPlatform() === 'android') {
   await AppsFlyer.setCollectAndroidID({ isCollect: true });
+}
+```
+
+#### setImeiData
+
+`setImeiData(params) : Promise<void>` — Android only
+
+Reports a caller-supplied IMEI to the SDK, for apps that already collect it themselves.
+
+| parameter | type | description |
+| --- | --- | --- |
+| imei | string | the device's IMEI |
+
+```typescript
+import { Capacitor } from '@capacitor/core';
+
+if (Capacitor.getPlatform() === 'android') {
+  await AppsFlyer.setImeiData({ imei: '490154203237518' });
+}
+```
+
+#### setOaidData
+
+`setOaidData(params) : Promise<void>` — Android only
+
+Reports a caller-supplied OAID (Open Anonymous Device Identifier) to the SDK, for apps that
+already collect it themselves.
+
+| parameter | type | description |
+| --- | --- | --- |
+| oaid | string | the device's OAID |
+
+```typescript
+import { Capacitor } from '@capacitor/core';
+
+if (Capacitor.getPlatform() === 'android') {
+  await AppsFlyer.setOaidData({ oaid: '78c8ea27-...' });
 }
 ```
 

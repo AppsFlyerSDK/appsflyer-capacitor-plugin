@@ -144,6 +144,25 @@ function checkSdkState() {
         .catch(err => console.log('SDK state error: ' + err));
 }
 
+// Android only — rejects with UNSUPPORTED_ON_PLATFORM on iOS.
+function setImeiData() {
+    AppsFlyer.setImeiData({ imei: '490154203237518' })
+        .then(() => console.log('setImeiData triggered'))
+        .catch(e => console.log('setImeiData error: ' + e));
+}
+
+function setOaidData() {
+    AppsFlyer.setOaidData({ oaid: '78c8ea27-widget' })
+        .then(() => console.log('setOaidData triggered'))
+        .catch(e => console.log('setOaidData error: ' + e));
+}
+
+function setAndroidIdData() {
+    AppsFlyer.setAndroidIdData({ androidId: '9774d56d682e549c' })
+        .then(() => console.log('setAndroidIdData triggered'))
+        .catch(e => console.log('setAndroidIdData error: ' + e));
+}
+
 const ExploreContainer: React.FC<ContainerProps> = () => {
     return (
         <div className="container">
@@ -191,6 +210,17 @@ const ExploreContainer: React.FC<ContainerProps> = () => {
                     <IonButton expand="block" onClick={() => startSDK()}>Start SDK</IonButton>
                     <IonButton expand="block" onClick={() => stop()}>Stop SDK</IonButton>
                     <IonButton expand="block" onClick={() => checkSdkState()}>Check SDK State</IonButton>
+                </IonCardContent>
+            </IonCard>
+
+            <IonCard>
+                <IonCardHeader>
+                    <IonCardTitle>Device Identifiers (Android only)</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                    <IonButton expand="block" onClick={() => setImeiData()}>Set IMEI Data</IonButton>
+                    <IonButton expand="block" onClick={() => setOaidData()}>Set OAID Data</IonButton>
+                    <IonButton expand="block" onClick={() => setAndroidIdData()}>Set Android ID Data</IonButton>
                 </IonCardContent>
             </IonCard>
         </div>

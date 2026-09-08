@@ -326,6 +326,16 @@ ios_launch() {
   [[ -n "$IOS_LAST_PID" ]] && log_debug "Launched PID: $IOS_LAST_PID"
 }
 
+
+# Path to the current install's af_qa_logs.txt. Goes through
+# `simctl get_app_container` rather than `find`-ing under
+# Containers/Data/Application: install/uninstall cycles leave prior
+# containers on disk, and an unscoped find can silently return a stale
+# file from an old container instead of the current one.
+ios_qa_log_path() {
+  echo "$(xcrun simctl get_app_container "$IOS_UDID" "$PACKAGE_NAME" data 2>/dev/null)/Documents/af_qa_logs.txt"
+}
+
 ios_get_pid() {
   xcrun simctl spawn "$IOS_UDID" launchctl list 2>/dev/null | \
     grep "$PACKAGE_NAME" | awk '{print $1}' | head -1
@@ -342,15 +352,11 @@ ios_collect_logs() {
   # Strategy 1: Read the app's af_qa_logs.txt from the simulator filesystem.
   # This file is the source of truth for [AF_QA] markers because the IOSink
   # in af_qa_logger.dart guarantees every line is appended.
-  local sim_data_dir
-  sim_data_dir="$HOME/Library/Developer/CoreSimulator/Devices/${IOS_UDID}/data"
-  if [[ -d "$sim_data_dir" ]]; then
-    local qa_log
-    qa_log=$(find "$sim_data_dir/Containers/Data/Application" -name "af_qa_logs.txt" -maxdepth 4 2>/dev/null | head -1)
-    if [[ -n "$qa_log" && -f "$qa_log" ]]; then
-      log_debug "Found iOS QA log file: $qa_log"
-      cat "$qa_log" >> "$log_file"
-    fi
+  local qa_log
+  qa_log="$(ios_qa_log_path)"
+  if [[ -f "$qa_log" ]]; then
+    log_debug "Found iOS QA log file: $qa_log"
+    cat "$qa_log" >> "$log_file"
   fi
 
   # Strategy 2: Always also append simctl log show output. The file logger
@@ -432,13 +438,9 @@ platform_peek_qa_log() {
     return 0
   fi
   ios_ensure_udid
-  local sim_data_dir
-  sim_data_dir="$HOME/Library/Developer/CoreSimulator/Devices/${IOS_UDID}/data"
-  [[ -d "$sim_data_dir" ]] || return 0
   local qa_log
-  qa_log=$(find "$sim_data_dir/Containers/Data/Application" \
-    -name "af_qa_logs.txt" -maxdepth 4 2>/dev/null | head -1)
-  [[ -n "$qa_log" && -f "$qa_log" ]] || return 0
+  qa_log="$(ios_qa_log_path)"
+  [[ -f "$qa_log" ]] || return 0
   cat "$qa_log" 2>/dev/null || true
 }
 
@@ -763,6 +765,18 @@ run_phase() {
       log_info "Waiting ${wait_trigger_sec}s for deep link to propagate..."
       sleep "$wait_trigger_sec"
     fi
+  fi
+
+  # Refresh the PID pinned for iOS log filtering. It's only set by
+  # ios_launch() (the fresh-install cold launch); a deep-link relaunch here
+  # goes through run_phase_command instead, which never touches it. Left
+  # stale, log_show's --predicate stays pinned to the terminated cold-launch
+  # process and silently filters out the relaunched process's own [AF_QA]
+  # lines. ios_get_pid() reflects whatever's actually running right now.
+  if [[ "$PLATFORM" == "ios" ]]; then
+    local current_pid
+    current_pid=$(ios_get_pid)
+    [[ -n "$current_pid" ]] && IOS_LAST_PID="$current_pid"
   fi
 
   # Collect logs
