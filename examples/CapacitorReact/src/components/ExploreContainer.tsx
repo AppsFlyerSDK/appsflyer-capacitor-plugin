@@ -146,19 +146,19 @@ function checkSdkState() {
 
 // Android only — rejects with UNSUPPORTED_ON_PLATFORM on iOS.
 function setImeiData() {
-    AppsFlyer.setImeiData({ imei: '490154203237518' })
+    AppsFlyer.setImeiData({ imei: 'REPLACE_WITH_DEVICE_IMEI' }) // 15-digit IMEI
         .then(() => console.log('setImeiData triggered'))
         .catch(e => console.log('setImeiData error: ' + e));
 }
 
 function setOaidData() {
-    AppsFlyer.setOaidData({ oaid: '78c8ea27-widget' })
+    AppsFlyer.setOaidData({ oaid: 'REPLACE_WITH_DEVICE_OAID' }) // UUID-formatted device identifier (MSA/OAID standard)
         .then(() => console.log('setOaidData triggered'))
         .catch(e => console.log('setOaidData error: ' + e));
 }
 
 function setAndroidIdData() {
-    AppsFlyer.setAndroidIdData({ androidId: '9774d56d682e549c' })
+    AppsFlyer.setAndroidIdData({ androidId: 'REPLACE_WITH_ANDROID_ID' }) // 16-character hex string
         .then(() => console.log('setAndroidIdData triggered'))
         .catch(e => console.log('setAndroidIdData error: ' + e));
 }

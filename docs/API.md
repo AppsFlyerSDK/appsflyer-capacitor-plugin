@@ -113,8 +113,8 @@ A platform value of "—" means the underlying native SDK has no equivalent call
 | [`registerSessionReadyListener`](#registersessionreadylistener) | ✅ | ✅ |
 | [`sendPushNotificationData`](#sendpushnotificationdata) | ✅ | — |
 | [`setAdditionalData`](#setadditionaldata) | ✅ | ✅ |
-| [`setAppId`](#setappid) | ✅ | — |
 | [`setAndroidIdData`](#setandroididdata) | ✅ | — |
+| [`setAppId`](#setappid) | ✅ | — |
 | [`setAppInviteOneLink`](#setappinviteonelink) | ✅ | ✅ |
 | [`setCollectAndroidID`](#setcollectandroidid) | ✅ | — |
 | [`setConsentData`](#setconsentdata) | ✅ | ✅ |
@@ -896,6 +896,13 @@ because it appears on the wire, for parity with the RPC map.
 `setAndroidIdData(params) : Promise<void>` — Android only
 
 Reports a caller-supplied Android ID to the SDK, for apps that already collect it themselves.
+Android ID is a persistent device identifier — confirm your app has the necessary user consent
+before collecting it, and avoid logging the raw value. Google Play policy restricts Android ID
+collection for apps with Play Services — review that policy and apply GDPR data-minimization
+principles before relying on this setter. To opt out of SDK collection of Android ID, see
+[setCollectAndroidID](#setcollectandroidid). This value must never be written to debug logs or
+crash/analytics reports, and must be declared in your app's
+[Play Data Safety section](https://support.google.com/googleplay/android-developer/answer/10787469).
 
 | parameter | type | description |
 | --- | --- | --- |
@@ -905,7 +912,7 @@ Reports a caller-supplied Android ID to the SDK, for apps that already collect i
 import { Capacitor } from '@capacitor/core';
 
 if (Capacitor.getPlatform() === 'android') {
-  await AppsFlyer.setAndroidIdData({ androidId: '9774d56d682e549c' });
+  await AppsFlyer.setAndroidIdData({ androidId: 'REPLACE_WITH_ANDROID_ID' });
 }
 ```
 
@@ -933,7 +940,18 @@ if (Capacitor.getPlatform() === 'android') {
 
 `setImeiData(params) : Promise<void>` — Android only
 
-Reports a caller-supplied IMEI to the SDK, for apps that already collect it themselves.
+Reports a caller-supplied IMEI to the SDK, for apps that already collect it themselves. IMEI is
+a persistent device identifier — confirm your app has the necessary user consent before
+collecting it, and avoid logging the raw value. On Android 10+ (API 29+) the platform itself
+blocks apps without carrier privileges from reading the device IMEI, and Google Play's
+[Permissions and APIs that Access Sensitive Information policy](https://support.google.com/googleplay/android-developer/answer/9888077)
+limits IMEI collection to a narrow set of eligible app categories — review that policy and apply
+GDPR data-minimization principles before relying on this setter. Most consumer apps targeting
+Android 10+ will not have access to IMEI; this setter is primarily intended for carrier-privileged
+apps, device-owner/enterprise deployments, or apps targeting legacy Android versions. This value
+must never be written to debug logs or crash/analytics reports, and must be declared in your
+app's
+[Play Data Safety section](https://support.google.com/googleplay/android-developer/answer/10787469).
 
 | parameter | type | description |
 | --- | --- | --- |
@@ -943,7 +961,7 @@ Reports a caller-supplied IMEI to the SDK, for apps that already collect it them
 import { Capacitor } from '@capacitor/core';
 
 if (Capacitor.getPlatform() === 'android') {
-  await AppsFlyer.setImeiData({ imei: '490154203237518' });
+  await AppsFlyer.setImeiData({ imei: 'REPLACE_WITH_DEVICE_IMEI' });
 }
 ```
 
@@ -952,7 +970,12 @@ if (Capacitor.getPlatform() === 'android') {
 `setOaidData(params) : Promise<void>` — Android only
 
 Reports a caller-supplied OAID (Open Anonymous Device Identifier) to the SDK, for apps that
-already collect it themselves.
+already collect it themselves. OAID is a persistent device identifier used on non-GMS Android
+devices (e.g. Huawei via AppGallery, or markets where Google Play Services are not present) —
+confirm your app has the necessary user consent before collecting it, and avoid logging the raw
+value. Apply GDPR data-minimization principles before relying on this setter. This value must
+never be written to debug logs or crash/analytics reports, and must be declared in your app's
+privacy disclosures, such as Huawei AppGallery data privacy declarations.
 
 | parameter | type | description |
 | --- | --- | --- |
@@ -962,7 +985,7 @@ already collect it themselves.
 import { Capacitor } from '@capacitor/core';
 
 if (Capacitor.getPlatform() === 'android') {
-  await AppsFlyer.setOaidData({ oaid: '78c8ea27-...' });
+  await AppsFlyer.setOaidData({ oaid: 'REPLACE_WITH_DEVICE_OAID' });
 }
 ```
 
