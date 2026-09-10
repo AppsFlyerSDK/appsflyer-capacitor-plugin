@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   promote:
-    name: Strip -rcN and ready PR for merge
+    name: Promote release (strip -rcN or pass through final build)
     if: ${{ github.event.label.name == 'pass QA ready for deploy' && startsWith(github.event.pull_request.head.ref, 'releases/') }}
     runs-on: ubuntu-latest
     permissions:
@@ -51,52 +51,71 @@ jobs:
         run: |
           CURRENT=$(jq -r '.version' package.json)
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
-          if ! [[ "$CURRENT" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-rc[0-9]+$ ]]; then
-            if [[ "$CURRENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "Version $CURRENT is already promoted (no -rcN suffix). Nothing to strip."
-              echo "promoted=$CURRENT" >> "$GITHUB_OUTPUT"
-              echo "needs_commit=false" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
+          source .github/workflows/scripts/version-format.sh
+          if [[ "$CURRENT" =~ $VERSION_RC_CAPTURE_REGEX ]]; then
+            PROMOTED="${BASH_REMATCH[1]}"
+            echo "promoted=$PROMOTED" >> "$GITHUB_OUTPUT"
+            echo "needs_commit=true" >> "$GITHUB_OUTPUT"
+            echo "Stripping -rcN: $CURRENT -> $PROMOTED"
+          elif [[ "$CURRENT" =~ $VERSION_FINAL_REGEX ]]; then
+            # Clean X.Y.Z, or a final hotfix build like X.Y.Z+1 — neither is an
+            # -rcN prerelease, so publish it verbatim instead of stripping.
+            echo "Version $CURRENT is already final (no -rcN suffix). Nothing to strip."
+            echo "promoted=$CURRENT" >> "$GITHUB_OUTPUT"
+            echo "needs_commit=false" >> "$GITHUB_OUTPUT"
+          else
             echo "::error::Unexpected version format: $CURRENT"
             exit 1
           fi
-          PROMOTED="${BASH_REMATCH[1]}"
-          echo "promoted=$PROMOTED" >> "$GITHUB_OUTPUT"
-          echo "needs_commit=true" >> "$GITHUB_OUTPUT"
-          echo "Stripping -rcN: $CURRENT -> $PROMOTED"
 
       - name: Strip -rcN via updatePluginVersion.sh
         if: ${{ steps.ver.outputs.needs_commit == 'true' }}
+        env:
+          PROMOTED: ${{ steps.ver.outputs.promoted }}
         run: |
           chmod +x .github/workflows/scripts/updatePluginVersion.sh
-          .github/workflows/scripts/updatePluginVersion.sh ${{ steps.ver.outputs.promoted }}
+          .github/workflows/scripts/updatePluginVersion.sh "$PROMOTED"
 
       - name: Commit and push promotion
         if: ${{ steps.ver.outputs.needs_commit == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
+          CURRENT_VER: ${{ steps.ver.outputs.current }}
+          PROMOTED_VER: ${{ steps.ver.outputs.promoted }}
         run: |
           git add -A
           if git diff --cached --quiet; then
             echo "No diff after strip — package.json may already be clean."
           else
-            git commit -m "chore: promote ${{ steps.ver.outputs.current }} -> ${{ steps.ver.outputs.promoted }}"
+            git commit -m "chore: promote $CURRENT_VER -> $PROMOTED_VER"
             git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BRANCH"
           fi
 
       - name: Update PR title and body
         env:
           GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          CURRENT_VER: ${{ steps.ver.outputs.current }}
+          PROMOTED_VER: ${{ steps.ver.outputs.promoted }}
         run: |
+          # Interpolating step outputs via env vars rather than ${{ }} inside this run
+          # block, as defense-in-depth: CURRENT_VER/PROMOTED_VER are already constrained
+          # to digit-only version strings by the regex check in "Read current RC version"
+          # above, so there's no injection hole here today, but other GITHUB_OUTPUT values
+          # in this repo's workflows are attacker-shaped, and env-var substitution can't be
+          # turned into command substitution the way an unquoted ${{ }} expansion into a
+          # heredoc can.
+          strip_note='Version suffix stripped from package.json.'
+          if [[ "$CURRENT_VER" == "$PROMOTED_VER" ]]; then
+            strip_note='Version was already final; nothing to strip.'
+          fi
           gh pr edit ${{ github.event.pull_request.number }} \
-            --title "Release ${{ steps.ver.outputs.promoted }}" \
+            --title "Release $PROMOTED_VER" \
             --body "$(cat <<EOF
-          Promoted from RC \`${{ steps.ver.outputs.current }}\` to production version \`${{ steps.ver.outputs.promoted }}\`.
+          Promoted from RC \`$CURRENT_VER\` to production version \`$PROMOTED_VER\`.
 
           - rc-smoke/npm verified green on the head commit.
-          - \`-rcN\` suffix stripped from \`package.json\`, \`AppsFlyerPlugin.swift\`.
+          - $strip_note
           - Ready to merge into \`main\`.
           EOF
           )"
@@ -131,7 +150,7 @@ jobs:
             `Branch: ${env.RELEASE_BRANCH}`,
             '',
             'The promote workflow could not prepare the release branch for production. Common causes:',
-            '• `rc-smoke/npm` is missing or red on the PR head SHA — bump to `rcN+1` and rerun rc-release.',
+            '• `rc-smoke/npm` is missing or red on the PR head SHA — bump the RC/build suffix and rerun rc-release.',
             '• The version-strip push was rejected (branch protection or stale ref).',
             '',
             `Run: https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,

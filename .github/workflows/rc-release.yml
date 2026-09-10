@@ -9,7 +9,7 @@ on:
         type: string
         default: develop
       plugin_version:
-        description: 'Plugin RC version (X.Y.Z-rcN)'
+        description: 'Plugin RC version (X.Y.Z-rcN) or final hotfix build (X.Y.Z+N)'
         required: true
         type: string
       ios_sdk_version:
@@ -49,7 +49,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  VERSION_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$'
+  VERSION_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+|\+[0-9]+)$'
   SDK_VERSION_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+$'
 
 jobs:
@@ -95,7 +95,8 @@ jobs:
         run: |
           MAJOR=$(echo "$PLUGIN_VERSION" | cut -d'.' -f1)
           MINOR=$(echo "$PLUGIN_VERSION" | cut -d'.' -f2)
-          PATCH=$(echo "$PLUGIN_VERSION" | cut -d'.' -f3 | cut -d'-' -f1)
+          # Strips whichever suffix is present: -rcN or +N (never both).
+          PATCH=$(echo "$PLUGIN_VERSION" | cut -d'.' -f3 | cut -d'-' -f1 | cut -d'+' -f1)
           BRANCH="releases/${MAJOR}.x.x/${MAJOR}.${MINOR}.x/${PLUGIN_VERSION}"
           TAG="v${PLUGIN_VERSION}"
           echo "release_branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -130,8 +131,10 @@ jobs:
           node-version: '24'
 
       - name: Create release branch
+        env:
+          RELEASE_BRANCH: ${{ needs.validate-release.outputs.release_branch }}
         run: |
-          BRANCH="${{ needs.validate-release.outputs.release_branch }}"
+          BRANCH="$RELEASE_BRANCH"
           if git ls-remote --exit-code --heads origin "$BRANCH"; then
             echo "Branch $BRANCH already exists on origin; checking it out"
             git fetch origin "$BRANCH"
@@ -172,8 +175,9 @@ jobs:
       - name: Push release branch
         env:
           GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
+          RELEASE_BRANCH: ${{ needs.validate-release.outputs.release_branch }}
         run: |
-          BRANCH="${{ needs.validate-release.outputs.release_branch }}"
+          BRANCH="$RELEASE_BRANCH"
           git push -u "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BRANCH"
 
   run-ci:
@@ -317,11 +321,14 @@ jobs:
     steps:
       - name: Create GitHub prerelease
         uses: actions/github-script@v7
+        env:
+          TAG_NAME: ${{ needs.validate-release.outputs.tag_name }}
+          RELEASE_BRANCH: ${{ needs.validate-release.outputs.release_branch }}
         with:
           github-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
           script: |
-            const tag = "${{ needs.validate-release.outputs.tag_name }}";
-            const branch = "${{ needs.validate-release.outputs.release_branch }}";
+            const tag = process.env.TAG_NAME;
+            const branch = process.env.RELEASE_BRANCH;
             try {
               await github.rest.repos.createRelease({
                 owner: context.repo.owner,
@@ -366,7 +373,7 @@ jobs:
           - Android E2E
           - rc-smoke/npm
 
-          When QA approves, apply the **pass QA ready for deploy** label. The promote-release workflow will strip \`-rcN\` and let you merge into main.
+          When QA approves, apply the **pass QA ready for deploy** label. The promote-release workflow will strip \`-rcN\` (or publish a final \`+N\` hotfix build as-is) and let you merge into main.
           EOF
           )
           if [ -z "$existing" ]; then
@@ -506,7 +513,9 @@ jobs:
         env:
           PLUGIN_VERSION: ${{ inputs.plugin_version }}
         run: |
-          BASE_VERSION=$(echo "$PLUGIN_VERSION" | sed 's/-rc[0-9]*$//')
+          source .github/workflows/scripts/version-format.sh
+          # Strips -rcN and final +N hotfix suffixes alike — Jira fixVersion is keyed to X.Y.Z.
+          BASE_VERSION=$(echo "$PLUGIN_VERSION" | sed -E "s/(${VERSION_SUFFIX_RC}|${VERSION_SUFFIX_BUILD})\$//")
           echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Fetch Jira tickets

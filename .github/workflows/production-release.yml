@@ -37,12 +37,16 @@ jobs:
     steps:
       - name: Resolve target ref
         id: ref
+        env:
+          RELEASE_BRANCH: ${{ inputs.release_branch }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "ref=${{ inputs.release_branch }}" >> "$GITHUB_OUTPUT"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "ref=$RELEASE_BRANCH" >> "$GITHUB_OUTPUT"
           else
             # Merged PR — use the merge commit on main; the version is whatever
-            # the PR merged (already -rcN-stripped by promote-release.yml).
+            # the PR merged (promote-release.yml either strips -rcN or passes
+            # an already-final build through unmodified).
             echo "ref=main" >> "$GITHUB_OUTPUT"
           fi
 
@@ -101,8 +105,11 @@ jobs:
           IOS_SDK_VERSION=$(jq -r '.iosSdkVersion' package.json)
           IOS_FRAMEWORK_VERSION=$(jq -r '.iosFrameworkVersion' package.json)
           BUILD_NUMBER=$(jq -r '.buildNumber' package.json)
-          if ! [[ "$PLUGIN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::package.json version $PLUGIN_VERSION still has -rcN. Promote step missed?"
+          source .github/workflows/scripts/version-format.sh
+          # Accepts a clean X.Y.Z or a final hotfix build X.Y.Z+N; an -rcN
+          # leftover means the promote step didn't strip it and must not publish.
+          if ! [[ "$PLUGIN_VERSION" =~ $VERSION_FINAL_REGEX ]]; then
+            echo "::error::package.json version $PLUGIN_VERSION is not a valid final version (X.Y.Z or X.Y.Z+N). Promote step missed, or an unexpected suffix leaked through?"
             exit 1
           fi
           echo "plugin_version=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"
@@ -136,16 +143,18 @@ jobs:
         uses: actions/github-script@v7
         env:
           TAG: ${{ steps.ver.outputs.tag }}
+          REF: ${{ steps.ref.outputs.ref }}
         with:
           github-token: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
           script: |
             const tag = process.env.TAG;
+            const ref = process.env.REF;
             try {
               await github.rest.repos.createRelease({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag_name: tag,
-                target_commitish: '${{ steps.ref.outputs.ref }}',
+                target_commitish: ref,
                 name: tag,
                 draft: false,
                 prerelease: false,
@@ -195,7 +204,7 @@ jobs:
           set -eo pipefail
           CHANGES=""
           if [ -f "CHANGELOG.md" ]; then
-            CHANGES=$(awk "/^## ${PLUGIN_VERSION}/,/^## [0-9]/" CHANGELOG.md | grep '^- ' | sed 's/^- /• /' | head -8 || true)
+            CHANGES=$(awk -v ver="${PLUGIN_VERSION}" '$0 == "## " ver { found=1 } found; /^## [0-9]/ && $0 != "## " ver && found { exit }' CHANGELOG.md | grep '^- ' | sed 's/^- /• /' | head -8 || true)
           fi
           if [ -z "$CHANGES" ]; then
             CHANGES="• No changelog bullets found for ${PLUGIN_VERSION}; see linked tickets below."
