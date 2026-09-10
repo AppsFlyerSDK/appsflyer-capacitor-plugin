@@ -58,8 +58,7 @@ jobs:
             echo "needs_commit=true" >> "$GITHUB_OUTPUT"
             echo "Stripping -rcN: $CURRENT -> $PROMOTED"
           elif [[ "$CURRENT" =~ $VERSION_FINAL_REGEX ]]; then
-            # Clean X.Y.Z, or a final hotfix build like X.Y.Z+1 — neither is an
-            # -rcN prerelease, so publish it verbatim instead of stripping.
+            # Clean X.Y.Z — not an -rcN prerelease, so publish it verbatim instead of stripping.
             echo "Version $CURRENT is already final (no -rcN suffix). Nothing to strip."
             echo "promoted=$CURRENT" >> "$GITHUB_OUTPUT"
             echo "needs_commit=false" >> "$GITHUB_OUTPUT"
@@ -150,7 +149,7 @@ jobs:
             `Branch: ${env.RELEASE_BRANCH}`,
             '',
             'The promote workflow could not prepare the release branch for production. Common causes:',
-            '• `rc-smoke/npm` is missing or red on the PR head SHA — bump the RC/build suffix and rerun rc-release.',
+            '• `rc-smoke/npm` is missing or red on the PR head SHA — bump the RC suffix and rerun rc-release.',
             '• The version-strip push was rejected (branch protection or stale ref).',
             '',
             `Run: https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,

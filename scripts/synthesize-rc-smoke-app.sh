@@ -36,9 +36,9 @@ if [[ ! -d "$SOURCE_APP" ]]; then
 fi
 
 # Validate semver-rc shape early to prevent silent garbage in package.json.
-if ! [[ "$RC_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+|\+[0-9]+)?$ ]]; then
+if ! [[ "$RC_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
   echo "Invalid RC version: $RC_VERSION"
-  echo "Expected X.Y.Z, X.Y.Z-rcN, or X.Y.Z+N"
+  echo "Expected X.Y.Z or X.Y.Z-rcN"
   exit 1
 fi
 

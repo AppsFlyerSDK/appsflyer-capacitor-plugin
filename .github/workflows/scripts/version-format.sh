@@ -1,7 +1,6 @@
 # Single source of truth for this repo's version-string shapes. Source this
 # (`source .github/workflows/scripts/version-format.sh`) instead of
-# re-typing these patterns — a future suffix-scheme change (already
-# happened once: -N -> +N) only needs updating here.
+# re-typing these patterns.
 #
 # Consumed by: promote-release.yml, production-release.yml,
 # updatePluginVersion.sh, and rc-release.yml's notify-team job (its
@@ -16,9 +15,8 @@
 # .github/workflows/ when this file's suffix patterns change.
 VERSION_CORE='[0-9]+\.[0-9]+\.[0-9]+'
 VERSION_SUFFIX_RC='-rc[0-9]+'
-VERSION_SUFFIX_BUILD='\+[0-9]+'
 
-# A final, publishable version: clean X.Y.Z, or a hotfix build X.Y.Z+N.
-VERSION_FINAL_REGEX="^${VERSION_CORE}(${VERSION_SUFFIX_BUILD})?\$"
+# A final, publishable version: clean X.Y.Z.
+VERSION_FINAL_REGEX="^${VERSION_CORE}\$"
 # An -rcN candidate, capturing the base X.Y.Z for the promote step's strip.
 VERSION_RC_CAPTURE_REGEX="^(${VERSION_CORE})${VERSION_SUFFIX_RC}\$"

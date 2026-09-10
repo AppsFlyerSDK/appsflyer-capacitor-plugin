@@ -24,7 +24,5 @@ if ! [[ "$newPluginVersion" =~ $VERSION_FINAL_REGEX || "$newPluginVersion" =~ $V
   exit 1
 fi
 
-# perl (not sed -r, used elsewhere in these scripts) because VERSION_SUFFIX_BUILD's literal "+"
-# needs backslash-escaping whose ERE handling differs between BSD sed (macOS) and GNU sed (CI/Linux).
-perl -pi -e "s/\"version\": \"${VERSION_CORE}(${VERSION_SUFFIX_RC}|${VERSION_SUFFIX_BUILD})?\"/\"version\": \"$newPluginVersion\"/g" package.json
+perl -pi -e "s/\"version\": \"[^\"]*\"/\"version\": \"$newPluginVersion\"/g" package.json
 git add package.json

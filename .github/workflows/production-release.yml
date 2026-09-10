@@ -106,10 +106,10 @@ jobs:
           IOS_FRAMEWORK_VERSION=$(jq -r '.iosFrameworkVersion' package.json)
           BUILD_NUMBER=$(jq -r '.buildNumber' package.json)
           source .github/workflows/scripts/version-format.sh
-          # Accepts a clean X.Y.Z or a final hotfix build X.Y.Z+N; an -rcN
-          # leftover means the promote step didn't strip it and must not publish.
+          # Accepts a clean X.Y.Z; an -rcN leftover means the promote step didn't
+          # strip it and must not publish.
           if ! [[ "$PLUGIN_VERSION" =~ $VERSION_FINAL_REGEX ]]; then
-            echo "::error::package.json version $PLUGIN_VERSION is not a valid final version (X.Y.Z or X.Y.Z+N). Promote step missed, or an unexpected suffix leaked through?"
+            echo "::error::package.json version $PLUGIN_VERSION is not a valid final version (X.Y.Z). Promote step missed, or an unexpected suffix leaked through?"
             exit 1
           fi
           echo "plugin_version=$PLUGIN_VERSION" >> "$GITHUB_OUTPUT"

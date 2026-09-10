@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       rc_version:
-        description: 'Published RC version (X.Y.Z-rcN) or final hotfix build (X.Y.Z+N)'
+        description: 'Published RC version (X.Y.Z-rcN)'
         required: true
         type: string
       release_branch:
-        description: 'Release branch (releases/X.x.x/X.Y.x/X.Y.Z-rcN or .../X.Y.Z+N)'
+        description: 'Release branch (releases/X.x.x/X.Y.x/X.Y.Z-rcN)'
         required: true
         type: string
 
@@ -35,7 +35,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
           RC: ${{ inputs.rc_version }}
           BR: ${{ inputs.release_branch }}
-          VERSION_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+|\+[0-9]+)$'
+          VERSION_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$'
         run: |
           set -eo pipefail
           if ! [[ "$RC" =~ $VERSION_REGEX ]]; then
@@ -347,7 +347,7 @@ jobs:
             `*Branch:* ${env.RELEASE_BRANCH}`,
             `*Run:* https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,
             '',
-            '*Next step:* Bump the RC/build suffix (`-rcN` -> `-rc(N+1)`, or `+N` -> `+(N+1)`) and rerun the RC-release workflow with `dry_run=false`. Republishing the same version is not supported by npm.',
+            '*Next step:* Bump the RC suffix (`-rcN` -> `-rc(N+1)`) and rerun the RC-release workflow with `dry_run=false`. Republishing the same version is not supported by npm.',
           ].join('\n');
           fs.appendFileSync(env.GITHUB_OUTPUT, `payload=${JSON.stringify({ text })}\n`);
           NODE
