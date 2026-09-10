@@ -17,5 +17,12 @@ echo "New Plugin Version 1: $newPluginVersion"
 # AppsFlyerSDK construction — there is no hardcoded Swift/Kotlin version constant
 # to bump post-7.0.2, so package.json is the only file this step touches.
 echo "Updating Package.json file"
-sed -i -r -e "s/\"version\": \"[0-9]+.[0-9]+.[0-9]+(-rc[0-9]+)?\"/\"version\": \"$newPluginVersion\"/gi" package.json
+source "$(dirname "$0")/version-format.sh"
+
+if ! [[ "$newPluginVersion" =~ $VERSION_FINAL_REGEX || "$newPluginVersion" =~ $VERSION_RC_CAPTURE_REGEX ]]; then
+  echo "Error: '$newPluginVersion' does not match expected version format ($VERSION_FINAL_REGEX or $VERSION_RC_CAPTURE_REGEX)" >&2
+  exit 1
+fi
+
+perl -pi -e "s/\"version\": \"[^\"]*\"/\"version\": \"$newPluginVersion\"/g" package.json
 git add package.json

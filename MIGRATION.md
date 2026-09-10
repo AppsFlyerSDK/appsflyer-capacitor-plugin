@@ -9,8 +9,8 @@ explicit `start()` call, and it must fire from inside `registerSessionReadyListe
 not right after `init()`.
 
 Check `package.json`'s `version` for exactly what you're on — this guide covers the whole 7.0.x
-line (currently `7.0.2`, native SDK Android `af-android-sdk` 7.0.1 + `af-android-plugin-bridge`
-7.0.12, iOS `AppsFlyerRPC` 7.0.13).
+line (currently `7.0.3`, native SDK Android `af-android-sdk` 7.0.1 + `af-android-plugin-bridge`
+7.0.13, iOS `AppsFlyerRPC` 7.0.13).
 
 - [Prerequisite](#prerequisite)
 - [Checklist](#checklist)
@@ -33,7 +33,7 @@ assumes that's already done.
 
 ## Checklist
 
-1. Bump to `^7.0.2`, reinstall native deps (`npx cap sync`).
+1. Bump to `^7.0.3`, reinstall native deps (`npx cap sync`).
 2. Fix every call site listed in the [full API change reference](#full-api-change-reference).
 3. Replace `initSDK(options)` with the `init` + `start` flow, including moving any
    deep-link/conversion listener registration to the right place relative to `init()` — see
