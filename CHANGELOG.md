@@ -1,3 +1,9 @@
+## 7.0.3
+ Release date: *2026-09-10*
+
+- Updated to `@appsflyer-sdk/js-core-plugin@7.1.0` and `af-android-plugin-bridge@7.0.13`.
+- Added 3 new Android-only device-ID setters: `setImeiData`, `setOaidData`, `setAndroidIdData` — for apps that already collect the device's IMEI/OAID/Android ID themselves and want to report them to the SDK. See [docs/API.md](docs/API.md#android-only).
+
 ## 7.0.2
  Release date: *2026-08-26*
 

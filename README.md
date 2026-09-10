@@ -14,7 +14,7 @@ To do so, please follow [this article](https://support.appsflyer.com/hc/en-us/ar
 ### <a id="plugin-build-for"> This plugin is built for:
 
 <img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18">  Android AppsFlyer SDK **7.0.1**</br>
-<img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **7.0.2**</br>
+<img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **7.0.13**</br>
 <img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18">  Capacitor 8</br>
 
 ## <a id="breaking-changes-7-0-2"> 	❗❗ Breaking changes when updating to v7.0.2 ❗❗
