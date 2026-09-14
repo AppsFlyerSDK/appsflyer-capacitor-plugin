@@ -15,8 +15,9 @@
 # .github/workflows/ when this file's suffix patterns change.
 VERSION_CORE='[0-9]+\.[0-9]+\.[0-9]+'
 VERSION_SUFFIX_RC='-rc[0-9]+'
+VERSION_SUFFIX_HOTFIX='-v[0-9]+'
 
-# A final, publishable version: clean X.Y.Z.
-VERSION_FINAL_REGEX="^${VERSION_CORE}\$"
+# A final, publishable version: clean X.Y.Z or hotfix X.Y.Z-vN.
+VERSION_FINAL_REGEX="^${VERSION_CORE}(${VERSION_SUFFIX_HOTFIX})?\$"
 # An -rcN candidate, capturing the base X.Y.Z for the promote step's strip.
 VERSION_RC_CAPTURE_REGEX="^(${VERSION_CORE})${VERSION_SUFFIX_RC}\$"
