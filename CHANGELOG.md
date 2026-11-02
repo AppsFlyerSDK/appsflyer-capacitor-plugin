@@ -1,3 +1,10 @@
+## 7.0.4
+ Release date: *2026-11-02*
+
+- Updated Android AppsFlyer SDK (af-android-sdk-bom) to 7.0.4.
+- Updated iOS AppsFlyerRPC to 7.0.41 and AppsFlyerFramework to 7.0.4.
+- af-android-plugin-bridge remains at 7.0.13.
+
 ## 7.0.2-v2
  Release date: *2026-09-14*
 
