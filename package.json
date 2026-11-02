@@ -1,6 +1,6 @@
 {
   "name": "appsflyer-capacitor-plugin",
-  "version": "7.0.4-rc1",
+  "version": "7.0.4",
   "iosSdkVersion": "7.0.41",
   "iosFrameworkVersion": "7.0.4",
   "androidSdkVersion": "7.0.4",
