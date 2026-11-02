@@ -9,10 +9,11 @@ set -euo pipefail
 # validated; a pin combination not listed fails the build instead of shipping
 # silently mismatched.
 #
-# ponytail: hardcoded table, not a constraint-solver — there's exactly one
-# known-good pairing today. Extend the table if/when that stops being true.
+# ponytail: hardcoded table, not a constraint-solver. Extend the table when a
+# new RPC + Framework pairing is validated.
 KNOWN_GOOD_PAIRS=(
   "7.0.13:7.0.2"
+  "7.0.41:7.0.4"
 )
 
 rpcVersion=$(grep -o 'appsflyer-apple-rpc\.git", exact: "[0-9.]*' Package.swift | grep -o '[0-9.]*$')
