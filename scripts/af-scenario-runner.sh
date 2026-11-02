@@ -177,7 +177,7 @@ android_get_device() {
 }
 
 android_is_installed() {
-  adb shell pm list packages 2>/dev/null | grep -q "$PACKAGE_NAME"
+  adb shell pm list packages 2>/dev/null | grep -qxF "package:$PACKAGE_NAME"
 }
 
 android_uninstall() {
@@ -269,6 +269,13 @@ android_is_alive() {
 IOS_UDID=""
 IOS_LAST_PID=""
 
+# Single writer for IOS_LAST_PID (ios_launch and the deep-link relaunch path
+# in run_phase both need to set it) so there's one place to look, not two
+# independently-maintained assignments.
+ios_set_last_pid() {
+  IOS_LAST_PID="$1"
+}
+
 ios_get_booted_udid() {
   xcrun simctl list devices booted -j 2>/dev/null | \
     jq -r '[.devices[][] | select(.state == "Booted")] | first | .udid // empty'
@@ -286,7 +293,7 @@ ios_ensure_udid() {
 }
 
 ios_is_installed() {
-  xcrun simctl listapps "$IOS_UDID" 2>/dev/null | grep -q "$PACKAGE_NAME" 2>/dev/null
+  xcrun simctl listapps "$IOS_UDID" 2>/dev/null | grep -qF "CFBundleIdentifier = \"$PACKAGE_NAME\";"
 }
 
 ios_uninstall() {
@@ -322,13 +329,69 @@ ios_launch() {
   local out
   out=$(xcrun simctl launch "$IOS_UDID" "$PACKAGE_NAME" 2>&1 || true)
   echo "$out"
-  IOS_LAST_PID=$(echo "$out" | awk -F': ' '/^'"$PACKAGE_NAME"': [0-9]+$/ {print $2}' | tail -1)
+  ios_set_last_pid "$(echo "$out" | awk -F': ' '/^'"$PACKAGE_NAME"': [0-9]+$/ {print $2}' | tail -1)"
   [[ -n "$IOS_LAST_PID" ]] && log_debug "Launched PID: $IOS_LAST_PID"
 }
 
+
+# Path to the current install's af_qa_logs.txt. Goes through
+# `simctl get_app_container` rather than `find`-ing under
+# Containers/Data/Application: install/uninstall cycles leave prior
+# containers on disk, and an unscoped find can silently return a stale
+# file from an old container instead of the current one.
+ios_qa_log_path() {
+  local container
+  container=$(xcrun simctl get_app_container "$IOS_UDID" "$PACKAGE_NAME" data 2>/dev/null)
+  if [[ -z "$container" ]]; then
+    log_debug "get_app_container returned nothing for $PACKAGE_NAME — app not installed or simulator not booted?"
+    return 1
+  fi
+  echo "$container/Documents/af_qa_logs.txt"
+}
+
 ios_get_pid() {
+  # launchctl list is tab-separated "PID\tStatus\tLabel"; app process labels
+  # are decorated (e.g. "UIKitApplication:com.appsflyer.engagement[a9b9]"),
+  # never the bare bundle id. Anchor on the UIKitApplication:<bundle>[ prefix
+  # so .debug/.staging suffix variants cannot false-positive via substring.
   xcrun simctl spawn "$IOS_UDID" launchctl list 2>/dev/null | \
-    grep "$PACKAGE_NAME" | awk '{print $1}' | head -1
+    awk -F'\t' -v pkg="$PACKAGE_NAME" '$3 ~ ("^UIKitApplication:" pkg "\\[") { print $1; exit }'
+}
+
+# Poll for a relaunched app PID after a deep-link openurl. Returns the PID on
+# stdout and 0 when found (including the suspended-resume case where the PID
+# never changes); returns 1 if the poll budget expires without a usable PID.
+ios_wait_for_relaunch_pid() {
+  local poll_budget_sec="${IOS_RELAUNCH_PID_POLL_SEC:-10}"
+  local sleep_interval=0.5
+  local max_attempts
+  max_attempts=$(awk -v b="$poll_budget_sec" -v s="$sleep_interval" 'BEGIN { printf "%d", b / s }')
+  local current_pid attempt=0
+  current_pid=$(ios_get_pid)
+  if [[ -n "$current_pid" && "$current_pid" == "$IOS_LAST_PID" ]]; then
+    # simctl openurl merely resumed a suspended-but-resident process: no
+    # new PID will ever appear.
+    echo "$current_pid"
+    return 0
+  fi
+
+  while [[ $attempt -lt $max_attempts ]]; do
+    if [[ -n "$current_pid" && "$current_pid" != "$IOS_LAST_PID" ]]; then
+      echo "$current_pid"
+      return 0
+    fi
+    sleep "$sleep_interval"
+    attempt=$((attempt + 1))
+    current_pid=$(ios_get_pid)
+  done
+
+  # Check the final poll fetched after the loop's last sleep
+  if [[ -n "$current_pid" && "$current_pid" != "$IOS_LAST_PID" ]]; then
+    echo "$current_pid"
+    return 0
+  fi
+
+  return 1
 }
 
 ios_collect_logs() {
@@ -342,15 +405,11 @@ ios_collect_logs() {
   # Strategy 1: Read the app's af_qa_logs.txt from the simulator filesystem.
   # This file is the source of truth for [AF_QA] markers because the IOSink
   # in af_qa_logger.dart guarantees every line is appended.
-  local sim_data_dir
-  sim_data_dir="$HOME/Library/Developer/CoreSimulator/Devices/${IOS_UDID}/data"
-  if [[ -d "$sim_data_dir" ]]; then
-    local qa_log
-    qa_log=$(find "$sim_data_dir/Containers/Data/Application" -name "af_qa_logs.txt" -maxdepth 4 2>/dev/null | head -1)
-    if [[ -n "$qa_log" && -f "$qa_log" ]]; then
-      log_debug "Found iOS QA log file: $qa_log"
-      cat "$qa_log" >> "$log_file"
-    fi
+  local qa_log
+  qa_log="$(ios_qa_log_path)" || qa_log=""
+  if [[ -f "$qa_log" ]]; then
+    log_debug "Found iOS QA log file: $qa_log"
+    cat "$qa_log" >> "$log_file"
   fi
 
   # Strategy 2: Always also append simctl log show output. The file logger
@@ -432,13 +491,9 @@ platform_peek_qa_log() {
     return 0
   fi
   ios_ensure_udid
-  local sim_data_dir
-  sim_data_dir="$HOME/Library/Developer/CoreSimulator/Devices/${IOS_UDID}/data"
-  [[ -d "$sim_data_dir" ]] || return 0
   local qa_log
-  qa_log=$(find "$sim_data_dir/Containers/Data/Application" \
-    -name "af_qa_logs.txt" -maxdepth 4 2>/dev/null | head -1)
-  [[ -n "$qa_log" && -f "$qa_log" ]] || return 0
+  qa_log="$(ios_qa_log_path)" || qa_log=""
+  [[ -f "$qa_log" ]] || return 0
   cat "$qa_log" 2>/dev/null || true
 }
 
@@ -762,6 +817,23 @@ run_phase() {
     else
       log_info "Waiting ${wait_trigger_sec}s for deep link to propagate..."
       sleep "$wait_trigger_sec"
+    fi
+
+    # Refresh the PID pinned for iOS log filtering via ios_set_last_pid().
+    # ios_launch() (the fresh-install cold launch) already sets it; a deep-link
+    # relaunch here goes through run_phase_command instead, which never
+    # touches it. Left stale, log_show's --predicate stays pinned to the
+    # terminated cold-launch process and silently filters out the relaunched
+    # process's own [AF_QA] lines. Scoped to deep-link phases only — other
+    # phases never relaunch, so IOS_LAST_PID is already correct and polling
+    # would just burn time.
+    if [[ "$PLATFORM" == "ios" ]]; then
+      local relaunched_pid
+      if relaunched_pid=$(ios_wait_for_relaunch_pid); then
+        ios_set_last_pid "$relaunched_pid"
+      else
+        log_warn "Could not confirm a new PID after deep-link relaunch; log filtering may stay pinned to the stale PID $IOS_LAST_PID"
+      fi
     fi
   fi
 

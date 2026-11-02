@@ -86,3 +86,28 @@ In v6.8.0 of the AppsFlyer SDK, we added the normal permission `com.google.andro
 to allow the SDK to collect the Android Advertising ID on apps targeting API 33.
 If your app is targeting children, you need to revoke this permission to comply with Google's Data policy.
 You can read more about it [here](https://dev.appsflyer.com/hc/docs/install-android-sdk#the-ad_id-permission).
+
+## Strict mode for kids apps (iOS)
+Use strict mode to remove IDFA collection and AdSupport framework dependencies (for example, in kids apps).
+
+To enable strict mode:
+1. Add `$AppsFlyerStrictMode = true` to your `ios/App/Podfile` before `target 'App' do`:
+
+```ruby
+$AppsFlyerStrictMode = true
+
+target 'App' do
+  # ...
+end
+```
+
+2. Sync and reinstall CocoaPods dependencies:
+
+```bash
+npx cap sync ios
+```
+
+To revert to regular mode, remove `$AppsFlyerStrictMode = true` from your `Podfile` and run `npx cap sync ios` again.
+
+> Note: Strict mode requires CocoaPods. If your iOS project integrates plugins through Swift Package Manager, switch to CocoaPods for strict mode builds.
+

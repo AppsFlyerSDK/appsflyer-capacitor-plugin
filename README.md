@@ -13,8 +13,8 @@ To do so, please follow [this article](https://support.appsflyer.com/hc/en-us/ar
 
 ### <a id="plugin-build-for"> This plugin is built for:
 
-<img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18">  Android AppsFlyer SDK **7.0.1**</br>
-<img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **7.0.2**</br>
+<img src="https://raw.githubusercontent.com/github/explore/80688e429a7d4ef2fca1e82350fe8e3517d3494d/topics/android/android.png" width="18" height="18">  Android AppsFlyer SDK **7.0.4**</br>
+<img src="https://icon.icepanel.io/Technology/svg/Apple.svg" width="18" height="18">  iOS AppsFlyer SDK **7.0.41**</br>
 <img src="https://icon.icepanel.io/Technology/svg/Capacitor.svg" width="18" height="18">  Capacitor 8</br>
 
 ## <a id="breaking-changes-7-0-2"> 	❗❗ Breaking changes when updating to v7.0.2 ❗❗
@@ -43,6 +43,30 @@ If you are still interested in using Capacitor 3, please follow the instructions
 
 ## <a id="migration"> ⏩ Migration
 Upgrading from a pre-7.0 version? See [MIGRATION.md](/MIGRATION.md) for the full 6.x → 7.x method/argument mapping, including a ready-to-use prompt for an LLM coding assistant.
+
+## Strict mode for kids apps (iOS)
+Use strict mode to remove IDFA collection and AdSupport framework dependencies (for example, in kids apps).
+
+To enable strict mode:
+1. Add `$AppsFlyerStrictMode = true` to your `ios/App/Podfile` before `target 'App' do`:
+
+```ruby
+$AppsFlyerStrictMode = true
+
+target 'App' do
+  # ...
+end
+```
+
+2. Sync and reinstall CocoaPods dependencies:
+
+```bash
+npx cap sync ios
+```
+
+To revert to regular mode, remove `$AppsFlyerStrictMode = true` from your `Podfile` and run `npx cap sync ios` again.
+
+> Note: Strict mode requires CocoaPods. If your iOS project integrates plugins through Swift Package Manager, switch to CocoaPods for strict mode builds.
 
  ##  📖 Guides
 - [Adding the SDK to your project](/docs/Installation.md)

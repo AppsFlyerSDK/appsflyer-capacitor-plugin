@@ -35,9 +35,10 @@ jobs:
           GH_TOKEN: ${{ secrets.CI_DEV_GITHUB_TOKEN }}
           RC: ${{ inputs.rc_version }}
           BR: ${{ inputs.release_branch }}
+          VERSION_REGEX: '^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$'
         run: |
           set -eo pipefail
-          if ! [[ "$RC" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$ ]]; then
+          if ! [[ "$RC" =~ $VERSION_REGEX ]]; then
             echo "Invalid RC version input: '$RC'."
             echo "should_run=false" >> "$GITHUB_OUTPUT"
             exit 1
@@ -284,12 +285,16 @@ jobs:
           fi
       - name: Post check_run on release branch HEAD
         uses: actions/github-script@v7
+        env:
+          HEAD_SHA: ${{ needs.decide.outputs.head_sha }}
+          CONCLUSION: ${{ steps.outcome.outputs.conclusion }}
+          SUMMARY: ${{ steps.outcome.outputs.summary }}
         with:
           github-token: ${{ github.token }}
           script: |
-            const sha = "${{ needs.decide.outputs.head_sha }}";
-            const conclusion = "${{ steps.outcome.outputs.conclusion }}";
-            const summary = `${{ steps.outcome.outputs.summary }}`;
+            const sha = process.env.HEAD_SHA;
+            const conclusion = process.env.CONCLUSION;
+            const summary = process.env.SUMMARY;
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -308,7 +313,7 @@ jobs:
     needs: [decide, smoke-android, smoke-ios]
     # Fire only for genuine smoke regressions (the RC is on npm but smoke is
     # red). Dry-run paths never dispatch this workflow. Production promotion is
-    # blocked until rcN+1 is published.
+    # blocked until a fixed RC — or a superseding build — is published and smoke passes.
     if: |
       always() &&
       needs.decide.outputs.should_run == 'true' &&
@@ -342,7 +347,7 @@ jobs:
             `*Branch:* ${env.RELEASE_BRANCH}`,
             `*Run:* https://github.com/${env.REPOSITORY}/actions/runs/${env.RUN_ID}`,
             '',
-            '*Next step:* Bump to `rcN+1` and rerun the RC-release workflow with `dry_run=false`. Republishing the same RC version is not supported by npm.',
+            '*Next step:* Bump the RC suffix (`-rcN` -> `-rc(N+1)`) and rerun the RC-release workflow with `dry_run=false`. Republishing the same version is not supported by npm.',
           ].join('\n');
           fs.appendFileSync(env.GITHUB_OUTPUT, `payload=${JSON.stringify({ text })}\n`);
           NODE

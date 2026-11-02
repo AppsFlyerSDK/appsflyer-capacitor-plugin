@@ -97,10 +97,7 @@ jobs:
           set -euo pipefail
           : "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:?missing OIDC env - id-token: write probably not granted}"
           : "${ACTIONS_ID_TOKEN_REQUEST_URL:?missing OIDC env - id-token: write probably not granted}"
-          args=(--access public --provenance)
-          if [ "${{ inputs.dist_tag }}" != "latest" ]; then
-            args+=(--tag "${{ inputs.dist_tag }}")
-          fi
+          args=(--access public --provenance --tag "${{ inputs.dist_tag }}")
           if ${{ inputs.dry_run }}; then
             echo "Dry run; not publishing to the registry."
             npm publish "${args[@]}" --dry-run
